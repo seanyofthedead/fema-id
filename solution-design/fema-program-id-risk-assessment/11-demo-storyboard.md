@@ -20,7 +20,7 @@ flowchart LR
     E --> F[6. YoY variance]
     F --> G[7. PRA auto-generator]
     G --> H[8. Human review/override]
-    H --> I[9. Assumptions & validation]
+    H --> I[9. Assumptions and validation]
     I --> J[10. Export/reporting]
 ```
 

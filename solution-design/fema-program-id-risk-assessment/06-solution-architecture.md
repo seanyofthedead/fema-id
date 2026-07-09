@@ -25,12 +25,12 @@
 
 ```mermaid
 flowchart TB
-    subgraph Ingestion["1. Ingestion & Staging"]
+    subgraph Ingestion["1. Ingestion and Staging"]
         I1[Synthetic FY extract loader]
         I2[Schema-mapping adapter<br/>ASSUMP-01]
-        I3[Validation & watermark check<br/>SRC-01]
+        I3[Validation and watermark check<br/>SRC-01]
     end
-    subgraph Transform["2. Cleansing & Mapping - deterministic"]
+    subgraph Transform["2. Cleansing and Mapping - deterministic"]
         T1[Normalization / cleansing<br/>REQ-003]
         T2[Rules engine - rules-as-data<br/>REQ-001 A1]
         T3[Rollup: code to sub-program to program<br/>REQ-004]
@@ -39,20 +39,20 @@ flowchart TB
     end
     subgraph Intelligence["3. AI-assisted inference"]
         M1[Historical mining / co-occurrence<br/>REQ-013]
-        M2[Anomaly & variance detection<br/>REQ-010]
+        M2[Anomaly and variance detection<br/>REQ-010]
         M3[LLM explanation generator]
         M4[RAG over public guidance<br/>ASSUMP-18 SRC-06 SRC-07]
         M5[Confidence scoring]
     end
-    subgraph Assessment["4. PRA & Trigger"]
+    subgraph Assessment["4. PRA and Trigger"]
         P1[Spend aggregation<br/>REQ-006]
         P2[YoY variance trigger<br/>REQ-010 config]
         P3[PRA auto-populator ~8/10<br/>REQ-008]
         P4[Qualitative stub ~2/10<br/>REQ-009]
     end
-    subgraph Review["5. Human-in-the-loop & Output"]
-        R1[Review & override UI<br/>A4 ASSUMP-17]
-        R2[Reporting & export<br/>REQ-006 SME-14]
+    subgraph Review["5. Human-in-the-loop and Output"]
+        R1[Review and override UI<br/>A4 ASSUMP-17]
+        R2[Reporting and export<br/>REQ-006 SME-14]
         R3[Audit trail store<br/>SME-18]
     end
 
@@ -61,7 +61,7 @@ flowchart TB
     Transform --> Assessment
     Intelligence --> Assessment
     Assessment --> Review
-    Intelligence -.confidence & rationale.-> Review
+    Intelligence -.confidence and rationale.-> Review
     Review --> R3
 ```
 
@@ -124,7 +124,7 @@ sequenceDiagram
     participant Ing as Ingestion
     participant Rul as Rules engine (det.)
     participant AI as AI layer
-    participant Agg as Aggregation & trigger (det.)
+    participant Agg as Aggregation and trigger (det.)
     participant PRA as PRA populator
     participant Hum as Human reviewer
     participant Out as Report + audit

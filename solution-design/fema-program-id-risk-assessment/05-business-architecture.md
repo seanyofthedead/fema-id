@@ -38,7 +38,7 @@ flowchart TD
     H --> I{>=20% YoY<br/>spend change?<br/>REQ-010}
     I -->|Yes| J[Comprehensive risk<br/>assessment triggered]
     I -->|No| K[Preliminary assessment<br/>on file]
-    J --> L[Testing & remediation<br/>often starts late REQ-012]
+    J --> L[Testing and remediation<br/>often starts late REQ-012]
     K --> L
 ```
 
@@ -103,15 +103,15 @@ Capability map for the target concept (demo implements the shaded core; outer ri
 flowchart LR
     subgraph Core["Demo core capabilities"]
         C1[Financial extract ingestion]
-        C2[Code cleansing & normalization]
+        C2[Code cleansing and normalization]
         C3[Program ID mapping - rules-as-data]
         C4[Program/sub-program rollup]
         C5[Disaster/event spend split]
-        C6[Spend aggregation & YoY variance]
+        C6[Spend aggregation and YoY variance]
         C7[PRA auto-population]
         C8[Comprehensive-assessment triggering]
-        C9[Human review & override]
-        C10[Reporting & export]
+        C9[Human review and override]
+        C10[Reporting and export]
     end
     subgraph Ring["Roadmap capabilities"]
         R1[Continuous/interim feeds REQ-022]

@@ -47,7 +47,7 @@ flowchart TD
     C -->|Yes| D[Pre-fill, editable]
     C -->|No| E[Flag for mandatory review]
     A -->|Qualitative Q9-Q10| F[Route to program office<br/>stub form REQ-009]
-    D --> G[Human review & sign-off<br/>ASSUMP-17]
+    D --> G[Human review and sign-off<br/>ASSUMP-17]
     E --> G
     F --> G
     G --> H[Finalized PRA + evidence + audit]
@@ -127,7 +127,7 @@ flowchart LR
     V --> T{trigger_flag?}
     T -->|Yes| C[Mark COMPREHENSIVE<br/>assessment required]
     T -->|No| K[Preliminary on file]
-    C --> E[Earlier identification ->\nearlier remediation REQ-012]
+    C --> E[Earlier identification means<br/>earlier remediation REQ-012]
     C --> R[Reviewer notified<br/>ASSUMP-17]
     K --> R
 ```
