@@ -2638,7 +2638,13 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     }
   });
   document.addEventListener('click', ev => {
-    if (!$('#cs-pop').hidden && !ev.target.closest('.csearch')) csClose();
+    if ($('#cs-pop').hidden) return;
+    /* composedPath keeps the original ancestors even when the click handler
+       re-rendered the popover and detached the clicked element mid-bubble */
+    const inside = ev.composedPath
+      ? ev.composedPath().some(el => el.nodeType === 1 && el.classList.contains('csearch'))
+      : !!ev.target.closest('.csearch');
+    if (!inside) csClose();
   });
   /* lineage overlay (FLOW-01) */
   $('#lin-close').addEventListener('click', closeLineage);
