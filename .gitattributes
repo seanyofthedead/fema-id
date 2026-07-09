@@ -1,0 +1,4 @@
+# Wave 1 reproducibility: the synthetic dataset and its generator are written
+# with LF endings and verified byte-identical against MANIFEST.sha256.
+# Prevent autocrlf from rewriting them on checkout.
+solution-design/fema-program-id-risk-assessment/data/** text eol=lf
