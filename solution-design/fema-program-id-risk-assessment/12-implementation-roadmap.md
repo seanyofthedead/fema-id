@@ -31,7 +31,7 @@ flowchart LR
 | 3 Mapping rules engine | ⬜ Planned | 2–3 d |
 | 4 AI-assisted inference | ⬜ Planned | 2–3 d |
 | 5 PRA automation | ⬜ Planned | 2 d |
-| 6 UI / demo build | ⬜ Planned | 3–4 d |
+| 6 UI / demo build | ⬜ Planned (Streamlit Option A) · ✅ **leave-behind single-file HTML variant shipped** (`leavebehind/fema-demo.html`) | 3–4 d |
 | 7 SME validation + refinement | ⬜ Planned | ongoing |
 | 8 Production-readiness assessment | ⬜ Future | scoping only |
 
@@ -115,6 +115,8 @@ flowchart LR
 | Dependencies | Waves 2–5; `REQ-025` |
 | Risks | Time-box vs polish → Option A chosen for speed |
 | Effort | 3–4 d |
+
+> **Leave-behind variant (shipped ahead of this wave):** `leavebehind/fema-demo.html` — a single self-contained HTML file implementing all 10 storyboard screens with the Wave 1 dataset embedded and every reportable number (rollups, YoY, trigger flags, PRA binds) computed deterministically in embedded JavaScript. Fully offline (no CDN/network/storage); AI explanations are precomputed and labeled as such since an offline file cannot call a model. Regenerated from current data by `leavebehind/build_demo_html.py` (byte-stable). This is the emailable/locked-down-machine variant; the Wave 6 Streamlit build remains the presented/connected demo path. See `leavebehind/README.md` and `16-decision-log.md` DEC-24…DEC-28.
 
 ### Wave 7 — SME validation + refinement
 | | |

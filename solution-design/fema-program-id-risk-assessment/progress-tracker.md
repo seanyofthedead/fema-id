@@ -45,6 +45,18 @@
 | `data/DATA_DICTIONARY.md` | ✅ | 2026-07-08 | All tables/fields, calibration basis, seed, planted-scenario map; flags fields added beyond file 08 |
 | `data/README.md` | ✅ | 2026-07-08 | Regeneration + DuckDB load commands; watermark/calibration disclaimers |
 
+## 1b. Leave-behind artifacts (single-file HTML demo pass)
+
+| Artifact | Status | Last updated | Notes |
+|---|---|---|---|
+| `leavebehind/fema-demo.html` | ✅ | 2026-07-08 | **Single self-contained HTML demo** — all 10 storyboard screens, Wave 1 data embedded, deterministic JS engine (rollups/YoY/trigger/PRA binds), fully offline, no storage; AI text precomputed & labeled; generated file (do not hand-edit) |
+| `leavebehind/build_demo_html.py` | ✅ | 2026-07-08 | Deterministic builder (stdlib-only): inlines `data/synthetic/*.csv` + `rules.yaml` into the template; byte-stable re-runs; verifies watermark per row; refuses answer-key reads/references |
+| `leavebehind/template.html` | ✅ | 2026-07-08 | App shell (HTML/CSS/JS) with data placeholder — UI source of truth |
+| `leavebehind/README.md` | ✅ | 2026-07-08 | Open instructions, per-screen guide, offline/precomputed-AI/synthetic disclaimers, regeneration steps |
+| `leavebehind/DEMO_SCRIPT.md` | ✅ | 2026-07-08 | 5–8 min click path aligned to file 14; wow moments: live threshold re-flag, rule-edit re-run |
+
+Decisions logged as DEC-24…DEC-28 (file 16); roadmap note added under Wave 6 (file 12).
+
 ---
 
 ## 2. Pass D quality-gate results

@@ -2,3 +2,8 @@
 # with LF endings and verified byte-identical against MANIFEST.sha256.
 # Prevent autocrlf from rewriting them on checkout.
 solution-design/fema-program-id-risk-assessment/data/** text eol=lf
+
+# Leave-behind reproducibility: build_demo_html.py must regenerate
+# fema-demo.html byte-identically from a fresh clone, so the template,
+# builder and generated file keep LF endings on every platform.
+solution-design/fema-program-id-risk-assessment/leavebehind/** text eol=lf
