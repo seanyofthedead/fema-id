@@ -227,6 +227,75 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
 .parity-ok{color:var(--good-text);font-weight:600}
 .parity-note{color:var(--warn-text);font-weight:600}
 
+/* ============ mapping enhancements (FLOW-01/02/04/07) ============ */
+/* screen-3 tabs */
+.tabs{display:flex;gap:4px;margin:0 0 16px;border-bottom:1px solid var(--grid)}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:8px 14px;font-weight:600;font-size:13.5px;color:var(--ink2);cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--blue-deep);border-bottom-color:var(--blue-deep)}
+
+/* FLOW-04 — universal code search (topbar) */
+.csearch{position:relative}
+.csearch input{font:inherit;font-size:12.5px;padding:5px 11px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);width:225px}
+#cs-pop{position:absolute;top:calc(100% + 6px);right:0;width:440px;max-width:88vw;background:var(--surface);border:1px solid var(--grid);
+  border-radius:10px;box-shadow:0 14px 44px rgba(20,20,15,.24);z-index:75;max-height:68vh;overflow:auto;padding:10px 12px;text-align:left}
+#cs-pop .cs-item{display:block;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:6px 9px;cursor:pointer;font-family:var(--mono);font-size:12.5px}
+#cs-pop .cs-item:hover,#cs-pop .cs-item.active{background:#e8f1fc}
+#cs-pop h4{font:700 14px/1.3 var(--serif);margin:2px 0 4px}
+.cs-anat{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.cs-fybars{display:flex;gap:8px;align-items:flex-end;height:58px;margin:8px 0 2px}
+.cs-fybars .fb{width:38px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;height:100%}
+.cs-fybars .fb i{display:block;width:24px;background:var(--blue);border-radius:3px 3px 0 0;min-height:2px}
+.cs-fybars .fb span{font-size:10px;color:var(--muted);font-family:var(--mono)}
+
+/* FLOW-01 — follow-the-dollar lineage overlay */
+#lineage{position:fixed;inset:0;z-index:80;background:rgba(21,34,56,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto}
+#lineage[hidden]{display:none}
+.lin-box{background:var(--page);border-radius:10px;max-width:880px;width:100%;box-shadow:0 18px 60px rgba(0,0,0,.35);overflow:hidden;margin-bottom:6vh}
+.lin-strip{background:repeating-linear-gradient(-45deg,#fff3cf 0 22px,#ffedb8 22px 44px);border-bottom:1px solid #e3c860;color:var(--warn-text);padding:5px 16px;font-size:11.5px}
+.lin-strip strong{letter-spacing:.08em;font-size:10.5px;border:1.5px solid currentColor;border-radius:4px;padding:0 6px;margin-right:8px;background:rgba(255,255,255,.55)}
+.lin-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:14px 18px 4px}
+.lin-head h3{font:700 17px/1.25 var(--serif);margin:0;flex:1;min-width:240px}
+.lin-body{padding:6px 18px 4px}
+.lin-foot{font-size:11.5px;color:var(--ink2);padding:8px 18px 14px;margin:0}
+.station{position:relative;display:flex;gap:14px;padding:11px 0 11px 4px;opacity:.14;transform:translateY(7px);transition:opacity .45s,transform .45s}
+.station.lit{opacity:1;transform:none}
+.station .sno{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font:700 13px/1 var(--mono);display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1}
+.station.exc .sno{background:var(--serious)}
+.station+.station::before{content:"";position:absolute;left:18px;top:-13px;height:24px;border-left:2px solid var(--blue-250)}
+.station .sbody{flex:1;min-width:0;background:var(--surface);border:1px solid var(--grid);border-radius:8px;padding:10px 14px;box-shadow:var(--shadow)}
+.station .st{font:700 13.5px var(--serif)}
+.station .sio{font-family:var(--mono);font-size:12.5px;margin:6px 0 2px;word-break:break-word}
+.station .sio .arrow{color:var(--muted);padding:0 5px}
+.trace-chips button{font-family:var(--mono);font-size:12px}
+
+/* FLOW-02 — dollar-weighted flow map */
+.flowlink{opacity:.55;transition:opacity .15s}
+.flowlink:hover{opacity:.85}
+.flowlink.dim{opacity:.1}
+.flowlink.lit{opacity:.92}
+.flownode{stroke:#fff;stroke-width:1}
+.flowcode{cursor:pointer}
+.flowlab{font-size:11px;paint-order:stroke;stroke:#fff;stroke-width:3px;fill:var(--ink2)}
+.flowlab.mono{font-family:var(--mono);font-size:10.5px}
+.flowcol{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;fill:var(--muted)}
+
+/* FLOW-07 — what-changed ripple drawer */
+#diff-drawer{position:fixed;top:0;right:0;bottom:0;width:410px;max-width:94vw;background:var(--surface);border-left:1px solid var(--grid);
+  box-shadow:-10px 0 34px rgba(20,20,15,.22);z-index:58;transform:translateX(105%);transition:transform .25s;display:flex;flex-direction:column}
+#diff-drawer.open{transform:none}
+#diff-drawer header{padding:12px 16px;border-bottom:1px solid var(--grid);display:flex;gap:10px;align-items:flex-start}
+#diff-drawer header h3{font:700 15px var(--serif);margin:0;flex:1}
+#diff-drawer .dd-what{font-size:12px;color:var(--ink2);padding:8px 16px 0}
+#diff-drawer .dd-body{flex:1;overflow:auto;padding:10px 16px}
+#diff-drawer footer{padding:12px 16px;border-top:1px solid var(--grid);display:flex;gap:10px;justify-content:flex-end;align-items:center}
+.dd-line{padding:8px 0;border-bottom:1px solid #efeee9;font-size:12.8px}
+.dd-line details{margin-top:4px}
+.dd-line summary{cursor:pointer;color:var(--blue-deep);font-size:12px}
+.dd-line table{margin-top:6px}
+.delta-pos{color:var(--good-text);font-weight:600;font-variant-numeric:tabular-nums}
+.delta-neg{color:var(--critical-text);font-weight:600;font-variant-numeric:tabular-nums}
+
 @media (max-width:920px){
   .app{grid-template-columns:1fr;grid-template-rows:auto auto auto minmax(0,1fr)}
   .sidebar{grid-column:1;grid-row:3;height:auto;position:static;flex-direction:column}
@@ -281,6 +350,10 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
   <div class="topbar">
     <div class="crumb"><span class="no" id="crumb-no">1</span><span id="crumb-title">Executive dashboard</span></div>
     <div class="spacer"></div>
+    <div class="ctl csearch">
+      <input id="code-search" type="search" placeholder="Where does this code go? — try LEG-0001" aria-label="Search financial codes (canonical, dirty or legacy spelling)" autocomplete="off">
+      <div id="cs-pop" hidden></div>
+    </div>
     <div class="ctl"><label for="fy-select">Fiscal year</label>
       <select id="fy-select" aria-label="Select fiscal year"></select>
     </div>
@@ -344,7 +417,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <p class="hint">Record-level rows from the embedded synthetic extract. <mark class="dirty">Dirty raw codes</mark> are shown as landed; <mark class="fixed">canonical codes</mark> as recovered by the cleansing rules.</p>
           <div class="tblwrap"><table id="s2-sample"><thead><tr>
             <th scope="col">txn_id</th><th scope="col">raw_code (landed)</th><th scope="col">code (cleansed)</th>
-            <th scope="col">DR</th><th scope="col">FY</th><th scope="col" class="num">Amount</th><th scope="col">Date</th>
+            <th scope="col">DR</th><th scope="col">FY</th><th scope="col" class="num">Amount</th><th scope="col">Date</th><th scope="col">Lineage</th>
           </tr></thead><tbody></tbody></table></div>
         </div>
         <div class="card">
@@ -366,6 +439,16 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <p class="lede">The undocumented Program ID rules, made visible and editable. Rules were inferred from multi-year history with confidence scores (REQ-013) — when the SOP arrives it drops in here, replacing inference with fact (REQ-015). <b>Edit any code's target sub-program and watch every rollup, trigger and PRA answer downstream recompute.</b></p>
         <div class="prov"><span class="tag">REQ-001</span><span class="tag">REQ-004</span><span class="tag">REQ-013</span><span class="tag">REQ-015</span><span class="tag">ASSUMP-02</span><span class="tag">ASSUMP-16</span></div>
       </header>
+      <div class="tabs" role="tablist" aria-label="Mapping views">
+        <button class="tab" id="s3-tab-btn-work" role="tab" aria-selected="true">Workspace</button>
+        <button class="tab" id="s3-tab-btn-flow" role="tab" aria-selected="false">Flow map</button>
+      </div>
+      <div id="s3-tab-work" role="tabpanel" aria-label="Mapping workspace">
+      <div class="card">
+        <h3>Follow the dollar — end-to-end lineage</h3>
+        <p class="hint">Trace one transaction from the raw code as landed, through cleansing (REQ-002/003), the mapping rule that classifies it (REQ-001), the rollup to its parent program (REQ-004) and the disaster-event tag (REQ-005), to the totals and PRA lines it feeds. Seeded picks below; every transaction on screen 2 also has a Trace button.</p>
+        <div class="flexrow trace-chips" id="s3-trace-chips"></div>
+      </div>
       <div class="kpis" id="s3-kpis"></div>
       <div class="card">
         <h3>Exception queue — records no rule can classify</h3>
@@ -403,6 +486,21 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <div class="tblwrap"><table id="s3-rules"><thead><tr>
           <th scope="col">Rule</th><th scope="col">Type</th><th scope="col">Expression</th><th scope="col">Confidence</th><th scope="col">Status</th>
         </tr></thead><tbody></tbody></table></div>
+      </div>
+      </div><!-- /s3-tab-work -->
+      <div id="s3-tab-flow" role="tabpanel" aria-label="Dollar-weighted flow map" hidden>
+        <div class="card">
+          <h3>Dollar-weighted flow — codes &rarr; sub-programs &rarr; program &rarr; disaster events</h3>
+          <p class="hint">The many-to-one rollup (REQ-004) and one-to-many event split (REQ-005) as geometry: ribbon width = synthetic dollars. Hover a ribbon for exact figures; <b>click a code to trace one of its transactions end-to-end</b>. Grey = exception-queue dollars visibly held out of the program (ASSUMP-16).</p>
+          <div class="filter-row">
+            <label for="s3-flow-prog">Program</label>
+            <select id="s3-flow-prog" class="inline"></select>
+            <button class="btn sm" id="s3-flow-clear" hidden>Clear highlight</button>
+            <span class="small right">Fiscal year follows the top-bar selector</span>
+          </div>
+          <div class="chart" id="s3-flow"></div>
+          <p class="note amber" id="s3-flow-note"></p>
+        </div>
       </div>
     </section>
 
@@ -648,6 +746,37 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
 
   </main>
 </div>
+
+<!-- FLOW-01 — follow-the-dollar lineage overlay -->
+<div id="lineage" hidden role="dialog" aria-modal="true" aria-labelledby="lin-title">
+  <div class="lin-box">
+    <div class="lin-strip"><strong>SYNTHETIC DEMO DATA</strong>Synthetic <b>disbursements</b> calibrated to public FEMA <b>obligation</b> envelopes — obligations &ne; disbursements (ASSUMP-05, ASSUMP-10).</div>
+    <div class="lin-head">
+      <h3 id="lin-title">Follow the dollar</h3>
+      <button class="btn sm" id="lin-all">Show all steps</button>
+      <button class="btn sm primary" id="lin-flow" hidden>Open in flow map</button>
+      <button class="btn sm" id="lin-close" aria-label="Close lineage trace">Close (Esc)</button>
+    </div>
+    <div class="lin-body" id="lin-stations"></div>
+    <p class="lin-foot">Illustrative pipeline per file 09 §1 — every hop cites the rule that performed it. The rule set is inferred/confirmed <b>synthetic</b> configuration, not FEMA's SOP; when the real SOP arrives these rule cards swap out (REQ-015). Deterministic maths only — the AI-labeled suggestion appears solely on exception routing.</p>
+  </div>
+</div>
+
+<!-- FLOW-07 — what-changed ripple drawer -->
+<aside id="diff-drawer" aria-label="What changed after the last mapping edit">
+  <header>
+    <h3>What changed</h3>
+    <button class="btn sm" id="dd-close" aria-label="Dismiss (keep change)">&times;</button>
+  </header>
+  <div class="dd-what" id="dd-what"></div>
+  <div class="dd-body" id="dd-body"></div>
+  <footer>
+    <span class="small" style="margin-right:auto">Deterministic recomputation — every figure recomputed from the embedded ledger (DEC-27)</span>
+    <button class="btn sm" id="dd-revert">Revert</button>
+    <button class="btn sm primary" id="dd-keep">Keep</button>
+  </footer>
+</aside>
+
 <div id="tooltip" role="presentation"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
@@ -755,7 +884,8 @@ const state = {
   finalized: {},               // progId -> timestamp string
   praProg: 'PROG-PA',
   audit: [],
-  screen: 1
+  screen: 1,
+  s3Tab: 'work'                // screen-3 view: 'work' | 'flow' (FLOW-02)
 };
 function praState(progId){
   if (!state.pra[progId]) state.pra[progId] = {};
@@ -1127,7 +1257,9 @@ function renderS2(){
       <td class="mono">${t.raw === t.code ? esc(t.raw) : `<mark class="dirty">${esc(t.raw)}</mark>`}</td>
       <td class="mono">${t.raw === t.code ? esc(t.code) : `<mark class="fixed">${esc(t.code)}</mark>`}</td>
       <td class="mono">DR-${t.dr}</td><td>${t.fy}</td>
-      <td class="num">${fmtFull(t.amt)}</td><td class="mono">${t.date}</td></tr>`).join('');
+      <td class="num">${fmtFull(t.amt)}</td><td class="mono">${t.date}</td>
+      <td><button class="btn ghost sm" data-trace="${t.id}" title="Follow this dollar end-to-end (raw code → rules → program → event → PRA)">Trace &rarr;</button></td></tr>`).join('');
+  $$('#s2-sample [data-trace]').forEach(b => b.addEventListener('click', () => openLineage(b.dataset.trace)));
   const schema = [
     ['txn_id', 'transaction.txn_id', 'unique · ' + TX.length.toLocaleString() + '/' + TX.length.toLocaleString()],
     ['raw_code', 'transaction.raw_code (as landed)', 'cleansing rules applied'],
@@ -1143,9 +1275,21 @@ function renderS2(){
 }
 
 function renderS3(){
+  const flow = state.s3Tab === 'flow';
+  $('#s3-tab-btn-work').setAttribute('aria-selected', String(!flow));
+  $('#s3-tab-btn-flow').setAttribute('aria-selected', String(flow));
+  $('#s3-tab-work').hidden = flow;
+  $('#s3-tab-flow').hidden = !flow;
+  if (flow) renderFlowMap(); else renderS3Work();
+}
+function renderS3Work(){
   const agg = aggregate();
   const exc = EXC;
   const open = openExceptions();
+  /* FLOW-01 seeded picks — one legacy-alias, one format-dirty, one clean (PROG-PA), one exception */
+  $('#s3-trace-chips').innerHTML = seedPicks().map(p =>
+    `<button class="btn sm" data-trace="${p.id}" title="${esc(p.title)}">${esc(p.label)} · <span class="mono">${p.id}</span></button>`).join('');
+  $$('#s3-trace-chips [data-trace]').forEach(b => b.addEventListener('click', () => openLineage(b.dataset.trace)));
   $('#s3-kpis').innerHTML =
     kpi('Financial codes', codeInfo.size, `${codeInfo.size - EXC.length} mapped by rules in force`) +
     kpi('Mapping rules', DATA.rules.length + state.sessionRules.length,
@@ -1174,12 +1318,18 @@ function renderS3(){
   }).join('');
   $$('#s3-exceptions [data-exc-approve]').forEach(b => b.addEventListener('click', () => {
     const e = excByCode.get(b.dataset.excApprove);
+    const dsnap = diffSnap();                                  // FLOW-07: before-state
     state.excDecisions.set(e.code, {action: 'approved', subId: e.subId});
     invalidate();
     logAudit('program_mapping', `Exception ${e.code} approved to ${e.subId}/${e.progId} (AI suggestion, confidence ${e.conf.toFixed(2)})`, e.code + ';similarity-match');
     const t = totalOf(aggregate(), e.progId, state.fy);
     toast(`<b>${esc(e.code)}</b> mapped to ${esc(shortName(progById.get(e.progId).name))} — its spend joined the rollups. FY${state.fy} program total is now <b>${fmtM(t)}</b>.`);
     refresh();
+    openDiffDrawer(`Exception approved: <span class="mono">${esc(e.code)}</span> &rarr; ${esc(e.subId)}`, dsnap, () => {
+      state.excDecisions.delete(e.code);
+      invalidate();
+      logAudit('program_mapping', `Exception approval on ${e.code} reverted via what-changed drawer`, e.code + ';revert');
+    });
   }));
   $$('#s3-exceptions [data-exc-keep]').forEach(b => b.addEventListener('click', () => {
     logAudit('program_mapping', `Exception ${b.dataset.excKeep} kept in queue (reviewer choice)`, b.dataset.excKeep);
@@ -1255,6 +1405,9 @@ let ovrN = 0;
 function remapCode(code, newSub){
   const oldSub = resolveSub(code);
   if (newSub === oldSub) return;
+  const dsnap = diffSnap();                                    // FLOW-07: before-state
+  const prevHad = state.overrides.has(code), prevVal = state.overrides.get(code);
+  const prevRules = state.sessionRules.slice();
   const oldProg = subById.get(oldSub).progId, newProg = subById.get(newSub).progId;
   const before = {o: totalOf(aggregate(), oldProg, state.fy), n: totalOf(aggregate(), newProg, state.fy)};
   const base = codeInfo.get(code).subId;
@@ -1274,6 +1427,12 @@ function remapCode(code, newSub){
   logAudit('mapping_rule', `Code ${code} remapped ${oldSub} → ${newSub}`, code + ';' + (newSub === base ? 'revert' : 'override'));
   toast(`Rule edited — rollups recomputed. <b>${esc(shortName(progById.get(oldProg).name))}</b> FY${state.fy}: ${fmtM(before.o)} → <b>${fmtM(after.o)}</b>${oldProg !== newProg ? ` · <b>${esc(shortName(progById.get(newProg).name))}</b>: ${fmtM(before.n)} → <b>${fmtM(after.n)}</b>` : ''}. Dashboard, variance and PRA follow.`);
   refresh();
+  openDiffDrawer(`Rule edit: <span class="mono">${esc(code)}</span> &rarr; ${esc(newSub)}`, dsnap, () => {
+    if (prevHad) state.overrides.set(code, prevVal); else state.overrides.delete(code);
+    state.sessionRules = prevRules;
+    invalidate();
+    logAudit('mapping_rule', `Rule edit on ${code} reverted via what-changed drawer`, code + ';revert');
+  });
 }
 
 function renderS4(){
@@ -1717,6 +1876,400 @@ function renderS10(){
   frame.srcdoc = praReportHtml(state.praProg);
 }
 
+/* =====================================================================
+   MAPPING VISUALIZATION FEATURES (enhancements/MAPPING_DEMO_IDEAS.md §4)
+   FLOW-01 follow-the-dollar · FLOW-02 flow map · FLOW-04 code search ·
+   FLOW-07 what-changed drawer. All deterministic re-use of the engine
+   above; the only AI-labeled element is the precomputed exception
+   suggestion that already exists. No answer-key data is present or used.
+   ===================================================================== */
+
+/* ---- shared: cleansing normalizer (mirrors rules.yaml normalize pipeline) ---- */
+function normalizeRaw(s){ return String(s || '').trim().toUpperCase().replace(/[\/\s]+/g, '-'); }
+
+/* ---- FLOW-04 — universal code search ---- */
+const CS_KEYS = (() => {
+  const ks = DATA.codes.map(c => ({key: c.code, code: c.code, alias: null}));
+  for (const [k, v] of Object.entries(DATA.config.alias_map)) ks.push({key: k, code: v, alias: k});
+  return ks.sort((a, b) => a.key < b.key ? -1 : 1);
+})();
+function csResolve(q){
+  const n = normalizeRaw(q);
+  if (!n) return null;
+  const target = DATA.config.alias_map[n] || n;
+  if (codeInfo.has(target)) return {code: target, alias: DATA.config.alias_map[n] ? n : null};
+  return null;
+}
+function csClose(){ $('#cs-pop').hidden = true; }
+function csRender(html){ const p = $('#cs-pop'); p.innerHTML = html; p.hidden = false; }
+function codeCard(code, aliasKey){
+  const ci = codeInfo.get(code);
+  const sub = resolveSub(code);
+  const amts = FYS.map(fy => TX.filter(t => t.code === code && t.fy === fy).reduce((s, t) => s + t.amt, 0));
+  const maxA = Math.max(...amts, 1);
+  const drs = [...new Set(TX.filter(t => t.code === code).map(t => t.dr))].sort((a, b) => a - b);
+  const fybars = '<div class="cs-fybars">' + FYS.map((fy, i) =>
+    `<div class="fb" title="FY${fy}: ${fmtFull(amts[i])}"><i style="height:${Math.max(2, amts[i] / maxA * 40).toFixed(0)}px"></i><span>&rsquo;${String(fy).slice(2)}</span></div>`).join('') + '</div>';
+  const aliasRule = aliasKey ? DATA.rules.find(r => r.type === 'cleansing' && r.expr.includes('alias ' + aliasKey)) : null;
+  const aliasNote = aliasKey
+    ? `<p class="note" style="margin:6px 0"><b class="mono">${esc(aliasKey)}</b> is a retired legacy alias — cleansing rule <b class="mono">${esc((aliasRule || {}).id || 'BR-002')}</b> remaps it to <b class="mono">${esc(code)}</b> (REQ-003).</p>` : '';
+  let chain;
+  if (!sub){
+    const e = excByCode.get(code);
+    chain = `<div class="ev"><b>Unmapped — exception queue (REQ-003).</b> No rule in force matches this code.
+      <div class="ai" style="margin-top:6px">${aiTag()}Suggested: ${esc(shortName(subById.get(e.subId).name))} &rarr; ${esc(shortName(progById.get(e.progId).name))} · confidence ${e.conf.toFixed(2)} &lt; 0.85 — mandatory human review (ASSUMP-16). Decide on screen 3.</div></div>`;
+  } else {
+    const progId = subById.get(sub).progId;
+    const ovr = state.overrides.has(code);
+    const excApproved = excByCode.has(code) && (state.excDecisions.get(code) || {}).action === 'approved';
+    const mrow = DATA.mappings.find(mm => mm[0] === code && mm[3] === PRA_FY);
+    const ruleId = ovr ? (state.sessionRules.find(r => r.code === code) || {}).id
+      : excApproved ? 'similarity' : (mrow ? mrow[4] : '—');
+    const conf = ovr ? 1 : excApproved ? excByCode.get(code).conf : (mrow ? mrow[5] : 0);
+    const stat = ovr ? '<span class="badge viol">session override</span>'
+      : excApproved ? '<span class="badge good">approved exception</span>'
+      : ((DATA.rules.find(r => r.id === ruleId) || {}).status === 'inferred'
+        ? '<span class="badge warn">inferred — confirm (SME-04)</span>' : '<span class="badge info">sme_confirmed</span>');
+    chain = `<div class="ev"><b class="mono">${esc(code)}</b> &rarr; ${esc(shortName(subById.get(sub).name))} <span class="mono small">${esc(sub)}</span> &rarr; <b>${esc(shortName(progById.get(progId).name))}</b><br>
+      <span class="small">rule <b class="mono">${esc(ruleId)}</b></span> ${stat} ${confChip(conf)}</div>`;
+  }
+  return `<h4 class="mono">${esc(code)}</h4>
+    <div class="cs-anat">${esc(ci.fund)} <span class="small">(fund)</span> · ${esc(ci.seg)} <span class="small">(segment)</span> · DR-${ci.event} <span class="small">(event — SRC-02)</span></div>
+    ${aliasNote}${chain}
+    <div class="small" style="margin-top:8px">Synthetic disbursements by fiscal year (SYNTHETIC-DEMO):</div>${fybars}
+    <div class="flexrow" style="margin:4px 0 8px">${drs.map(d => `<span class="badge gray">DR-${d}</span>`).join(' ')}</div>
+    <div class="flexrow">
+      <button class="btn sm primary" data-cs-trace="${esc(code)}">Trace a transaction</button>
+      <button class="btn sm" data-cs-flow="${esc(code)}">Show in flow map</button>
+    </div>`;
+}
+function csOnInput(){
+  const q = $('#code-search').value;
+  if (!q.trim()){ csClose(); return; }
+  const hit = csResolve(q);
+  if (hit){ csRender(codeCard(hit.code, hit.alias)); return; }
+  const n = normalizeRaw(q);
+  const matches = CS_KEYS.filter(k => k.key.startsWith(n)).slice(0, 8);
+  if (!matches.length){
+    csRender(`<p class="small" style="margin:4px 2px">No match for <span class="mono">${esc(q)}</span> — not in the synthetic demo dataset (${DATA.codes.length} codes + ${Object.keys(DATA.config.alias_map).length} legacy aliases embedded). Real FEMA codes are not represented here.</p>`);
+    return;
+  }
+  csRender(matches.map((k, i) =>
+    `<button class="cs-item${i === 0 ? ' active' : ''}" data-cs-pick="${esc(k.key)}">${esc(k.key)}${k.alias ? ' <span class="small">(legacy alias &rarr; ' + esc(k.code) + ')</span>' : ''}</button>`).join(''));
+}
+
+/* ---- FLOW-01 — follow-the-dollar lineage trace ---- */
+let linModel = null, linTimers = [];
+function clearLinTimers(){ linTimers.forEach(clearTimeout); linTimers = []; }
+function ruleCard(rule){
+  if (!rule) return '';
+  const stat = rule.status === 'inferred' ? '<span class="badge warn">inferred</span>'
+    : rule.status === 'session' ? '<span class="badge viol">session override</span>'
+    : '<span class="badge info">' + esc(rule.status) + '</span>';
+  return `<div class="ev"><b class="mono">${esc(rule.id)}</b> · <span class="mono small">${esc(rule.type)}</span> ${stat} ${rule.conf != null ? confChip(rule.conf) : ''}<br><span class="small mono">${esc(rule.expr)}</span></div>`;
+}
+function lineageModel(txnId){
+  const t = TX.find(x => x.id === txnId);
+  if (!t) return null;
+  const norm = normalizeRaw(t.raw);
+  const aliasTarget = DATA.config.alias_map[norm] || null;
+  const stations = [];
+  stations.push({no: 1, title: 'Raw code as landed (REQ-002)', html:
+    `<div class="sio">${t.raw === t.code ? esc(t.raw) : `<mark class="dirty">${esc(t.raw)}</mark>`}</div>
+     <span class="small">txn <b class="mono">${esc(t.id)}</b> · FY${t.fy} · ${esc(t.date)} · <b>${fmtFull(t.amt)}</b> — one record of the flat FY-end extract (ASSUMP-01). This opaque code is all the finance center sees today.</span>`});
+  const normRule = DATA.rules.find(r => r.type === 'cleansing' && r.expr.indexOf('normalize') === 0);
+  const aliasRule = aliasTarget ? DATA.rules.find(r => r.type === 'cleansing' && r.expr.includes('alias ' + norm)) : null;
+  let s2;
+  if (t.raw === t.code){
+    s2 = `<div class="sio">${esc(t.raw)}<span class="arrow">&rarr;</span>${esc(t.code)}</div>
+      <span class="small">Landed canonical — the normalize pipeline verified the format; no adjustment needed.</span>${ruleCard(normRule)}`;
+  } else if (aliasTarget){
+    s2 = `<div class="sio"><mark class="dirty">${esc(t.raw)}</mark><span class="arrow">&rarr;</span><mark class="fixed">${esc(t.code)}</mark></div>
+      <span class="small">Retired legacy alias (FY2022–23 vintage) remapped to its canonical successor — the "manual adjustment behind the scenes" (REQ-003), now an inspectable rule.</span>${ruleCard(aliasRule || normRule)}`;
+  } else {
+    s2 = `<div class="sio"><mark class="dirty">${esc(t.raw)}</mark><span class="arrow">&rarr;</span><mark class="fixed">${esc(t.code)}</mark></div>
+      <span class="small">Format dirt repaired deterministically: ${esc(DATA.config.normalize.join(' → '))} (REQ-002/003).</span>${ruleCard(normRule)}`;
+  }
+  stations.push({no: 2, title: 'Cleansing &amp; adjustment (REQ-003)', html: s2});
+  const sub = resolveSub(t.code);
+  if (!sub){
+    const e = excByCode.get(t.code);
+    stations.push({no: 3, cls: 'exc', title: 'No rule matches &rarr; exception queue (ASSUMP-16)', html:
+      `<div class="sio">${esc(t.code)}<span class="arrow">&rarr;</span><span class="badge warn">exception_queue</span></div>
+       <span class="small">First seen FY2026 — no mapping rule in force covers this code (REQ-003).</span>
+       <div class="ai">${aiTag()}Similarity match suggests ${esc(shortName(subById.get(e.subId).name))} &rarr; ${esc(shortName(progById.get(e.progId).name))} at confidence ${e.conf.toFixed(2)} — below the 0.85 routing threshold, so a human must decide (screen 3).</div>`});
+    stations.push({no: 4, cls: 'exc', title: 'Held out of every total', html:
+      `<div class="sio">${fmtFull(t.amt)}<span class="arrow">&rarr;</span>no rollup · no trigger · no PRA · no export</div>
+       <span class="small">Until a reviewer approves a mapping, this dollar is visibly excluded — nothing auto-classifies (ASSUMP-16, ASSUMP-17). Approve the suggestion in the exception queue on screen 3 and re-run this trace to watch it land.</span>`});
+    return {t, stations, mapped: false};
+  }
+  const progId = subById.get(sub).progId;
+  const ovr = state.overrides.has(t.code);
+  const excApproved = excByCode.has(t.code) && (state.excDecisions.get(t.code) || {}).action === 'approved';
+  let mapRule;
+  if (ovr){
+    const sr = state.sessionRules.find(r => r.code === t.code);
+    mapRule = {id: sr.id, type: 'code_to_subprogram', expr: sr.expr, conf: 1, status: 'session'};
+  } else if (excApproved){
+    const e = excByCode.get(t.code);
+    mapRule = {id: 'similarity', type: 'code_to_subprogram', expr: `${t.code} -> ${sub} (AI suggestion approved by reviewer in-session)`, conf: e.conf, status: 'approved exception'};
+  } else {
+    const mrow = DATA.mappings.find(mm => mm[0] === t.code && mm[3] === t.fy);
+    mapRule = mrow ? DATA.rules.find(r => r.id === mrow[4]) : null;
+  }
+  stations.push({no: 3, title: 'Code &rarr; sub-program (REQ-001)', html:
+    `<div class="sio">${esc(t.code)}<span class="arrow">&rarr;</span>${esc(shortName(subById.get(sub).name))} <span class="small mono">${esc(sub)}</span></div>
+     <span class="small">The undocumented Program ID logic, applied as an inspectable rule (REQ-001) — edit it on screen 3 and this trace changes with it.</span>${ruleCard(mapRule)}`});
+  const rollRule = DATA.rules.find(r => r.type === 'rollup' && r.expr.endsWith('-> ' + progId));
+  const sibs = (subsOfProg.get(progId) || []).length;
+  stations.push({no: 4, title: 'Roll up to parent program (REQ-004)', html:
+    `<div class="sio">${esc(sub)}<span class="arrow">&rarr;</span><b>${esc(shortName(progById.get(progId).name))}</b> <span class="small mono">${esc(progId)}</span></div>
+     <span class="small">One of ${sibs} sub-programs feeding this reporting program — the transcript's "A, B and C all equal up to program one".</span>${ruleCard(rollRule)}`});
+  const evRule = DATA.rules.find(r => r.type === 'event_split');
+  const ev = eventByDr.get(t.dr);
+  const tot = totalOf(aggregate(), progId, t.fy);
+  const share = tot > 0 ? (t.amt / tot * 100) : 0;
+  stations.push({no: 5, title: 'Event split &amp; destination (REQ-005 / REQ-006)', html:
+    `<div class="sio">event segment<span class="arrow">&rarr;</span><span class="badge gray" style="color:${DR_COLOR[t.dr] || 'inherit'}">DR-${t.dr}</span> ${esc(ev.type)} (${esc(ev.state)}) — real declaration number, synthetic dollars (SRC-02)</div>
+     ${ruleCard(evRule)}
+     <div class="ev" style="margin-top:8px"><b>Where this dollar reports:</b> ${esc(shortName(progById.get(progId).name))} FY${t.fy} total <b>${fmtFull(tot)}</b> — this transaction is ${share < 0.05 ? '&lt;0.1' : share.toFixed(1)}% of it.${t.fy === PRA_FY
+       ? ' It feeds PRA <b>Q1</b> (total disbursements), <b>Q2</b> (YoY) and <b>Q4</b> (codes / sub-programs) for this program — screens 7–8.'
+       : ` FY${t.fy} totals form the baseline the FY${t.fy + 1} trigger compares against (REQ-010).`}</div>`});
+  return {t, stations, mapped: true, progId};
+}
+function linDone(){ if (linModel && linModel.mapped) $('#lin-flow').hidden = false; }
+function openLineage(txnId){
+  const model = lineageModel(txnId);
+  if (!model) return;
+  linModel = model;
+  $('#lin-title').textContent = `Follow the dollar — ${model.t.id} (${fmtFull(model.t.amt)})`;
+  $('#lin-stations').innerHTML = model.stations.map(s =>
+    `<div class="station${s.cls ? ' ' + s.cls : ''}"><div class="sno">${s.no}</div><div class="sbody"><div class="st">${s.title}</div>${s.html}</div></div>`).join('');
+  $('#lin-flow').hidden = true;
+  $('#lineage').hidden = false;
+  clearLinTimers();
+  const st = $$('#lin-stations .station');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches){
+    st.forEach(s => s.classList.add('lit')); linDone();
+  } else {
+    st.forEach((s, i) => linTimers.push(setTimeout(() => {
+      s.classList.add('lit');
+      if (i === st.length - 1) linDone();
+    }, 240 + i * 620)));
+  }
+  $('#lin-close').focus();
+}
+function linShowAll(){
+  clearLinTimers();
+  $$('#lin-stations .station').forEach(s => s.classList.add('lit'));
+  linDone();
+}
+function closeLineage(){ clearLinTimers(); $('#lineage').hidden = true; }
+function seedPicks(){
+  const picks = [];
+  const alias = TX.find(t => DATA.config.alias_map[normalizeRaw(t.raw)]);
+  if (alias) picks.push({id: alias.id, label: 'Legacy alias', title: `Raw code ${alias.raw} — retired alias remapped by cleansing rules (REQ-003)`});
+  const dirty = TX.find(t => t.raw !== t.code && !DATA.config.alias_map[normalizeRaw(t.raw)]);
+  if (dirty) picks.push({id: dirty.id, label: 'Format-dirty', title: `Raw code ${dirty.raw} — normalized deterministically (REQ-002)`});
+  const clean = TX.find(t => t.fy === PRA_FY && t.raw === t.code && (codeInfo.get(t.code) || {}).subId === 'SUB-PA-A');
+  if (clean) picks.push({id: clean.id, label: 'Clean row (Public Assistance)', title: 'Canonical code, straight-through mapping into PROG-PA'});
+  const exc = TX.find(t => excByCode.has(t.code));
+  if (exc) picks.push({id: exc.id, label: 'Exception (never-seen code)', title: `Code ${exc.code} — no rule matches; routed to human review (ASSUMP-16)`});
+  return picks;
+}
+
+/* ---- FLOW-02 — dollar-weighted flow map (hand-rolled, fixed 4 columns) ---- */
+const flowState = {prog: 'PROG-PA', highlight: null};
+function flowModel(progId, fy){
+  const cs = new Map(), subT = new Map(), codeT = new Map(), drT = new Map(), ex = new Map();
+  let progT = 0, exT = 0;
+  for (const t of TX){
+    if (t.fy !== fy) continue;
+    const sub = resolveSub(t.code);
+    if (!sub){
+      const e = excByCode.get(t.code);
+      if (e && e.progId === progId){ ex.set(t.code, (ex.get(t.code) || 0) + t.amt); exT += t.amt; }
+      continue;
+    }
+    if (subById.get(sub).progId !== progId) continue;
+    progT += t.amt;
+    codeT.set(t.code, (codeT.get(t.code) || 0) + t.amt);
+    subT.set(sub, (subT.get(sub) || 0) + t.amt);
+    drT.set(t.dr, (drT.get(t.dr) || 0) + t.amt);
+    const k = t.code + '|' + sub;
+    cs.set(k, (cs.get(k) || 0) + t.amt);
+  }
+  return {cs, subT, codeT, drT, ex, progT, exT};
+}
+function renderFlowMap(){
+  const sel = $('#s3-flow-prog');
+  if (!sel.dataset.init){
+    progOptions(sel, flowState.prog); sel.dataset.init = 1;
+    sel.addEventListener('change', () => { flowState.prog = sel.value; flowState.highlight = null; renderFlowMap(); });
+    $('#s3-flow-clear').addEventListener('click', () => { flowState.highlight = null; renderFlowMap(); });
+  }
+  sel.value = flowState.prog;
+  $('#s3-flow-clear').hidden = !flowState.highlight;
+  const progId = flowState.prog, fy = state.fy;
+  const m = flowModel(progId, fy);
+  const el = $('#s3-flow'); el.innerHTML = '';
+  $('#s3-flow-note').innerHTML = `Dollar-weighted flow, FY${fy} <b>synthetic disbursements</b> (SYNTHETIC-DEMO), calibrated to public OpenFEMA <b>obligation</b> envelopes — obligations &ne; disbursements (ASSUMP-05/10). Grey ribbons are exception-queue dollars held out of the program until a human decides (ASSUMP-16).`;
+  if (!m.progT && !m.exT){ el.innerHTML = `<p class="small">No FY${fy} spend maps to this program at the mapping in force.</p>`; return; }
+  const W = 960, nodeW = 12, gap = 4, top = 26;
+  const colX = [180, 430, 640, 830];
+  const scale = 430 / (m.progT + m.exT);
+  const nh = amt => Math.max(5, amt * scale);
+  const nodes = new Map();
+  function addNode(key, col, label, amt, color, opts){
+    nodes.set(key, Object.assign({key, col, label, amt, color, h: nh(amt), inOff: 0, outOff: 0}, opts || {}));
+  }
+  const codesSorted = [...m.codeT.entries()].sort((a, b) => b[1] - a[1]);
+  codesSorted.forEach(([c, amt]) => addNode('C|' + c, 0, c, amt, '#2a78d6', {mono: true, code: c}));
+  const exSorted = [...m.ex.entries()].sort((a, b) => b[1] - a[1]);
+  exSorted.forEach(([c, amt]) => addNode('C|' + c, 0, c, amt, '#9a988f', {mono: true, code: c, grey: true}));
+  const subsSorted = [...m.subT.entries()].sort((a, b) => b[1] - a[1]);
+  subsSorted.forEach(([s, amt]) => addNode('S|' + s, 1, shortName(subById.get(s).name), amt, '#1c5cab'));
+  if (m.exT) addNode('S|EXQ', 1, 'Exception queue — held out (ASSUMP-16)', m.exT, '#9a988f', {grey: true});
+  addNode('P|' + progId, 2, shortName(progById.get(progId).name), m.progT, '#152238');
+  const drsShown = DR_ORDER.filter(dr => m.drT.has(dr));
+  drsShown.forEach(dr => addNode('D|' + dr, 3, `DR-${dr} · ${eventByDr.get(dr).type.replace('Hurricane ', '')} (${eventByDr.get(dr).state})`, m.drT.get(dr), DR_COLOR[dr], {}));
+  const colBottom = [top, top, top, top];
+  for (const n of nodes.values()){ n.y = colBottom[n.col]; colBottom[n.col] += n.h + gap; }
+  const maxBottom = Math.max(...colBottom);
+  const shifts = colBottom.map(b => (maxBottom - b) / 2);
+  for (const n of nodes.values()) n.y += shifts[n.col];
+  const H = maxBottom + 34;
+  const links = [];
+  codesSorted.forEach(([c]) => subsSorted.forEach(([s]) => {
+    const amt = m.cs.get(c + '|' + s);
+    if (amt) links.push({from: 'C|' + c, to: 'S|' + s, amt, color: '#2a78d6', key: 'cs|' + c + '|' + s,
+      tip: `${fmtFull(amt)} · ${c} → ${shortName(subById.get(s).name)}`});
+  }));
+  exSorted.forEach(([c, amt]) => links.push({from: 'C|' + c, to: 'S|EXQ', amt, color: '#9a988f', key: 'ex|' + c,
+    tip: `${fmtFull(amt)} · ${c} → exception queue (held out, ASSUMP-16)`}));
+  subsSorted.forEach(([s, amt]) => links.push({from: 'S|' + s, to: 'P|' + progId, amt, color: '#1c5cab', key: 'sp|' + s,
+    tip: `${fmtFull(amt)} · ${shortName(subById.get(s).name)} → ${shortName(progById.get(progId).name)} (rollup, REQ-004)`}));
+  drsShown.forEach(dr => links.push({from: 'P|' + progId, to: 'D|' + dr, amt: m.drT.get(dr), color: DR_COLOR[dr], key: 'pd|' + dr,
+    tip: `${fmtFull(m.drT.get(dr))} · ${shortName(progById.get(progId).name)} → DR-${dr} ${eventByDr.get(dr).type} (event split, REQ-005)`}));
+  let litKeys = null;
+  if (flowState.highlight){
+    const hl = flowState.highlight;
+    litKeys = new Set();
+    const sub = resolveSub(hl.code);
+    if (!sub){ litKeys.add('ex|' + hl.code); }
+    else {
+      litKeys.add('cs|' + hl.code + '|' + sub);
+      litKeys.add('sp|' + sub);
+      const drs = hl.dr != null ? [hl.dr] : [...new Set(TX.filter(t => t.fy === fy && t.code === hl.code).map(t => t.dr))];
+      drs.forEach(dr => litKeys.add('pd|' + dr));
+    }
+  }
+  const svg = svgNode('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': 'Dollar-weighted flow from financial codes through sub-programs and program to disaster events'});
+  [['Financial codes', 0], ['Sub-programs', 1], ['Reporting program', 2], ['Disaster events', 3]].forEach(([txt, c]) => {
+    const t = svgNode('text', {x: colX[c] + nodeW / 2, y: 14, 'text-anchor': c === 0 ? 'end' : 'start', class: 'flowcol'}, svg);
+    t.textContent = txt;
+    t.setAttribute('x', c === 0 ? colX[0] + nodeW : colX[c]);
+  });
+  for (const l of links){
+    const a = nodes.get(l.from), b = nodes.get(l.to);
+    const th = Math.max(1, l.amt * scale);
+    const x1 = colX[a.col] + nodeW, x2 = colX[b.col];
+    const y1 = a.y + a.outOff, y2 = b.y + b.inOff;
+    a.outOff += th; b.inOff += th;
+    const xm = (x1 + x2) / 2;
+    const p = svgNode('path', {
+      d: `M${x1},${y1.toFixed(1)} C${xm},${y1.toFixed(1)} ${xm},${y2.toFixed(1)} ${x2},${y2.toFixed(1)} L${x2},${(y2 + th).toFixed(1)} C${xm},${(y2 + th).toFixed(1)} ${xm},${(y1 + th).toFixed(1)} ${x1},${(y1 + th).toFixed(1)} Z`,
+      fill: l.color, class: 'flowlink' + (litKeys ? (litKeys.has(l.key) ? ' lit' : ' dim') : '')}, svg);
+    attachTip(p, () => `<div class="tt-m">${esc(l.tip)}</div>`);
+  }
+  const lastLabY = [0, 0, 0, 0];
+  for (const n of nodes.values()){
+    const r = svgNode('rect', {x: colX[n.col], y: n.y.toFixed(1), width: nodeW, height: n.h.toFixed(1), rx: 2,
+      fill: n.color, class: 'flownode' + (n.code ? ' flowcode' : ''), tabindex: n.code ? 0 : -1}, svg);
+    attachTip(r, () => `<div class="tt-h">${esc(n.label)}</div><div class="tt-m">FY${fy}: ${fmtFull(n.amt)}${n.code ? '<br>Click to trace a transaction end-to-end' : ''}</div>`);
+    if (n.code){
+      const open = () => {
+        const t = TX.find(x => x.fy === fy && x.code === n.code) || TX.find(x => x.code === n.code);
+        if (t) openLineage(t.id);
+      };
+      r.addEventListener('click', open);
+      r.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
+    }
+    let ly = n.y + n.h / 2 + 4;
+    if (ly < lastLabY[n.col] + 11) ly = lastLabY[n.col] + 11;
+    lastLabY[n.col] = ly;
+    const lab = svgNode('text', {x: n.col === 0 ? colX[0] - 6 : colX[n.col] + nodeW + 6, y: ly.toFixed(1),
+      'text-anchor': n.col === 0 ? 'end' : 'start', class: 'flowlab' + (n.mono ? ' mono' : '')}, svg);
+    lab.textContent = n.label.length > 34 ? n.label.slice(0, 33) + '…' : n.label;
+  }
+  el.appendChild(svg);
+}
+
+/* ---- FLOW-07 — what-changed ripple diff ---- */
+let ddUndo = null;
+function diffSnap(){
+  const agg = aggregate();
+  const res = {};
+  DATA.codes.forEach(c => { res[c.code] = resolveSub(c.code); });
+  const flags = {};
+  PROGS.forEach(p => { flags[p.id] = progRow(p.id, state.fy, state.cfg, agg).flag; });
+  const pra = {};
+  PROGS.forEach(p => { pra[p.id] = praAnswers(p.id).filter(a => !a.human).map(a => [a.qid, a.value]); });
+  return {res, progFy: Object.assign({}, agg.progFy), flags, pra};
+}
+function computeDiff(b, a){
+  const movedCodes = DATA.codes.filter(c => (b.res[c.code] || null) !== (a.res[c.code] || null)).map(c => c.code);
+  const moved = new Set(movedCodes);
+  let txnsMoved = 0;
+  TX.forEach(t => { if (moved.has(t.code)) txnsMoved++; });
+  const deltas = [];
+  for (const p of PROGS){
+    const perFy = FYS.map(fy => ({fy, d: (a.progFy[p.id + '|' + fy] || 0) - (b.progFy[p.id + '|' + fy] || 0)}))
+      .filter(x => Math.abs(x.d) > 0.005);
+    if (perFy.length){
+      const cur = perFy.find(x => x.fy === state.fy);
+      deltas.push({progId: p.id, cur: cur ? cur.d : 0, perFy});
+    }
+  }
+  const flips = PROGS.filter(p => b.flags[p.id] !== a.flags[p.id]).map(p => ({progId: p.id, to: a.flags[p.id]}));
+  const praChanges = [];
+  for (const p of PROGS){
+    const bm = new Map(b.pra[p.id]);
+    for (const [qid, v] of a.pra[p.id]) if (bm.get(qid) !== v) praChanges.push({progId: p.id, qid, from: bm.get(qid), to: v});
+  }
+  return {txnsMoved, movedCodes, deltas, flips, praChanges};
+}
+function openDiffDrawer(title, before, undoFn){
+  const d = computeDiff(before, diffSnap());
+  ddUndo = undoFn;
+  const fmtD = v => `<span class="${v >= 0 ? 'delta-pos' : 'delta-neg'}">${(v >= 0 ? '+' : '−') + fmtM(Math.abs(v))}</span>`;
+  $('#dd-what').innerHTML = title;
+  const lines = [];
+  lines.push(`<div class="dd-line"><b>${d.txnsMoved.toLocaleString()}</b> transaction(s) re-mapped${d.movedCodes.length ? ` — <span class="mono">${d.movedCodes.map(esc).join(', ')}</span>` : ''}</div>`);
+  lines.push(d.deltas.length
+    ? d.deltas.map(x => `<div class="dd-line"><b>${esc(shortName(progById.get(x.progId).name))}</b> FY${state.fy}: ${fmtD(x.cur)}
+        <details><summary>all affected fiscal years</summary><table>${x.perFy.map(f => `<tr><td>FY${f.fy}</td><td class="num">${fmtD(f.d)}</td></tr>`).join('')}</table></details></div>`).join('')
+    : '<div class="dd-line">No program totals changed in any fiscal year.</div>');
+  lines.push(d.flips.length
+    ? d.flips.map(f => `<div class="dd-line"><b>Trigger flip:</b> ${esc(shortName(progById.get(f.progId).name))} — now ${f.to ? '<span class="badge crit">Comprehensive required</span>' : '<span class="badge good">Preliminary only</span>'} (FY${state.fy}, configuration in force)</div>`).join('')
+    : `<div class="dd-line">0 trigger flips at the configuration in force (FY${state.fy}).</div>`);
+  lines.push(d.praChanges.length
+    ? `<div class="dd-line"><b>${d.praChanges.length}</b> PRA answer(s) changed (FY${PRA_FY} assessment cycle)
+        <details><summary>show changes</summary><table>${d.praChanges.map(c => `<tr><td class="mono small">${esc(c.progId)} ${esc(c.qid)}</td><td class="small">${esc(String(c.from))} → <b>${esc(String(c.to))}</b></td></tr>`).join('')}</table></details></div>`
+    : '<div class="dd-line">0 PRA answers changed.</div>');
+  $('#dd-body').innerHTML = lines.join('');
+  $('#diff-drawer').classList.add('open');
+}
+function closeDiffDrawer(kept){
+  const dr = $('#diff-drawer');
+  if (!dr.classList.contains('open')) return;
+  dr.classList.remove('open');
+  if (kept) logAudit('mapping_rule', 'Change kept after what-changed review (ripple drawer)', 'diff;keep');
+  ddUndo = null;
+  refresh();
+}
+
 /* ============================ navigation & refresh ============================ */
 const TITLES = {1: 'Executive dashboard', 2: 'Data ingestion', 3: 'Program mapping workspace',
   4: 'Disaster / event grouping', 5: 'Spend aggregation', 6: 'YoY variance & trigger',
@@ -1766,6 +2319,77 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     refresh();
   });
   $('#s9-parity-run').addEventListener('click', runParity);
+  /* screen-3 tabs (FLOW-02) */
+  $('#s3-tab-btn-work').addEventListener('click', () => { state.s3Tab = 'work'; if (state.screen === 3) renderS3(); });
+  $('#s3-tab-btn-flow').addEventListener('click', () => { state.s3Tab = 'flow'; if (state.screen === 3) renderS3(); });
+  /* code search (FLOW-04) */
+  const csInput = $('#code-search');
+  csInput.addEventListener('input', csOnInput);
+  csInput.addEventListener('focus', () => { if (csInput.value.trim()) csOnInput(); });
+  csInput.addEventListener('keydown', ev => {
+    const items = $$('#cs-pop .cs-item');
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp'){
+      if (!items.length) return;
+      ev.preventDefault();
+      const cur = items.findIndex(i => i.classList.contains('active'));
+      const nxt = ev.key === 'ArrowDown' ? Math.min(items.length - 1, cur + 1) : Math.max(0, cur - 1);
+      items.forEach((i, n) => i.classList.toggle('active', n === nxt));
+    } else if (ev.key === 'Enter'){
+      const act = items.find(i => i.classList.contains('active')) || items[0];
+      if (act){ ev.preventDefault(); act.click(); }
+    } else if (ev.key === 'Escape'){ csClose(); csInput.blur(); }
+  });
+  $('#cs-pop').addEventListener('click', ev => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    if (b.dataset.csPick != null){
+      const k = CS_KEYS.find(x => x.key === b.dataset.csPick);
+      if (k) csRender(codeCard(k.code, k.alias));
+    } else if (b.dataset.csTrace){
+      const code = b.dataset.csTrace;
+      const t = TX.find(x => x.fy === PRA_FY && x.code === code) || TX.find(x => x.code === code);
+      csClose();
+      if (t) openLineage(t.id);
+    } else if (b.dataset.csFlow){
+      const code = b.dataset.csFlow;
+      const sub = resolveSub(code);
+      flowState.prog = sub ? subById.get(sub).progId : ((excByCode.get(code) || {}).progId || 'PROG-PA');
+      flowState.highlight = {code, dr: null};
+      csClose();
+      state.s3Tab = 'flow';
+      setScreen(3);
+    }
+  });
+  document.addEventListener('click', ev => {
+    if (!$('#cs-pop').hidden && !ev.target.closest('.csearch')) csClose();
+  });
+  /* lineage overlay (FLOW-01) */
+  $('#lin-close').addEventListener('click', closeLineage);
+  $('#lin-all').addEventListener('click', linShowAll);
+  $('#lin-flow').addEventListener('click', () => {
+    flowState.prog = linModel.progId;
+    flowState.highlight = {code: linModel.t.code, dr: linModel.t.dr};
+    closeLineage();
+    state.s3Tab = 'flow';
+    setScreen(3);
+  });
+  $('#lineage').addEventListener('click', ev => { if (ev.target === $('#lineage')) closeLineage(); });
+  /* what-changed drawer (FLOW-07) */
+  $('#dd-keep').addEventListener('click', () => closeDiffDrawer(true));
+  $('#dd-close').addEventListener('click', () => closeDiffDrawer(false));
+  $('#dd-revert').addEventListener('click', () => {
+    if (ddUndo) ddUndo();
+    ddUndo = null;
+    $('#diff-drawer').classList.remove('open');
+    toast('Change reverted exactly — every total restored to its prior value.');
+    refresh();
+  });
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Escape') return;
+    if (!$('#lineage').hidden){ closeLineage(); return; }
+    if ($('#diff-drawer').classList.contains('open')){ closeDiffDrawer(false); return; }
+    if (!$('#cs-pop').hidden) csClose();
+  });
   refreshChip();
   setScreen(1);
 })();

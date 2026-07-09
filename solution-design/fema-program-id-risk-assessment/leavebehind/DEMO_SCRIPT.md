@@ -4,7 +4,7 @@
 **Setup:** double-click `fema-demo.html`. Wifi can be off — say so, it's part of the story. Reload = clean reset.
 **Say twice, minimum:** *"Everything on screen is synthetic, watermarked data — calibrated to public FEMA obligation data, never real spend."* (The amber banner says it persistently.)
 
-The two **wow moments** are marked ★. Don't rush them.
+The three **wow moments** are marked ★. Don't rush them. (★ wow #1 — the follow-the-dollar trace landing in the flow map — is the mapping-story centerpiece.)
 
 ---
 
@@ -19,13 +19,17 @@ The two **wow moments** are marked ★. Don't rush them.
 - Point at the pipeline strip: 2,019 rows landed → 114 repaired → 40 legacy aliases remapped.
 - **Say:** "File in. The extract layout is a config contract, not code — when we see your real extract (SME-03), we swap this panel, not the system. That's also how it survives the financial-system migration (REQ-019)."
 - Point at a red *dirty* raw code next to its green cleansed code: "Today's 'behind-the-scenes adjustments' become visible, deterministic rules."
+- Every sample row has a **Trace →** button — you'll use its big brother on the next screen.
 
-## 1:30 — Screen 3 · Program mapping workspace (~90s) ★ wow #1 (part A)
+## 1:30 — Screen 3 · Program mapping workspace (~2min) ★ wow #1 — "Follow the dollar"
 
 - **Say:** "We don't have your Program ID rules — the SOP is still being chased (SME-02). So we *inferred* the rules from four years of history, gave each a confidence score, and made them editable (REQ-013, REQ-015)."
-- Show the exception queue: "Six new FY2026 codes no rule can classify. The AI *suggests* a home with 44–61% confidence — below the 0.85 bar, so nothing auto-classifies (ASSUMP-16). A human decides."
-- Click **Approve suggestion** on `XR-88001-4339`: read the toast — its spend just joined the rollups.
-- ★ In the mapping table, change one code's sub-program dropdown (e.g., move a `PA-97036-…` code to another sub-program). Read the toast: both programs' totals change, and note the new `OVR-001` rule in the registry. **Say:** "One rule edit — every rollup, the dashboard, the trigger flags and the PRA answers downstream just recomputed. Rules-as-data, not tribal knowledge."
+- ★ **Follow the dollar.** In the *Follow the dollar* card, click the **Legacy alias** chip. Let the five stations light up one by one: raw `LEG-0001` as landed → cleansing rule `BR-003` recovers the canonical code (REQ-003) → mapping rule `BR-007` assigns the sub-program (REQ-001) → rollup rule to Public Assistance (REQ-004) → the DR event tag and the exact program total and PRA lines this dollar feeds (REQ-005/006). **Say:** "This walk happens invisibly inside FEMA today — you only get the outputs of it. Here it's a click, and every hop cites the rule that did it."
+- Click **Open in flow map**: the whole program renders as a dollar-weighted river — codes → sub-programs → program → disaster events — with this dollar's path lit and everything else dimmed. Hover a ribbon for exact figures. **Say:** "Sub-programs A, B and C all feed program one — your words, as a picture, on real DR numbers."
+- (Optional, fast) Type `leg-0001` — or any dirty spelling like `pa/97036/4332` — into the **code search** in the top bar: same answer, instantly, with the rule and confidence attached. "Today this question means finding the person who knows."
+- Back on the **Workspace** tab, show the exception queue: "Six new FY2026 codes no rule can classify. The AI *suggests* a home with 44–61% confidence — below the 0.85 bar, so nothing auto-classifies (ASSUMP-16). A human decides."
+- Click **Approve suggestion** on `XR-88001-4339`: the **What changed** drawer itemizes the blast radius — 4 transactions, +$1.8M to one program, the PRA answers that moved. Keep it.
+- ★ wow #2 — In the mapping table, change one code's sub-program dropdown (e.g., move a `PA-97036-…` code to another sub-program). The drawer itemizes again: transactions moved, both programs' deltas per fiscal year, any **trigger flip**, every PRA answer that changed — with an exact **Revert**. **Say:** "One rule edit — every rollup, the dashboard, the trigger flags and the PRA answers downstream just recomputed, and the blast radius is enumerated before you keep it. Rules-as-data, not tribal knowledge."
 
 ## 3:00 — Screen 4 · Event grouping (~30s)
 
@@ -37,7 +41,7 @@ The two **wow moments** are marked ★. Don't rush them.
 - Flip *Group by* to sub-program, then program × event.
 - **Say:** "Public data shows *funding* — obligations. Your problem is *actual spend*. This ledger is synthetic disbursements calibrated to those public obligation envelopes, and the distinction stays on-screen (ASSUMP-05)."
 
-## 4:00 — Screen 6 · YoY variance & trigger (~75s) ★ wow #2
+## 4:00 — Screen 6 · YoY variance & trigger (~75s) ★ wow #3
 
 - **Say:** "Here's the centerpiece. Your transcript said *'I think it's like 20%'* — so the threshold, the direction and the measure are configuration, on screen, not a magic number (REQ-010; exact rule is our top question, SME-01)."
 - ★ Drag the threshold slider 20 → 35: watch bars leave the corridor's flag set and the KPI count drop. Drag to 10: near-misses like +19% flip red. Set direction to *increase only*: the −31% program un-flags.
