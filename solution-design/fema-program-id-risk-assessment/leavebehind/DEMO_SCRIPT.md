@@ -2,7 +2,7 @@
 
 **Package:** FEMA Program ID & PRA Automation (demo) · aligned to the talk track (file 14) and storyboard (file 11).
 **Setup:** double-click `fema-demo.html`. Wifi can be off — say so, it's part of the story. Reload = clean reset.
-**Say twice, minimum:** *"Everything on screen is synthetic, watermarked data — calibrated to public FEMA obligation data, never real spend."* (The amber banner says it persistently.)
+**Say twice, minimum:** *"Everything on screen is synthetic, watermarked data — calibrated to public FEMA obligation data, never real spend."* (There is no on-screen banner anymore — the disclosure was moved off-screen in the 2026-07-09 UX scrub, so saying it is entirely on the presenter. Every export the file generates still carries the SYNTHETIC-DEMO watermark.)
 
 The **wow moments** are marked ★. Don't rush them. (★ wow #1 — the follow-the-dollar trace landing in the flow map — is the mapping-story centerpiece. ★ **THE wow moment** for this stakeholder is the **crawler holdout reveal** on screen 3's *Inference test* tab: the tool rediscovers the grouping logic from history alone and is scored against a year it never saw.)
 
@@ -36,11 +36,12 @@ The **wow moments** are marked ★. Don't rush them. (★ wow #1 — the follow-
 
 - **Say:** "Harvey, Irma and Maria hit close together and had to be tracked separately (REQ-005). These DR numbers are real public declarations (SRC-02) — the dollars against them are synthetic."
 - If you did the remap above, the anomaly note may show an **event-mismatch flag** — point out that AI flags add a review reason, never change a number.
+- **If asked why 2017 storms show spend in every year FY2022–26 — or why it keeps growing:** the multi-year part is real — disaster money is no-year money, and spending against one declaration runs a decade or more (Maria's Puerto Rico recovery was still one of FEMA's largest active streams in the 2020s). That's exactly why the event-split requirement exists. The *rising* year-over-year shape, though, is planted so the variance trigger has something to fire on — a real per-disaster curve typically ramps, peaks, then tails off. Realistic curve shape is an open validation question (SME-11, SME-26).
 
 ## 3:30 — Screen 5 · Spend aggregation (~30s)
 
 - Flip *Group by* to sub-program, then program × event.
-- **Say:** "Public data shows *funding* — obligations. Your problem is *actual spend*. This ledger is synthetic disbursements calibrated to those public obligation envelopes, and the distinction stays on-screen (ASSUMP-05)."
+- **Say:** "Public data shows *funding* — obligations. Your problem is *actual spend*. This ledger is synthetic disbursements calibrated to those public obligation envelopes — funding is never presented as spend (ASSUMP-05; the caption was moved off-screen in the UX scrub, so make the distinction verbally)."
 
 ## 4:00 — Screen 6 · YoY variance & trigger (~75s) ★ wow #3
 
@@ -73,6 +74,7 @@ The **wow moments** are marked ★. Don't rush them. (★ wow #1 — the follow-
 ## Q&A quick answers (from file 14 §9)
 
 - **"Is this real FEMA data?"** — No: synthetic, watermarked, calibrated to public obligations. No real spend, no PII.
+- **"Harvey/Irma/Maria were 2017 — why is there FY2022–26 spend, and why is it rising?"** — Multi-year spend against a single declaration is genuine FEMA behavior (no-year disaster money; decade-long recovery projects). The rising year-over-year direction is synthetic, planted to exercise the 20% trigger; the realistic per-disaster curve shape is what SME validation will supply (SME-26).
 - **"Where did 20% come from?"** — Your transcript, hedged — that's exactly why it's a slider (SME-01).
 - **"Are those our real questions?"** — No, illustrative placeholder on OMB payment-integrity factors (SME-05).
 - **"Is it production-ready?"** — No. Concept demo; production (security, FedRAMP, integration) is a separate assessment (Wave 8).
