@@ -32,6 +32,19 @@
 | `16-decision-log.md` | ✅ | 2026-07-08 | DEC-01..18; seeded with made decisions | Passed Pass D |
 | `17-appendix.md` | ✅ | 2026-07-08 | Glossary, acronyms, example rules/data, refs | Passed Pass D |
 
+## 1a. Data artifacts (Wave 1 dataset pass)
+
+| Artifact | Status | Last updated | Notes |
+|---|---|---|---|
+| `data/generator/generate_synthetic.py` | ✅ | 2026-07-08 | Seeded generator (seed 20260708); builds twice + byte-compare; 10 self-checks gate writing |
+| `data/generator/rules.yaml` | ✅ | 2026-07-08 | Taxonomy + mapping/cleansing rules + configurable 20% trigger (rules-as-data, files 09/10) |
+| `data/generator/anchors.json` | ✅ | 2026-07-08 | Cached live SRC-03/04 obligation envelopes (calibration; offline re-runs) |
+| `data/synthetic/*.csv` (14 tables) | ✅ | 2026-07-08 | FY2022–FY2026; 2,019 txns, 18 programs, 51 subs, 105 codes; all rows watermarked `SYNTHETIC-DEMO` |
+| `data/synthetic/answer_key.csv` / `.md` | ✅ | 2026-07-08 | Planted ground truth — **VALIDATION ONLY**, excluded from inference path |
+| `data/synthetic/MANIFEST.sha256` | ✅ | 2026-07-08 | Reproducibility manifest (byte-identical re-runs) |
+| `data/DATA_DICTIONARY.md` | ✅ | 2026-07-08 | All tables/fields, calibration basis, seed, planted-scenario map; flags fields added beyond file 08 |
+| `data/README.md` | ✅ | 2026-07-08 | Regeneration + DuckDB load commands; watermark/calibration disclaimers |
+
 ---
 
 ## 2. Pass D quality-gate results
@@ -72,6 +85,6 @@
 ## 4. Remaining open items (forward-looking)
 
 - **Blocking SME confirmations:** `SME-01` (trigger), `SME-03` (extract), `SME-05` (PRA text), `SME-11` (spend definition).
-- **Wave 1 remainder:** generate the calibrated synthetic dataset (file 08 §7).
+- **Wave 1:** ✅ COMPLETE — calibrated synthetic dataset generated and committed (`data/`; see §1a). Fields added beyond file 08 (`transaction.raw_code`, `fiscal_year_spend_summary`, watermark on all tables, `cleansing` rule type) are flagged in `data/DATA_DICTIONARY.md` §5 for adoption into file 08 at its next revision.
 - **Highest-priority next build wave:** Wave 2 — data model + ingestion (file 12).
 - **Production path:** Wave 8 security/FedRAMP assessment (`SME-09/16/17/18`).

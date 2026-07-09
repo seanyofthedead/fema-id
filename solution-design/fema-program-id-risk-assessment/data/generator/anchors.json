@@ -1,0 +1,54 @@
+{
+  "description": "Calibration anchors: real public OBLIGATION totals (not disbursements) pulled live from OpenFEMA. Used only to scale synthetic disbursement magnitudes (ASSUMP-05, ASSUMP-10). Cached so the generator re-runs with no network dependency.",
+  "calibration_basis": "Per-disaster sum of federalShareObligated from SRC-03 (PublicAssistanceFundedProjectsDetails v2, assistance listing 97.036) and SRC-04 (HazardMitigationAssistanceProjects v4, listing 97.039), for the verified SRC-02 disaster set.",
+  "access_date": "2026-07-08",
+  "endpoints": {
+    "SRC-03": "https://www.fema.gov/api/open/v2/PublicAssistanceFundedProjectsDetails",
+    "SRC-04": "https://www.fema.gov/api/open/v4/HazardMitigationAssistanceProjects"
+  },
+  "measure": "federalShareObligated (obligations; public). The synthetic ledger models disbursements (non-public) drawing down against these envelopes.",
+  "disasters": {
+    "4332": {
+      "pa_federal_share_obligated": 3068033750.0,
+      "pa_project_count": 6153,
+      "hma_federal_share_obligated": 528441179.0,
+      "hma_project_count": 148
+    },
+    "4337": {
+      "pa_federal_share_obligated": 2401247053.0,
+      "pa_project_count": 7699,
+      "hma_federal_share_obligated": 421457082.0,
+      "hma_project_count": 472
+    },
+    "4338": {
+      "pa_federal_share_obligated": 115765348.0,
+      "pa_project_count": 1557,
+      "hma_federal_share_obligated": 15254265.0,
+      "hma_project_count": 45
+    },
+    "4339": {
+      "pa_federal_share_obligated": 36201585283.0,
+      "pa_project_count": 11018,
+      "hma_federal_share_obligated": 609589173.0,
+      "hma_project_count": 266
+    },
+    "4340": {
+      "pa_federal_share_obligated": 22097739706.0,
+      "pa_project_count": 1130,
+      "hma_federal_share_obligated": 186741090.0,
+      "hma_project_count": 131
+    },
+    "4341": {
+      "pa_federal_share_obligated": 10614.0,
+      "pa_project_count": 1,
+      "hma_federal_share_obligated": 123250.0,
+      "hma_project_count": 2
+    },
+    "4346": {
+      "pa_federal_share_obligated": 33542196.0,
+      "pa_project_count": 267,
+      "hma_federal_share_obligated": 3605907.0,
+      "hma_project_count": 20
+    }
+  }
+}

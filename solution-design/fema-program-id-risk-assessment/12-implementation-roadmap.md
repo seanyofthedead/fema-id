@@ -2,7 +2,7 @@
 
 **Package:** FEMA Program ID & PRA Automation (demo)
 **Document date:** 2026-07-08
-**Status:** Conceptual demo. Waves 0–1 are **substantially complete** via the foundation pass (commit `d2bf3b7`); Waves 2–8 are forward-looking. Effort is indicative (developer-days for the demo build; production waves are directional).
+**Status:** Conceptual demo. Waves 0–1 are **COMPLETE** (Wave 0 via the foundation pass, commit `d2bf3b7`; Wave 1 dataset generation via `data/` — seeded generator + committed synthetic outputs). Waves 2–8 are forward-looking. Effort is indicative (developer-days for the demo build; production waves are directional).
 **Cross-references:** `REQ-` (02), `ASSUMP-` (03), `SRC-` (04), `SME-` (13).
 
 ---
@@ -26,7 +26,7 @@ flowchart LR
 | Wave | Status | Est. effort (demo) |
 |---|---|---|
 | 0 Requirements & assumptions | ✅ Substantially complete | — (done) |
-| 1 Public data + synthetic dataset | ✅ Substantially complete (research done; dataset generation pending) | 1–2 d remaining |
+| 1 Public data + synthetic dataset | ✅ **COMPLETE** (research done, file 04; dataset generated and committed, `data/`) | — (done) |
 | 2 Data model + ingestion | ⬜ Planned | 2–3 d |
 | 3 Mapping rules engine | ⬜ Planned | 2–3 d |
 | 4 AI-assisted inference | ⬜ Planned | 2–3 d |
@@ -50,16 +50,16 @@ flowchart LR
 | Risks | Transcript is partial/auto-generated (mitigated by caveats) |
 | Effort | Done |
 
-### Wave 1 — Public data + synthetic dataset ✅ (research) / ⬜ (generation)
+### Wave 1 — Public data + synthetic dataset ✅ COMPLETE
 | | |
 |---|---|
 | Objective | Verify public sources; define synthetic-data strategy; generate the dataset |
-| Tasks | Live-verify sources (done, file 04); **remaining:** generate the calibrated synthetic ledger per file 08 §7 |
-| Deliverables | File 04 (committed); synthetic FY23–FY26 dataset (pending) |
-| Acceptance | Sources verified with dates; dataset watermarked; ≥1 program breaches trigger |
+| Tasks | Live-verify sources (done, file 04); generate the calibrated synthetic ledger per file 08 §7 (done, `data/`) |
+| Deliverables | File 04 (committed); `data/generator/generate_synthetic.py` + `rules.yaml` + `anchors.json` (seed 20260708); `data/synthetic/*.csv` — FY2022–FY2026 ledger (2,019 txns, 18 programs, 51 subs) + reference tables + validation-only answer key; `data/DATA_DICTIONARY.md`, `data/README.md` |
+| Acceptance | ✅ Sources verified with dates; ✅ every row watermarked `SYNTHETIC-DEMO`; ✅ trigger breaches planted both directions (FY2026: +34/+52/+21%, −31/−24%) plus within-threshold programs; ✅ calibrated to live SRC-03/04 obligation envelopes (≤29.5% per-DR utilization); ✅ 10/10 generator self-checks pass; ✅ byte-identical re-runs |
 | Dependencies | `SRC-02/03/04`; file 08 §7 |
 | Risks | Calibration realism (`ASSUMP-10`) → `SME-11` |
-| Effort | 1–2 d remaining |
+| Effort | Done |
 
 ### Wave 2 — Data model + ingestion
 | | |

@@ -1,0 +1,6 @@
+src_id,title,url,verification,access_date,data_watermark
+SRC-01,OpenFEMA API (platform + dataset metadata endpoints),https://www.fema.gov/api/open,API,2026-07-08,SYNTHETIC-DEMO
+SRC-02,OpenFEMA Disaster Declarations Summaries v2,https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries,API,2026-07-08,SYNTHETIC-DEMO
+SRC-03,OpenFEMA Public Assistance Funded Projects Details v2,https://www.fema.gov/api/open/v2/PublicAssistanceFundedProjectsDetails,API,2026-07-08,SYNTHETIC-DEMO
+SRC-04,OpenFEMA Hazard Mitigation Assistance Projects v4,https://www.fema.gov/api/open/v4/HazardMitigationAssistanceProjects,API,2026-07-08,SYNTHETIC-DEMO
+SRC-12,"SAM.gov Assistance Listings (97.036 PA, 97.039 HMGP)",https://sam.gov/assistance-listings,Search,2026-07-08,SYNTHETIC-DEMO

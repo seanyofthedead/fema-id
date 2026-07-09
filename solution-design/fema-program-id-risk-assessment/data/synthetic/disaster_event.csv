@@ -1,0 +1,8 @@
+disaster_number,incident_type,state,fy_declared,declaration_title,data_watermark
+4332,Hurricane Harvey,TX,2017,Harvey/TX,SYNTHETIC-DEMO
+4337,Hurricane Irma,FL,2017,Irma/FL,SYNTHETIC-DEMO
+4338,Hurricane Irma,GA,2017,Irma/GA,SYNTHETIC-DEMO
+4339,Hurricane Maria,PR,2017,Maria/PR,SYNTHETIC-DEMO
+4340,Hurricane Maria,VI,2017,Maria/VI,SYNTHETIC-DEMO
+4341,Hurricane Irma,FL,2017,Irma - Seminole Tribe,SYNTHETIC-DEMO
+4346,Hurricane Irma,SC,2018,Irma follow-on (FY2018),SYNTHETIC-DEMO
