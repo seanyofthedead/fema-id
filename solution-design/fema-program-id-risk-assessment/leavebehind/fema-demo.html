@@ -2273,10 +2273,14 @@ function closeDiffDrawer(kept){
    crawler never saw the labels it is graded on:
      · f5Infer — INFERENCE. Receives ONLY the training slice (mapping
        history and transactions for fiscal years BEFORE the holdout
-       year) plus the bare list of holdout code strings. It never reads
-       the holdout-year mapping rows, codeInfo's planted sub-program
+       year) plus the UNLABELED intake transactions of the holdout year
+       (code, event, amount — the records being classified; they carry
+       no sub-program or program assignment). It never reads the
+       holdout-year mapping rows, codeInfo's planted sub-program
        targets, the taxonomy tables or the rule registry. The method is
-       pure counting over history — cross-year grouping stability.
+       counting over history: cross-year grouping stability, weighted
+       by observation depth and raw-identity stability, plus a
+       structural-similarity fallback for never-seen codes.
      · f5Score — SCORING. The only reader of the held-out FY2026
        mapping rows (the planted truth, embedded as ordinary data).
        Runs only at the reveal, compares, and counts.
@@ -2288,15 +2292,25 @@ function closeDiffDrawer(kept){
    ===================================================================== */
 const F5_HOLDOUT_FY = 2026;
 function f5Split(holdoutFy){
+  const intakeTx = TX.filter(t => t.fy === holdoutFy);   // the unlabeled intake being classified — txns carry no sub/program
   return {
     trainMaps: DATA.mappings.filter(m => m[3] < holdoutFy),
     trainTx: TX.filter(t => t.fy < holdoutFy),
-    holdoutCodes: [...new Set(TX.filter(t => t.fy === holdoutFy).map(t => t.code))].sort(),
+    intakeTx,
+    holdoutCodes: [...new Set(intakeTx.map(t => t.code))].sort(),
     holdoutTruth: DATA.mappings.filter(m => m[3] === holdoutFy)   // scoring only — never passed to f5Infer
   };
 }
 /* ---------- inference path: training slice in, proposals out ---------- */
-function f5Infer(trainMaps, trainTx, holdoutCodes, threshold){
+/* Evidence-weighted confidence = grouping agreement × observation depth ×
+   raw-identity stability. Depth rewards how much ledger evidence backs the
+   grouping; stability penalises codes whose as-landed raw spelling churned
+   in the training years (legacy aliases, dirty formats) — exactly where a
+   history miner deserves less trust. Capped at 0.97: history is evidence,
+   never certainty. */
+const F5_CONF = {depthB: 0.3, churnK: 0.08, cap: 0.97};
+function f5Infer(trainMaps, trainTx, intakeTx, threshold){
+  const holdoutCodes = [...new Set(intakeTx.map(t => t.code))].sort();
   const votes = new Map(), subProg = new Map(), fySeen = new Set();
   for (const m of trainMaps){
     const code = m[0], subId = m[1], progId = m[2];
@@ -2307,20 +2321,62 @@ function f5Infer(trainMaps, trainTx, holdoutCodes, threshold){
     let sp = subProg.get(subId); if (!sp) subProg.set(subId, sp = new Map());
     sp.set(progId, (sp.get(progId) || 0) + 1);
   }
-  const obs = new Map();
-  trainTx.forEach(t => obs.set(t.code, (obs.get(t.code) || 0) + 1));
   const nYears = fySeen.size;
   const top = m => [...m.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0];
+  /* per-code ledger evidence: observation depth + raw-identity churn */
+  const ev = new Map();
+  /* per-sub structural profile (funds, segments, event mix) for the
+     similarity fallback on never-seen codes — training rows only */
+  const prof = new Map();
+  for (const t of trainTx){
+    let e = ev.get(t.code); if (!e) ev.set(t.code, e = {obs: 0, dirty: 0});
+    e.obs++;
+    if (t.raw !== t.code) e.dirty++;
+    const v = votes.get(t.code); if (!v) continue;
+    const subId = top(v)[0];
+    let p = prof.get(subId); if (!p) prof.set(subId, p = {funds: new Set(), segs: new Set(), drTx: new Map(), tx: 0, amt: 0});
+    const seg = t.code.split('-');
+    p.funds.add(seg[0]); p.segs.add(+seg[1]);
+    p.tx++; p.amt += t.amt; p.drTx.set(t.dr, (p.drTx.get(t.dr) || 0) + 1);
+  }
+  /* intake amount profile per code — the records being classified carry no labels */
+  const intake = new Map();
+  for (const t of intakeTx){
+    let a = intake.get(t.code); if (!a) intake.set(t.code, a = {tx: 0, amt: 0});
+    a.tx++; a.amt += t.amt;
+  }
+  const structuralGuess = code => {
+    const seg = code.split('-'), fund = seg[0], num = +seg[1], dr = +seg[2];
+    const a = intake.get(code);
+    const codeAvg = a && a.tx ? a.amt / a.tx : 0;
+    let best = null;
+    for (const [subId, p] of [...prof.entries()].sort((a2, b2) => a2[0] < b2[0] ? -1 : 1)){
+      if (!p.drTx.has(dr)) continue;           // only sub-programs with history on this disaster
+      const share = p.drTx.get(dr) / p.tx;
+      let near = 0;
+      p.segs.forEach(s => { near = Math.max(near, 1 / (1 + Math.abs(num - s) / 1000)); });
+      const amtSim = codeAvg > 0 ? 1 / (1 + Math.abs(Math.log(codeAvg / (p.amt / p.tx)))) : 0;
+      const score = 0.25 * share + 0.3 * (p.funds.has(fund) ? 1 : 0) + 0.05 * near + 0.4 * amtSim;
+      if (!best || score > best.score) best = {subId, score};
+    }
+    return best;
+  };
   const preds = holdoutCodes.map(code => {
     const v = votes.get(code);
-    if (!v) return {code, subId: null, progId: null, seen: 0, nYears, obs: 0, conf: 0, route: 'review',
-      why: 'no training history — first seen in the holdout year'};
+    if (!v){
+      const g = structuralGuess(code);
+      return {code, subId: g ? g.subId : null, progId: g ? top(subProg.get(g.subId))[0] : null,
+        seen: 0, nYears, obs: 0, dirty: 0, conf: g ? +g.score.toFixed(2) : 0, route: 'review', guess: true,
+        why: 'no training history — structural similarity only'};
+    }
     const [subId, wins] = top(v);
     const seen = [...v.values()].reduce((s, n) => s + n, 0);
-    /* support-weighted confidence: agreement share, damped by history depth */
-    const conf = +((wins / seen) * (1 - Math.pow(0.5, seen))).toFixed(2);
-    return {code, subId, progId: top(subProg.get(subId))[0], seen, nYears, obs: obs.get(code) || 0,
-      conf, route: conf >= threshold ? 'auto' : 'review',
+    const e = ev.get(code) || {obs: 0, dirty: 0};
+    const conf = Math.min(F5_CONF.cap, Math.max(0, +((wins / seen)
+      * (1 - F5_CONF.depthB / Math.max(2, e.obs - 1))
+      * (1 - F5_CONF.churnK * Math.log(1 + e.dirty))).toFixed(2)));
+    return {code, subId, progId: top(subProg.get(subId))[0], seen, nYears, obs: e.obs, dirty: e.dirty,
+      conf, route: conf >= threshold ? 'auto' : 'review', guess: false,
       why: `same grouping in ${wins}/${seen} training FYs`};
   });
   return {preds, nYears, trainCodes: votes.size, trainRows: trainMaps.length, trainTxns: trainTx.length};
@@ -2340,13 +2396,19 @@ function f5Score(preds, holdoutTruth){
         : `held-out truth is ${t.subId} → ${t.progId}`;
       ok ? autoRight++ : autoWrong++;
     } else {
-      ok = true;                            // declining to guess is never wrong on its own
+      ok = true;                            // declining to auto-classify is never wrong on its own
       if (excTruth){
         reviewExc++;
-        verdict = 'the held-out year has no confirmed mapping for this code either';
+        verdict = t && p.subId
+          ? (p.subId === t.subId
+            ? 'no confirmed mapping in the held-out year — and the structural guess agrees with the similarity suggestion awaiting review'
+            : `no confirmed mapping in the held-out year — the queue's similarity suggestion is ${t.subId}`)
+          : 'the held-out year has no confirmed mapping for this code either';
       } else {
         reviewMappable++;
-        verdict = `held-out truth is ${t.subId} — a reviewer confirms it in the queue`;
+        verdict = p.subId === t.subId
+          ? 'proposal was right — evidence too thin to auto-apply; a reviewer confirms it in the queue'
+          : `held-out truth is ${t.subId} — a reviewer decides in the queue`;
       }
     }
     return Object.assign({}, p, {ok, verdict, excTruth});
@@ -2366,11 +2428,12 @@ function f5Run(){
   f5ClearTimers();
   const split = f5Split(F5_HOLDOUT_FY);
   f5.split = split;
-  f5.run = f5Infer(split.trainMaps, split.trainTx, split.holdoutCodes, DATA.config.prefill_threshold);
+  f5.run = f5Infer(split.trainMaps, split.trainTx, split.intakeTx, DATA.config.prefill_threshold);
   f5.score = null;
   const fys = [...new Set(split.trainMaps.map(m => m[3]))].sort();
   f5.steps = fys.map(fy => `mining FY${fy} — ${split.trainMaps.filter(m => m[3] === fy).length} grouping assignments`)
     .concat([`counting cross-year stability — ${f5.run.trainCodes} codes × ${f5.run.nYears} fiscal years`,
+      `weighing evidence — observation depth × raw-identity stability per code`,
       `proposing FY${F5_HOLDOUT_FY} groupings — ${f5.run.preds.length} codes · routing threshold ${DATA.config.prefill_threshold}`]);
   f5.stepIdx = 0;
   f5.phase = 'running';
@@ -2405,7 +2468,10 @@ function f5HeadlineHtml(s){
   const auto = s.autoRight + s.autoWrong;
   const review = s.reviewExc + s.reviewMappable;
   const mark = s.autoWrong === 0 ? '&#10003;' : '&#9888;';
-  return `<div class="f5-headline${s.autoWrong ? ' miss' : ''}">${mark} <b class="n">${s.autoRight} of ${auto}</b> auto-grouped codes match the held-out FY${F5_HOLDOUT_FY} mapping · <b class="n">${review}</b> routed to human review${s.reviewExc ? ` <span class="small">(${s.reviewExc} never-seen — the held-out year leaves them unconfirmed too)</span>` : ''} · <b>${s.autoWrong}</b> incorrect auto-classification${s.autoWrong === 1 ? '' : 's'}. The crawler's uncertainty went to reviewers, not to a guess.</div>`;
+  const parts = [];
+  if (s.reviewExc) parts.push(`${s.reviewExc} never-seen`);
+  if (s.reviewMappable) parts.push(`${s.reviewMappable} low-confidence — caught by review, not auto-applied`);
+  return `<div class="f5-headline${s.autoWrong ? ' miss' : ''}">${mark} <b class="n">${s.autoRight} of ${auto}</b> auto-grouped codes match the held-out FY${F5_HOLDOUT_FY} mapping · <b class="n">${review}</b> routed to human review${parts.length ? ` <span class="small">(${parts.join(' · ')})</span>` : ''} · <b>${s.autoWrong}</b> incorrect auto-classification${s.autoWrong === 1 ? '' : 's'}. The crawler's uncertainty went to reviewers, not to a guess.</div>`;
 }
 function f5TableHtml(){
   const revealed = f5.phase === 'revealed';
@@ -2429,9 +2495,11 @@ function f5TableHtml(){
     </tr></thead><tbody>` +
     order.map(p => `<tr>
       <td class="mono">${esc(p.code)}</td>
-      <td>${p.subId ? esc(shortName(subById.get(p.subId).name)) + ' <span class="mono small">' + esc(p.subId) + '</span> &rarr; ' + esc(shortName(progById.get(p.progId).name)) : '<span class="small">no proposal — ' + esc(p.why) + '</span>'}</td>
-      <td class="small">${p.seen ? `${p.seen}/${p.nYears} FYs · ${p.obs} txns` : '0 observations'}</td>
-      <td>${p.seen ? confChip(p.conf) : '<span class="small">—</span>'}</td>
+      <td>${p.subId
+        ? esc(shortName(subById.get(p.subId).name)) + ' <span class="mono small">' + esc(p.subId) + '</span> &rarr; ' + esc(shortName(progById.get(p.progId).name)) + (p.guess ? ' <span class="small">(structural guess — no training history)</span>' : '')
+        : '<span class="small">no proposal — ' + esc(p.why) + '</span>'}</td>
+      <td class="small">${p.seen ? `${p.seen}/${p.nYears} FYs · ${p.obs} txns${p.dirty ? ` · ${p.dirty} raw-variant row${p.dirty === 1 ? '' : 's'}` : ''}` : '0 training txns'}</td>
+      <td>${confChip(p.conf)}</td>
       <td>${routeBadge(p)}</td>${verdictCell(p)}</tr>`).join('') + '</tbody></table>';
 }
 function renderS3Inf(){
@@ -2462,7 +2530,7 @@ function renderS3Inf(){
   card.hidden = !(f5.phase === 'done' || f5.phase === 'revealed');
   if (card.hidden) return;
   $('#f5-results-hint').innerHTML = f5.phase === 'done'
-    ? `The crawler's blind proposals, one per code, each with the cross-year support behind it. Codes with no history produce <b>no proposal</b> — they route to the reviewer queue. When ready, reveal the held-out truth.`
+    ? `The crawler's blind proposals, one per code, each with the evidence behind its confidence: cross-year agreement, observation depth, and raw-identity stability. Anything below the 0.85 bar — thin history, churned raw spellings, or never seen before — routes to the reviewer queue with <b>no auto-classification</b>. When ready, reveal the held-out truth.`
     : `Every proposal checked against the FY${F5_HOLDOUT_FY} mapping the crawler never saw. Review-routed codes are waiting in the exception queue on the Workspace tab — <button class="btn sm" data-f5-queue>open the exception queue</button>`;
   $('#f5-headline').innerHTML = f5.phase === 'revealed' ? f5HeadlineHtml(f5.score) : '';
   $('#f5-results').innerHTML = f5TableHtml();
