@@ -66,6 +66,12 @@ Decisions logged as DEC-24…DEC-28 (file 16); roadmap note added under Wave 6 (
 | `review/HOW_IT_WORKS_EMAIL.md` | ✅ | 2026-07-09 | Plain-English colleague explainer email: data provenance (synthetic, seeded, calibrated to public OpenFEMA obligation envelopes, watermarked), app functionality (live deterministic math vs labeled precomputed AI text), navigation (sidebar arc, FY selector, F5 reset), and code anatomy/linking (FUND–SEGMENT–EVENT parsing, rule-registry mapping, 0.85 exception routing); every claim traced to source docs in the reference section |
 | `review/PRE_DEMO_EMAIL.md` | ✅ | 2026-07-09 (revised same day) | Colleague-ready verification email drafted from `PRE_DEMO_QUESTIONS.md`; revised per Sean so every item is a question colleagues answer (Sean presents, answers nothing): dataset/framing P0s → Tim/Luke, client environment → Brett, FEMA chase raised as explicit needs-owner ask; full P0/P1 table with consequences + fallbacks, P2 separated; EOD-Thursday deadline (flagged tight); no new/renumbered IDs, no questions answered; routing divergence from the (unmodified) review file noted in-file |
 
+## 1d. Enhancement ideation artifacts (2026-07-09)
+
+| Artifact | Status | Last updated | Notes |
+|---|---|---|---|
+| `enhancements/MAPPING_DEMO_IDEAS.md` | ✅ | 2026-07-09 | Ranked brainstorm of 12 interactive features (FLOW-01…12) making the ID→program linking visible in the leave-behind demo; impact-vs-effort table; Friday shortlist FLOW-01/02/04/07 (wow: "Follow the Dollar" trace landing in the Sankey flow map) with build specs; all shortlist ideas run on already-embedded Wave 1 data; answer key remains validation-only (holdout scoring for the crawler idea uses embedded FY2026 planted mappings, never `answer_key.*`). Ideation only — `leavebehind/fema-demo.html` unchanged. |
+
 ---
 
 ## 2. Pass D quality-gate results
