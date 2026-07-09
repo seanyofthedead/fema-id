@@ -3,7 +3,7 @@
 **Package:** FEMA Program ID & PRA Automation (demo)
 **Document date:** 2026-07-08
 **Foundation commit (frozen):** `d2bf3b7` — files 02, 03, 04.
-**Build-pass commit:** `__BUILD_HASH__` (design, delivery, and summary files 01, 05–17, README, this tracker).
+**Build-pass commit:** `5ea3ad7` (design, delivery, and summary files 01, 05–17, README, this tracker).
 **Status legend:** ✅ complete · 🔒 frozen (do not modify) · ⬜ pending.
 
 ---
