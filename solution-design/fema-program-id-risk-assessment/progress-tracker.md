@@ -63,7 +63,7 @@ Decisions logged as DEC-24…DEC-28 (file 16); roadmap note added under Wave 6 (
 |---|---|---|---|
 | `review/DEMO_GAP_ANALYSIS.md` | ✅ | 2026-07-09 | Demo reviewed against files 08–11/13/15 across 8 lenses; correctness spot-check recomputed all 470 committed summary rows from `transaction.csv` — **0 mismatches**; findings GAP-01…GAP-14 (1 High / 5 Med / 8 Low); answer-key/offline/watermark guardrails verified |
 | `review/PRE_DEMO_QUESTIONS.md` | ✅ | 2026-07-09 | Routed, prioritized question set: new `SME-19`…`SME-25` (IDs continue from SME-18; nothing renumbered) + confirmation list of still-open file-13 questions; P0 answer-by-Friday summary with owners and demo-safe workarounds |
-| `review/PRE_DEMO_EMAIL.md` | ✅ | 2026-07-09 | Colleague-ready verification email drafted from `PRE_DEMO_QUESTIONS.md`: per-owner P0 asks (Sean, Tim/Luke, Brett, FEMA contacts), full P0/P1 priority table with consequences + fallbacks, P2 items separated as non-blocking; EOD-Thursday deadline (flagged tight — demo next day); no new/renumbered IDs, no questions answered |
+| `review/PRE_DEMO_EMAIL.md` | ✅ | 2026-07-09 (revised same day) | Colleague-ready verification email drafted from `PRE_DEMO_QUESTIONS.md`; revised per Sean so every item is a question colleagues answer (Sean presents, answers nothing): dataset/framing P0s → Tim/Luke, client environment → Brett, FEMA chase raised as explicit needs-owner ask; full P0/P1 table with consequences + fallbacks, P2 separated; EOD-Thursday deadline (flagged tight); no new/renumbered IDs, no questions answered; routing divergence from the (unmodified) review file noted in-file |
 
 ---
 
