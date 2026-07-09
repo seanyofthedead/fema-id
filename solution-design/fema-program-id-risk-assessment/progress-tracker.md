@@ -57,6 +57,13 @@
 
 Decisions logged as DEC-24…DEC-28 (file 16); roadmap note added under Wave 6 (file 12).
 
+## 1c. Pre-demo review artifacts (review pass, 2026-07-09)
+
+| Artifact | Status | Last updated | Notes |
+|---|---|---|---|
+| `review/DEMO_GAP_ANALYSIS.md` | ✅ | 2026-07-09 | Demo reviewed against files 08–11/13/15 across 8 lenses; correctness spot-check recomputed all 470 committed summary rows from `transaction.csv` — **0 mismatches**; findings GAP-01…GAP-14 (1 High / 5 Med / 8 Low); answer-key/offline/watermark guardrails verified |
+| `review/PRE_DEMO_QUESTIONS.md` | ✅ | 2026-07-09 | Routed, prioritized question set: new `SME-19`…`SME-25` (IDs continue from SME-18; nothing renumbered) + confirmation list of still-open file-13 questions; P0 answer-by-Friday summary with owners and demo-safe workarounds |
+
 ---
 
 ## 2. Pass D quality-gate results
@@ -89,6 +96,7 @@ Decisions logged as DEC-24…DEC-28 (file 16); roadmap note added under Wave 6 (
 |---|---|---|
 | `ASSUMP-` | 16, 17, 18, 19 | Confidence-queue, mandatory HITL, public-only RAG, illustrative roles |
 | `SME-` | 14, 15, 16, 17, 18 | Reporting outputs, explainability/confidence, users/RBAC, RAG corpus, audit/retention |
+| `SME-` (review pass, 2026-07-09) | 19, 20, 21, 22, 23, 24, 25 | Pre-demo review questions (`review/PRE_DEMO_QUESTIONS.md`): rule-status framing, FY2026-completeness framing, wow-#1 rehearsal, program-name framing, trigger grain, extract volumes, ingestion validation rules. Defined in the review file; file 13 unmodified. |
 | `REQ-` | — | None (transcript-derived set frozen at 26) |
 | `SRC-` | — | None (no new public source needed; all citations resolve to `SRC-01..12`) |
 
