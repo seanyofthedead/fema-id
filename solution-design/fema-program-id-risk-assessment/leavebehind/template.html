@@ -318,7 +318,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
   <aside class="sidebar">
     <div class="brand">
       <h1>Program Integrity Console</h1>
-      <div class="sub">FEMA PRA Automation</div>
+      <div class="sub">FEMA Preliminary Risk Assessment (PRA) Automation</div>
     </div>
     <nav class="nav" id="nav" aria-label="Demo screens">
       <div class="grp">Monitor</div>
@@ -349,7 +349,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <div id="cs-pop" hidden></div>
     </div>
     <div class="ctl"><label for="fy-select">Fiscal year</label>
-      <select id="fy-select" aria-label="Select fiscal year"></select>
+      <select id="fy-select" aria-label="Select fiscal year" title="FY2022 is the baseline year — it has no prior year for a year-over-year comparison, so it is not selectable"></select>
     </div>
     <span class="chip-cfg" title="Comprehensive-assessment trigger currently in force — configure on screen 6">trigger <b id="chip-threshold">±20%</b> YoY &middot; <span id="chip-direction">either</span></span>
   </div>
@@ -414,7 +414,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         </div>
         <div class="card">
           <h3>Schema mapping — file-in contract</h3>
-          <p class="hint">Source columns map to model fields by configuration. When the real extract layout is confirmed, only this panel changes.</p>
+          <p class="hint">Source columns map to model fields by configuration. When the real extract layout is confirmed, only this panel changes. Validation counts are computed live from the embedded rows.</p>
           <div class="tblwrap"><table id="s2-schema"><thead><tr>
             <th scope="col">Extract column</th><th scope="col">Model field (file 08)</th><th scope="col">Validation</th>
           </tr></thead><tbody></tbody></table></div>
@@ -601,8 +601,8 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
               <label><input type="radio" name="s6-dir" value="decrease_only"> decrease only</label>
             </div>
           </div>
-          <div class="fld"><span>Min prior-FY amount (noise floor)</span>
-            <input type="number" id="s6-minprior" class="inline" min="0" step="1000000" value="0" aria-label="Minimum prior-year amount">
+          <div class="fld"><span>Min prior-FY amount ($ · noise floor)</span>
+            <input type="number" id="s6-minprior" class="inline" min="0" step="1000000" value="0" aria-label="Minimum prior-year amount in dollars" title="Programs whose prior-year disbursements fall below this dollar amount are never flagged — suppresses noise on tiny programs">
           </div>
           <div class="fld"><span>Measure</span>
             <span class="badge gray">disbursements</span>
@@ -1008,6 +1008,11 @@ const BASE_EVENTS = new Map();
 
 /* ============================ PRA engine (FY2026 assessment cycle) ============================ */
 const PRA_FY = CUR_FY_DEFAULT;
+/* shown on screens 7/8 only when the top-bar FY differs from the assessment cycle */
+function fyPinNote(){
+  return state.fy === PRA_FY ? ''
+    : `<div class="note amber">The assessment cycle is <b>FY${PRA_FY}</b>; the top-bar fiscal-year selector (currently FY${state.fy}) affects the pipeline screens only.</div>`;
+}
 function aiTag(){ return '<span class="ai-tag" title="Deterministic stand-in text — in the connected product a live model writes this; it never computes a number either way.">AI-SUGGESTED · PRECOMPUTED</span>'; }
 function praAnswers(progId){
   const agg = aggregate();
@@ -1174,8 +1179,8 @@ function kpi(lbl, val, sub, cls){
 }
 function badgeAssess(flag){
   return flag
-    ? '<span class="badge crit">Comprehensive required</span>'
-    : '<span class="badge good">Preliminary only</span>';
+    ? '<span class="badge crit" title="Year-over-year change breached the configured trigger — this program requires a full (comprehensive) risk assessment">Comprehensive required</span>'
+    : '<span class="badge good" title="Year-over-year change stayed inside the configured trigger — the preliminary assessment on file stands">Preliminary only</span>';
 }
 function yoyCell(pct){
   if (pct == null) return '<td class="num">—</td>';
@@ -1208,7 +1213,7 @@ function renderS1(){
   $('#s1-fy').textContent = 'FY' + fy;
   $('#s1-kpis').innerHTML =
     kpi(`Total disbursements · FY${fy}`, fmtM(tot), `${fmtPct(totPct)} vs FY${fy-1}`) +
-    kpi('Reporting programs', PROGS.length, 'improper-payment testing population') +
+    kpi('Reporting programs', PROGS.length, '<span title="Programs FEMA must assess for improper-payment risk under PIIA / OMB A-123 Appendix C">improper-payment testing population</span>') +
     kpi('Flagged for comprehensive assessment', flagged.length,
       `trigger: ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% YoY · ${state.cfg.direction.replace('_',' ')}`,
       flagged.length ? 'alert' : 'ok') +
@@ -1249,11 +1254,26 @@ function renderS2(){
     kpi('Format-dirty raw codes', fmtDirt.length, 'lowercase / separators — normalized deterministically') +
     kpi('Legacy alias remaps', alias.length, `retired codes ${Object.keys(DATA.config.alias_map).join(', ').slice(0, 26)}…`) +
     kpi('Routed to exception queue', excTx.length, 'new codes with no rule in force', excTx.length ? 'alert' : 'ok');
+  /* schema validation — computed live over the embedded ledger, not display literals */
+  const fyWin = new Map(DATA.fiscalYears.map(f => [f.fy, f]));
+  const N = TX.length;
+  const val = {
+    idUnique: new Set(TX.map(t => t.id)).size,
+    codeKnown: TX.filter(t => codeInfo.has(t.code)).length,
+    drKnown: TX.filter(t => eventByDr.has(t.dr)).length,
+    fyKnown: TX.filter(t => fyWin.has(t.fy)).length,
+    amtPop: TX.filter(t => typeof t.amt === 'number' && isFinite(t.amt)).length,
+    dateInFy: TX.filter(t => { const w = fyWin.get(t.fy); return w && t.date >= w.start && t.date <= w.end; }).length
+  };
+  const frac = n => n === N ? n.toLocaleString() + '/' + N.toLocaleString()
+    : '<span class="parity-note">' + n.toLocaleString() + '/' + N.toLocaleString() + ' ⚠</span>';
+  const valChecks = Object.values(val);
+  const valPassed = valChecks.filter(c => c === N).length;
   const steps = [
     {t: '1 · File lands', d: 'flat record-level extract', m: TX.length.toLocaleString() + ' rows'},
     {t: '2 · Normalize', d: DATA.config.normalize.join(' → '), m: fmtDirt.length + ' rows repaired'},
     {t: '3 · Alias remap', d: 'retired legacy codes → canonical (rules BR-003…BR-006)', m: alias.length + ' rows remapped'},
-    {t: '4 · Schema-map', d: 'columns → model fields (config, right panel)', m: '100% valid'},
+    {t: '4 · Schema-map', d: 'columns → model fields (config, right panel)', m: valPassed + '/' + valChecks.length + ' checks pass'},
     {t: '5 · To mapping engine', d: 'unclassifiable rows → exception queue', m: excTx.length + ' rows queued'}
   ];
   $('#s2-pipe').innerHTML = steps.map(s =>
@@ -1270,13 +1290,13 @@ function renderS2(){
       <td><button class="btn ghost sm" data-trace="${t.id}" title="Follow this dollar end-to-end (raw code → rules → program → event → PRA)">Trace &rarr;</button></td></tr>`).join('');
   $$('#s2-sample [data-trace]').forEach(b => b.addEventListener('click', () => openLineage(b.dataset.trace)));
   const schema = [
-    ['txn_id', 'transaction.txn_id', 'unique · ' + TX.length.toLocaleString() + '/' + TX.length.toLocaleString()],
-    ['raw_code', 'transaction.raw_code (as landed)', 'cleansing rules applied'],
-    ['code', 'transaction.code → financial_code.code', codeInfo.size + ' distinct codes'],
-    ['disaster_number', 'disaster_event.disaster_number', 'all resolve to declared disasters'],
-    ['fiscal_year', 'fiscal_year.fiscal_year', 'FY' + FYS[0] + '–FY' + FYS[FYS.length - 1]],
-    ['disbursement_amount', 'transaction.disbursement_amount', 'NUMERIC(14,2) · 100% populated'],
-    ['disbursement_date', 'transaction.disbursement_date', 'within FY window · 100% valid'],
+    ['txn_id', 'transaction.txn_id', 'unique · ' + frac(val.idUnique)],
+    ['raw_code', 'transaction.raw_code (as landed)', (fmtDirt.length + alias.length) + ' rows repaired by cleansing rules'],
+    ['code', 'transaction.code → financial_code.code', codeInfo.size + ' distinct codes · ' + frac(val.codeKnown) + ' resolve'],
+    ['disaster_number', 'disaster_event.disaster_number', frac(val.drKnown) + ' resolve to declared disasters'],
+    ['fiscal_year', 'fiscal_year.fiscal_year', 'FY' + FYS[0] + '–FY' + FYS[FYS.length - 1] + ' · ' + frac(val.fyKnown)],
+    ['disbursement_amount', 'transaction.disbursement_amount', frac(val.amtPop) + ' populated'],
+    ['disbursement_date', 'transaction.disbursement_date', frac(val.dateInFy) + ' within the FY window'],
   ];
   $('#s2-schema tbody').innerHTML = schema.map(r =>
     `<tr><td class="mono">${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('');
@@ -1577,7 +1597,7 @@ function renderS7(){
   const autoCount = A.filter(a => !a.human).length;
   $('#s7-autorate').textContent = `${autoCount - 1} deterministic + 1 history-based auto · ${A.length - autoCount} program-office · split is parameterizable`;
   const y = A.find(a => a.qid === 'Q3');
-  $('#s7-summary').innerHTML = `<div class="note ${y.value.startsWith('Yes') ? 'amber' : ''}">
+  $('#s7-summary').innerHTML = fyPinNote() + `<div class="note ${y.value.startsWith('Yes') ? 'amber' : ''}">
     <b>${esc(shortName(progById.get(progId).name))}</b> — FY${PRA_FY} preliminary risk assessment. ${esc(y.value)}.
     Every auto answer below carries its evidence, its confidence and an AI-suggested rationale; sign-off happens on screen 8.</div>`;
   $('#s7-questions').innerHTML = A.map(a => {
@@ -1611,9 +1631,9 @@ function renderS8(){
   $('#s8-progress').style.width = (decided / A.length * 100) + '%';
   const fin = state.finalized[progId];
   $('#s8-finalize').disabled = decided < A.length || !!fin;
-  $('#s8-final-banner').innerHTML = fin
+  $('#s8-final-banner').innerHTML = fyPinNote() + (fin
     ? `<div class="note" style="border-left-color:var(--good);background:#e7f4e7;color:var(--good-text)"><b>PRA finalized</b> at ${esc(fin)}. Exports now carry review status. In-memory only — reload resets.</div>`
-    : '';
+    : '');
   $('#s8-questions').innerHTML = A.map(a => {
     const q = qMeta(a.qid);
     const st = ps[a.qid] || {};
@@ -1621,7 +1641,8 @@ function renderS8(){
     let valueBlock, controls;
     if (a.human){
       valueBlock = `<div class="aval">${st.human ? esc(st.human) : '<span class="pending">Awaiting program-office input</span>'}</div>
-        <textarea class="inline" data-human="${a.qid}" placeholder="Program-office answer (e.g., rule/regulation/staffing changes this FY)…">${st.human ? esc(st.human) : ''}</textarea>`;
+        <label class="small" for="human-${a.qid}" style="display:block;margin:6px 0 3px">Program-office answer</label>
+        <textarea class="inline" id="human-${a.qid}" data-human="${a.qid}" placeholder="e.g., rule/regulation/staffing changes this FY…">${st.human ? esc(st.human) : ''}</textarea>`;
       controls = `<button class="btn sm primary" data-save-human="${a.qid}">Save answer</button>
         ${st.human ? `<button class="btn sm" data-approve="${a.qid}" ${st.decision === 'approved' ? 'disabled' : ''}>Approve</button>` : ''}
         ${st.decision ? `<span class="badge ${st.decision === 'approved' ? 'good' : 'warn'}">${st.decision}</span>` : '<span class="badge gray">draft</span>'}`;
@@ -1641,8 +1662,10 @@ function renderS8(){
       ${valueBlock}
       <div class="actions">${controls}</div>
       <div class="ovr-form" data-ovr-form="${a.qid}" hidden style="margin-top:8px">
-        <input class="inline" style="max-width:340px" data-ovr-value="${a.qid}" placeholder="Corrected value">
-        <textarea class="inline" data-ovr-reason="${a.qid}" placeholder="Reason for override (required — feeds the audit trail)"></textarea>
+        <label class="small" for="ovr-value-${a.qid}" style="display:block;margin:0 0 3px">Corrected value</label>
+        <input class="inline" style="max-width:340px" id="ovr-value-${a.qid}" data-ovr-value="${a.qid}" placeholder="e.g., 4">
+        <label class="small" for="ovr-reason-${a.qid}" style="display:block;margin:6px 0 3px">Reason for override (required — recorded in the audit trail)</label>
+        <textarea class="inline" id="ovr-reason-${a.qid}" data-ovr-reason="${a.qid}" placeholder="e.g., program office reports a code retired mid-year…"></textarea>
         <div class="actions"><button class="btn sm primary" data-ovr-save="${a.qid}">Save override</button>
         <button class="btn sm" data-ovr-cancel="${a.qid}">Cancel</button></div>
       </div>
