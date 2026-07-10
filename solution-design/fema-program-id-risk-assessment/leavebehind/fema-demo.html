@@ -297,6 +297,26 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
 .f5-headline.miss{background:#fdf0e4;border-color:#eecfa8}
 .f5-headline b.n{font:700 19px/1 var(--serif)}
 
+/* ============ guided tour (B2) ============ */
+#tour{position:fixed;right:22px;bottom:22px;width:360px;max-width:92vw;background:var(--navy);color:var(--navy-ink);
+  border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.4);z-index:56;padding:14px 16px}
+#tour h4{font:700 14px/1.3 var(--serif);margin:0 0 6px;color:#fff}
+#tour p{font-size:12.5px;line-height:1.5;margin:0 0 12px}
+#tour .tbtn{background:var(--navy-2);border:1px solid var(--navy-3);color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12.5px;font-weight:600}
+#tour .tbtn:hover{background:var(--navy-3)}
+#tour .tbtn.primary{background:var(--blue-deep);border-color:var(--blue-deep)}
+#tour .tbtn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ============ assessment task rail (B4) ============ */
+.rail{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.rail .stp{display:inline-flex;gap:7px;align-items:center;background:var(--surface);border:1px solid var(--grid);
+  border-radius:16px;padding:4px 12px 4px 6px;font-size:12px;color:var(--ink2);cursor:pointer}
+.rail .stp:hover{border-color:var(--ink2)}
+.rail .stp .ic{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;background:var(--grid);color:var(--ink2);flex:none}
+.rail .stp.done{color:var(--ink)}
+.rail .stp.done .ic{background:var(--good);color:#fff}
+
 @media (max-width:920px){
   .app{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
   .sidebar{grid-column:1;grid-row:2;height:auto;position:static;flex-direction:column}
@@ -337,6 +357,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <button data-screen="10"><span class="n">10</span>Export &amp; reporting</button>
     </nav>
     <div class="sidefoot">
+      <button class="btn sm" data-tour-start style="width:100%;margin-bottom:8px">Take the 10-screen tour</button>
       Offline single-file build &middot; reload = reset
     </div>
   </aside>
@@ -363,7 +384,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <h2 id="s1-h">Executive dashboard</h2>
         <p class="lede">One-glance program health for the fiscal year — the answer the current manual process takes weeks to months to produce after year-end close. Every figure below is computed live, in this file, from the transaction ledger.</p>
       </header>
-      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> It automates the fiscal-year-end program-integrity flow: the FY-end extract is already ingested, mapped to programs and assessed. Follow the screens in order — ingestion and mapping (2–5), the variance trigger (6), the auto-populated preliminary risk assessment (7), reviewer sign-off (8), exports (10). Nothing finalizes without human review on screen 8.</div>
+      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> It automates the fiscal-year-end program-integrity flow: the FY-end extract is already ingested, mapped to programs and assessed. Follow the screens in order — ingestion and mapping (2–5), the variance trigger (6), the auto-populated preliminary risk assessment (7), reviewer sign-off (8), exports (10). Nothing finalizes without human review on screen 8. <button class="btn sm" data-tour-start style="margin-left:6px;vertical-align:1px">Take the tour &rarr;</button></div>
       <div class="kpis" id="s1-kpis"></div>
       <div class="cols c2">
         <div class="card">
@@ -632,6 +653,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <h2 id="s7-h">Preliminary risk assessment — auto-generator</h2>
         <p class="lede">One fixed template, N data bindings. About 8 of 10 questions auto-populate from data the finance center already holds; 2 are qualitative and route to the program office.</p>
       </header>
+      <div id="s7-rail"></div>
       <div class="card">
         <div class="filter-row">
           <label for="s7-prog">Program</label>
@@ -651,6 +673,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <h2 id="s8-h">Human review &amp; override</h2>
         <p class="lede">Auto-populated is <b>not</b> auto-accepted. A reviewer approves or overrides every answer — overrides capture a reason — and nothing finalizes without sign-off. Below-threshold confidence routes to mandatory review.</p>
       </header>
+      <div id="s8-rail"></div>
       <div class="card">
         <div class="filter-row">
           <label for="s8-prog">Program</label>
@@ -718,6 +741,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <h2 id="s10-h">Export &amp; reporting</h2>
         <p class="lede">Tangible artifacts, generated entirely client-side in this file (no server, no network). Excel-compatible outputs — with modern, auditable logic underneath.</p>
       </header>
+      <div id="s10-rail"></div>
       <div class="cols c3">
         <div class="card">
           <h3>PRA report (HTML)</h3>
@@ -776,6 +800,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
   </footer>
 </aside>
 
+<div id="tour" hidden role="dialog" aria-label="Guided tour"></div>
 <div id="tooltip" role="presentation"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
@@ -884,7 +909,8 @@ const state = {
   praProg: 'PROG-PA',
   audit: [],
   screen: 1,
-  s3Tab: 'work'                // screen-3 view: 'work' | 'flow' (FLOW-02) | 'inf' (FLOW-05)
+  s3Tab: 'work',               // screen-3 view: 'work' | 'flow' (FLOW-02) | 'inf' (FLOW-05)
+  tour: false                  // guided-tour panel visible
 };
 function praState(progId){
   if (!state.pra[progId]) state.pra[progId] = {};
@@ -899,6 +925,30 @@ function signedOffCount(progId){
     else if (st && st.decision) decided++;
   });
   return {decided, total: A.length};
+}
+/* assessment task rail (B4) — the analyst's path across screens 7 → 8 → 10 */
+function taskRail(){
+  const progId = state.praProg;
+  const so = signedOffCount(progId);
+  const ps = praState(progId);
+  const qualDone = ['Q9', 'Q10'].filter(q => ps[q] && ps[q].human).length;
+  const fin = !!state.finalized[progId];
+  const exported = state.audit.some(a => a.entity === 'export' && a.refs === progId);
+  const steps = [
+    {scr: 8, done: so.decided === so.total, label: `Sign off answers · ${so.decided}/${so.total}`},
+    {scr: 8, done: qualDone === 2, label: `Program-office Q9–Q10 · ${qualDone}/2`},
+    {scr: 8, done: fin, label: fin ? 'Finalized' : 'Finalize'},
+    {scr: 10, done: exported, label: 'Export'}
+  ];
+  return `<div class="rail" role="navigation" aria-label="Assessment steps for ${esc(shortName(progById.get(progId).name))}">` +
+    steps.map((s, i) =>
+      `<button class="stp${s.done ? ' done' : ''}" data-rail="${s.scr}" title="Go to screen ${s.scr}"><span class="ic">${s.done ? '✓' : i + 1}</span>${esc(s.label)}</button>`).join('') +
+    '</div>';
+}
+function renderRail(holder){
+  const el = $(holder);
+  el.innerHTML = taskRail();
+  $$('.stp', el).forEach(b => b.addEventListener('click', () => setScreen(+b.dataset.rail)));
 }
 let auditN = 0;
 function logAudit(entity, decision, refs){
@@ -1079,7 +1129,7 @@ function hbars(container, rows, opts){
   opts = opts || {};
   const el = $(container); el.innerHTML = '';
   if (!rows.length){ el.innerHTML = '<p class="small">No data for this selection.</p>'; return; }
-  const labW = opts.labelWidth || 210, valW = 78, W = 760, rowH = 26, gap = 6;
+  const labW = opts.labelWidth || 210, valW = 116, W = 760, rowH = 26, gap = 6;
   const H = rows.length * (rowH + gap) + 26;
   const max = Math.max(...rows.map(r => r.value), 1);
   const plotW = W - labW - valW - 10;
@@ -1102,7 +1152,7 @@ function hbars(container, rows, opts){
     const bar = svgNode('rect', {x: labW + 1, y, width: w, height: rowH - 6,
       rx: 3, fill: r.color || '#2a78d6', tabindex: 0}, svg);
     const vl = svgNode('text', {x: labW + w + 7, y: y + rowH / 2 + 3, class: 'dlabel'}, svg);
-    vl.textContent = fmtM(r.value) + (r.flag ? ' ⚑' : '');
+    vl.textContent = fmtM(r.value) + (r.flag ? ' ⚑ flagged' : '');
     if (r.flag) vl.setAttribute('fill', '#a12525');
     if (r.tip) attachTip(bar, () => r.tip);
   });
@@ -1592,6 +1642,7 @@ function renderS7(){
   if (!psel.dataset.init){ psel.dataset.init = 1;
     psel.addEventListener('change', () => { state.praProg = psel.value; refresh(); }); }
   progOptions(psel, state.praProg);
+  renderRail('#s7-rail');
   const progId = state.praProg;
   const A = praAnswers(progId);
   const autoCount = A.filter(a => !a.human).length;
@@ -1623,6 +1674,7 @@ function renderS8(){
   if (!psel.dataset.init){ psel.dataset.init = 1;
     psel.addEventListener('change', () => { state.praProg = psel.value; refresh(); }); }
   progOptions(psel, state.praProg);
+  renderRail('#s8-rail');
   const progId = state.praProg;
   const A = praAnswers(progId);
   const ps = praState(progId);
@@ -1893,6 +1945,7 @@ function renderS10(){
     }));
   }
   progOptions(psel, state.praProg);
+  renderRail('#s10-rail');
   const so = signedOffCount(state.praProg);
   $('#s10-pra-status').innerHTML = state.finalized[state.praProg]
     ? `<span class="badge good">Finalized</span> all ${so.total} answers signed off — the export carries full review status.`
@@ -1990,7 +2043,7 @@ function csOnInput(){
 }
 
 /* ---- FLOW-01 — follow-the-dollar lineage trace ---- */
-let linModel = null, linTimers = [];
+let linModel = null, linTimers = [], linPrevFocus = null;
 function clearLinTimers(){ linTimers.forEach(clearTimeout); linTimers = []; }
 function ruleCard(rule){
   if (!rule) return '';
@@ -2072,6 +2125,7 @@ function linDone(){ if (linModel && linModel.mapped) $('#lin-flow').hidden = fal
 function openLineage(txnId){
   const model = lineageModel(txnId);
   if (!model) return;
+  linPrevFocus = document.activeElement;
   linModel = model;
   $('#lin-title').textContent = `Follow the dollar — ${model.t.id} (${fmtFull(model.t.amt)})`;
   $('#lin-stations').innerHTML = model.stations.map(s =>
@@ -2095,7 +2149,12 @@ function linShowAll(){
   $$('#lin-stations .station').forEach(s => s.classList.add('lit'));
   linDone();
 }
-function closeLineage(){ clearLinTimers(); $('#lineage').hidden = true; }
+function closeLineage(){
+  clearLinTimers();
+  $('#lineage').hidden = true;
+  if (linPrevFocus && document.contains(linPrevFocus)) linPrevFocus.focus();
+  linPrevFocus = null;
+}
 function seedPicks(){
   const picks = [];
   const alias = TX.find(t => DATA.config.alias_map[normalizeRaw(t.raw)]);
@@ -2238,7 +2297,7 @@ function renderFlowMap(){
 }
 
 /* ---- FLOW-07 — what-changed ripple diff ---- */
-let ddUndo = null;
+let ddUndo = null, ddPrevFocus = null;
 function diffSnap(){
   const agg = aggregate();
   const res = {};
@@ -2290,7 +2349,9 @@ function openDiffDrawer(title, before, undoFn){
         <details><summary>show changes</summary><table>${d.praChanges.map(c => `<tr><td class="mono small">${esc(c.progId)} ${esc(c.qid)}</td><td class="small">${esc(String(c.from))} → <b>${esc(String(c.to))}</b></td></tr>`).join('')}</table></details></div>`
     : '<div class="dd-line">0 PRA answers changed.</div>');
   $('#dd-body').innerHTML = lines.join('');
+  ddPrevFocus = document.activeElement;
   $('#diff-drawer').classList.add('open');
+  $('#dd-close').focus();
 }
 function closeDiffDrawer(kept){
   const dr = $('#diff-drawer');
@@ -2299,6 +2360,8 @@ function closeDiffDrawer(kept){
   if (kept) logAudit('mapping_rule', 'Change kept after what-changed review (ripple drawer)', 'diff;keep');
   ddUndo = null;
   refresh();
+  if (ddPrevFocus && document.contains(ddPrevFocus)) ddPrevFocus.focus();
+  ddPrevFocus = null;
 }
 
 /* =====================================================================
@@ -2570,6 +2633,42 @@ function renderS3Inf(){
   $('#f5-results').innerHTML = f5TableHtml();
 }
 
+/* ============================ guided tour (B2) ============================ */
+const TOUR_TEXT = {
+  1: 'The answer that takes weeks today, in one view: totals, year-over-year change, programs breaching the trigger, and what is stuck unmapped — all computed live in this file.',
+  2: 'The FY-end extract lands as a flat file; the layout is a config contract. The cleansing pipeline repairs format-dirty rows and retired legacy codes deterministically.',
+  3: 'The undocumented Program ID rules, inferred from history, scored and editable. Try a Follow-the-dollar chip, the Flow map tab or the Inference test — or edit a mapping and watch everything downstream recompute.',
+  4: 'Harvey, Irma and Maria had to be tracked separately: spend splits by federal disaster declaration, with an anomaly flag if an event leaves its historical set.',
+  5: 'Transactions roll up to program, sub-program and event totals — deterministic aggregation over the record-level ledger. Exception-queue spend stays visibly held out.',
+  6: 'The centerpiece: threshold, direction and noise floor are configuration, on screen. Drag the slider and watch programs re-flag live.',
+  7: 'One fixed template, per-program data bindings: about 8 of 10 questions auto-populate with evidence and confidence; 2 route to the program office.',
+  8: 'Auto-populated is not auto-accepted: approve or override every answer (overrides need a reason), then finalize — the audit trail records each decision.',
+  9: 'Every gap became a documented assumption with a validation question. Run the parity check to recompute ~740 values against the committed baselines.',
+  10: 'Take the artifacts with you: the PRA report, a spend-summary CSV and a machine-readable package — generated entirely client-side.'
+};
+function renderTour(){
+  const el = $('#tour');
+  if (!state.tour){ el.hidden = true; return; }
+  const n = state.screen;
+  el.hidden = false;
+  el.innerHTML = `<h4>${n} · ${esc(TITLES[n])} <span style="color:var(--navy-ink-2);font:400 11px var(--sans)">stop ${n} of 10</span></h4>
+    <p>${esc(TOUR_TEXT[n])}</p>
+    <div class="flexrow">
+      <button class="tbtn" id="tour-prev" ${n === 1 ? 'disabled' : ''}>&larr; Back</button>
+      <button class="tbtn primary" id="tour-next">${n === 10 ? 'Finish' : 'Next &rarr;'}</button>
+      <button class="tbtn right" id="tour-end">End tour</button>
+    </div>`;
+  $('#tour-prev').addEventListener('click', () => setScreen(n - 1));
+  $('#tour-next').addEventListener('click', () => { if (n === 10) tourEnd(); else setScreen(n + 1); });
+  $('#tour-end').addEventListener('click', tourEnd);
+}
+function tourStart(){
+  state.tour = true;
+  setScreen(1);
+  $('#tour-next').focus();
+}
+function tourEnd(){ state.tour = false; renderTour(); }
+
 /* ============================ navigation & refresh ============================ */
 const TITLES = {1: 'Executive dashboard', 2: 'Data ingestion', 3: 'Program mapping workspace',
   4: 'Disaster / event grouping', 5: 'Spend aggregation', 6: 'YoY variance & trigger',
@@ -2583,6 +2682,7 @@ function setScreen(n){
   $('#crumb-no').textContent = n;
   $('#crumb-title').textContent = TITLES[n];
   RENDER[n]();
+  renderTour();
   $('#main').scrollTop = 0; window.scrollTo(0, 0);
 }
 function refreshChip(){
@@ -2700,13 +2800,48 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     $('#diff-drawer').classList.remove('open');
     toast('Change reverted exactly — every total restored to its prior value.');
     refresh();
+    if (ddPrevFocus && document.contains(ddPrevFocus)) ddPrevFocus.focus();
+    ddPrevFocus = null;
   });
   document.addEventListener('keydown', ev => {
     if (ev.key !== 'Escape') return;
     if (!$('#lineage').hidden){ closeLineage(); return; }
     if ($('#diff-drawer').classList.contains('open')){ closeDiffDrawer(false); return; }
-    if (!$('#cs-pop').hidden) csClose();
+    if (!$('#cs-pop').hidden){ csClose(); return; }
+    if (state.tour) tourEnd();
   });
+  /* keep Tab cycling inside whichever overlay is open (lineage dialog, what-changed drawer) */
+  function trapFocus(container, ev){
+    const f = $$('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])', container)
+      .filter(el => !el.disabled && !el.hidden && el.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (!container.contains(document.activeElement)){ ev.preventDefault(); first.focus(); }
+    else if (ev.shiftKey && document.activeElement === first){ ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last){ ev.preventDefault(); first.focus(); }
+  }
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Tab') return;
+    if (!$('#lineage').hidden) trapFocus($('#lineage'), ev);
+    else if ($('#diff-drawer').classList.contains('open')) trapFocus($('#diff-drawer'), ev);
+  });
+  /* arrow-key navigation on the screen-3 tablist */
+  const tabOrder = ['work', 'flow', 'inf'];
+  $('#screen-3 .tabs').addEventListener('keydown', ev => {
+    const i = tabOrder.findIndex(k => ev.target === $('#s3-tab-btn-' + k));
+    if (i < 0) return;
+    let n = null;
+    if (ev.key === 'ArrowRight') n = (i + 1) % tabOrder.length;
+    else if (ev.key === 'ArrowLeft') n = (i + tabOrder.length - 1) % tabOrder.length;
+    else if (ev.key === 'Home') n = 0;
+    else if (ev.key === 'End') n = tabOrder.length - 1;
+    if (n == null) return;
+    ev.preventDefault();
+    const btn = $('#s3-tab-btn-' + tabOrder[n]);
+    btn.focus(); btn.click();
+  });
+  /* guided tour (B2) */
+  $$('[data-tour-start]').forEach(b => b.addEventListener('click', tourStart));
   /* reload = reset is deliberate; confirm it once session decisions exist */
   window.addEventListener('beforeunload', ev => {
     if (!state.audit.length) return;

@@ -18,7 +18,7 @@
 
 ## 2. What each screen shows
 
-Navigation is the left sidebar (keyboard-accessible buttons), following the storyboard's narrative arc (file 11): *extract lands → mapped → split by event → aggregated → trigger fires → PRA populates → human signs off → export*.
+Navigation is the left sidebar (keyboard-accessible buttons), following the storyboard's narrative arc (file 11): *extract lands → mapped → split by event → aggregated → trigger fires → PRA populates → human signs off → export*. Two aids for a first-time viewer: a **guided tour** (button in the sidebar footer or the screen-1 About note) walks the 10 screens with one line of narration each, and an **assessment task rail** on screens 7/8/10 shows the analyst's path (sign off answers → program-office Q9–Q10 → finalize → export) with live per-program state.
 
 | # | Screen | What it proves |
 |---|---|---|
