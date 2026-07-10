@@ -384,7 +384,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <h2 id="s1-h">Executive dashboard</h2>
         <p class="lede">One-glance program health for the fiscal year — the answer the current manual process takes weeks to months to produce after year-end close. Every figure below is computed live, in this file, from the transaction ledger.</p>
       </header>
-      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> It automates the fiscal-year-end program-integrity flow: the FY-end extract is already ingested, mapped to programs and assessed. Follow the screens in order — ingestion and mapping (2–5), the variance trigger (6), the auto-populated preliminary risk assessment (7), reviewer sign-off (8), exports (10). Nothing finalizes without human review on screen 8. <button class="btn sm" data-tour-start style="margin-left:6px;vertical-align:1px">Take the tour &rarr;</button></div>
+      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> It automates the fiscal-year-end program-integrity flow: the FY-end extract is already ingested, mapped to programs and assessed. Follow the screens in order — ingestion and mapping (2–5), the variance trigger (6), the auto-populated preliminary risk assessment (7), reviewer sign-off (8), exports (10). Nothing finalizes without human review on screen 8. You can also ingest your own CSV extract on screen 2 and watch everything recompute. <button class="btn sm" data-tour-start style="margin-left:6px;vertical-align:1px">Take the tour &rarr;</button></div>
       <div class="kpis" id="s1-kpis"></div>
       <div class="cols c2">
         <div class="card">
@@ -418,6 +418,17 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <p class="lede">The FY-end extract lands as a flat, record-level file. The layout is a configuration contract, not code — swapping the real extract layout is a config change, which is how the design survives the pending financial-system migration. The extract shown below is pre-loaded; in the connected product this step is a file drop.</p>
       </header>
       <div class="kpis" id="s2-kpis"></div>
+      <div class="card">
+        <h3>Load your own extract (CSV)</h3>
+        <p class="hint">Ingestion, live: drop a record-level CSV and the rules in this file cleanse, validate, map and aggregate it — every screen recomputes. Required columns: <span class="mono">raw_code, disaster_number, fiscal_year, disbursement_amount, disbursement_date</span> (<span class="mono">txn_id</span> optional; any <span class="mono">code</span> column is ignored — the cleansing rules recompute it). Fiscal years and disaster numbers must belong to the embedded reference set; unknown codes are held out in the exception queue.</p>
+        <div class="flexrow">
+          <button class="btn primary" id="s2-upload-btn">Choose CSV to ingest&hellip;</button>
+          <input type="file" id="s2-upload" accept=".csv,text/csv" hidden aria-label="Select a CSV extract to ingest">
+          <button class="btn" id="s2-sample">Download the embedded extract (.csv)</button>
+          <button class="btn" id="s2-restore" hidden>Restore embedded extract</button>
+        </div>
+        <div id="s2-load-result"></div>
+      </div>
       <div class="card">
         <h3>Cleansing &amp; normalization pipeline</h3>
         <p class="hint">Deterministic, rules-as-data. Rules below are loaded from the rule registry — the same registry the mapping workspace edits.</p>
@@ -605,7 +616,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <header>
         <div class="eyebrow">Assess &middot; Screen 6</div>
         <h2 id="s6-h">Year-over-year variance &amp; the comprehensive-assessment trigger</h2>
-        <p class="lede">The analytical centerpiece. The transcript hedged the exact rule ("I think it's like 20%"), so threshold, direction and measure are <b>configuration, on screen</b> — never a magic number. <b>Drag the threshold and watch programs re-flag live.</b></p>
+        <p class="lede">The analytical centerpiece. The exact rule is pending client confirmation, so threshold, direction and measure are <b>configuration, on screen</b> — never a magic number. <b>Drag the threshold and watch programs re-flag live.</b></p>
       </header>
       <div class="card">
         <h3>Trigger configuration (rules-as-data)</h3>
@@ -883,6 +894,7 @@ const DR_COLOR = {};
   .forEach((c, i) => { if (DR_ORDER[i] != null) DR_COLOR[DR_ORDER[i]] = c; });
 /* transactions hydrated once: [id, raw, code, dr, fy, amt, date] */
 const TX = DATA.txns.map(r => ({id: r[0], raw: r[1], code: r[2], dr: r[3], fy: r[4], amt: r[5], date: r[6]}));
+const TX_EMBEDDED = TX.slice();   // pristine copy — CSV ingestion swaps TX in place; restore refills from here
 /* exception queue baseline: mapping rows with status exception_queue carry the AI SUGGESTION */
 const EXC = DATA.mappings.filter(m => m[6] === 'exception_queue')
   .map(m => ({code: m[0], subId: m[1], progId: m[2], fy: m[3], conf: m[5]}));
@@ -910,7 +922,8 @@ const state = {
   audit: [],
   screen: 1,
   s3Tab: 'work',               // screen-3 view: 'work' | 'flow' (FLOW-02) | 'inf' (FLOW-05)
-  tour: false                  // guided-tour panel visible
+  tour: false,                 // guided-tour panel visible
+  customExtract: null          // filename of a user-ingested CSV replacing the embedded ledger
 };
 function praState(progId){
   if (!state.pra[progId]) state.pra[progId] = {};
@@ -1045,16 +1058,134 @@ function openExceptions(){
     return !(d && d.action === 'approved');
   });
 }
-/* baseline event set per program (for the anomaly flag) */
+/* baseline event set per program (for the anomaly flag) — recomputed when the ledger is swapped */
 const BASE_EVENTS = new Map();
-(function(){
+function computeBaseEvents(){
+  BASE_EVENTS.clear();
   const agg = aggregate(true);
   for (const p of PROGS){
     const set = new Set();
     for (const fy of FYS) eventsOf(p.id, fy, agg).forEach(e => set.add(e.dr));
     BASE_EVENTS.set(p.id, set);
   }
-})();
+}
+computeBaseEvents();
+
+/* ============================ CSV extract ingestion ============================ */
+/* A user-selected CSV replaces the in-memory transaction ledger and flows through
+   the same cleansing rules, mapping resolution, rollups, trigger and PRA binds as
+   the embedded extract. Reference data (programs, sub-programs, codes, rules,
+   declarations, fiscal years) stays embedded; unknown codes are held out of every
+   total. Local file read only — no network, no storage. */
+let lastLoad = null;   // {name, loaded, aliased, repaired, unknown[], rejected[], rejCount} | {name, error}
+function parseCsv(text){
+  const rows = []; let row = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (q){
+      if (c === '"'){ if (text[i + 1] === '"'){ field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ','){ row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r'){
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = '';
+      if (row.length > 1 || row[0] !== '') rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.length > 1 || row[0] !== '') rows.push(row);
+  return rows;
+}
+/* session decisions describe the previous ledger — clear them when it changes */
+function resetSessionState(){
+  state.overrides.clear();
+  state.sessionRules = [];
+  state.excDecisions.clear();
+  state.pra = {};
+  state.finalized = {};
+  flowState.highlight = null;
+  invalidate();
+  computeBaseEvents();
+  f5Reset();
+}
+function applyExtract(text, name){
+  const rows = parseCsv(text);
+  if (rows.length < 2){
+    lastLoad = {name, error: 'No data rows found — expected a header row plus at least one record. The current ledger is unchanged.'};
+    refresh(); return;
+  }
+  const head = rows[0].map(h => String(h).trim().toLowerCase());
+  const col = f => head.indexOf(f);
+  const missing = ['raw_code', 'disaster_number', 'fiscal_year', 'disbursement_amount', 'disbursement_date'].filter(f => col(f) < 0);
+  if (missing.length){
+    lastLoad = {name, error: 'Missing required column(s): ' + missing.join(', ') + '. The current ledger is unchanged.'};
+    refresh(); return;
+  }
+  const cId = col('txn_id');
+  const fyOk = new Set(FYS);
+  const out = [], rejected = [];
+  let rejCount = 0;
+  for (let i = 1; i < rows.length; i++){
+    const r = rows[i];
+    const raw = String(r[col('raw_code')] || '').trim();
+    const fyRawVal = String(r[col('fiscal_year')] || '').trim();
+    const drRawVal = String(r[col('disaster_number')] || '').trim();
+    const fy = parseInt(fyRawVal, 10);
+    const dr = parseInt(drRawVal.replace(/^DR-?/i, ''), 10);
+    const amt = Number(String(r[col('disbursement_amount')] || '').replace(/[$,\s]/g, ''));
+    const date = String(r[col('disbursement_date')] || '').trim();
+    const why = !raw ? 'raw_code is empty'
+      : !fyOk.has(fy) ? `fiscal_year "${fyRawVal}" is outside the embedded FY${FYS[0]}–FY${FYS[FYS.length - 1]} reference set`
+      : !eventByDr.has(dr) ? `disaster_number "${drRawVal}" is not an embedded declaration`
+      : !isFinite(amt) ? 'disbursement_amount is not a number' : null;
+    if (why){
+      rejCount++;
+      if (rejected.length < 6) rejected.push({n: i + 1, why});
+      continue;
+    }
+    const norm = normalizeRaw(raw);
+    const code = DATA.config.alias_map[norm] || norm;
+    out.push({id: cId >= 0 && String(r[cId] || '').trim() ? String(r[cId]).trim() : 'UPL-' + String(out.length + 1).padStart(6, '0'),
+      raw, code, dr, fy, amt: Math.round(amt * 100) / 100, date});
+  }
+  if (!out.length){
+    lastLoad = {name, error: `All ${rejCount} data row(s) were rejected (first: row ${rejected[0].n} — ${rejected[0].why}). The current ledger is unchanged.`};
+    refresh(); return;
+  }
+  TX.length = 0; TX.push(...out);
+  resetSessionState();
+  state.customExtract = name;
+  const aliased = out.filter(t => DATA.config.alias_map[normalizeRaw(t.raw)]).length;
+  const repaired = out.filter(t => t.raw !== t.code).length - aliased;
+  const unknown = [...new Set(out.filter(t => !codeInfo.has(t.code)).map(t => t.code))].sort();
+  lastLoad = {name, loaded: out.length, aliased, repaired, unknown, rejected, rejCount};
+  logAudit('ingestion', `Extract loaded from ${name}: ${out.length} rows ingested, ${rejCount} rejected, ${aliased} legacy aliases remapped, ${repaired} format repairs, ${unknown.length} unknown codes held out`, name);
+  toast(`<b>${esc(name)}</b> ingested — ${out.length.toLocaleString()} rows through cleansing, mapping and rollups. Every screen recomputed.`);
+  refresh();
+}
+function loadExtractFile(file){
+  const rd = new FileReader();
+  rd.onload = () => applyExtract(String(rd.result || ''), file.name);
+  rd.onerror = () => { lastLoad = {name: file.name, error: 'The file could not be read. The current ledger is unchanged.'}; refresh(); };
+  rd.readAsText(file);
+}
+function restoreExtract(){
+  TX.length = 0; TX.push(...TX_EMBEDDED);
+  resetSessionState();
+  state.customExtract = null;
+  lastLoad = null;
+  logAudit('ingestion', `Embedded extract restored (${TX.length} rows)`, 'embedded');
+  toast('Embedded extract restored — all figures recomputed from the original ledger.');
+  refresh();
+}
+function exportExtractCsv(){
+  const lines = ['txn_id,raw_code,disaster_number,fiscal_year,disbursement_amount,disbursement_date'];
+  for (const t of TX_EMBEDDED)
+    lines.push([t.id, '"' + t.raw.replace(/"/g, '""') + '"', t.dr, t.fy, t.amt.toFixed(2), t.date].join(','));
+  return lines.join('\n') + '\n';
+}
 
 /* ============================ PRA engine (FY2026 assessment cycle) ============================ */
 const PRA_FY = CUR_FY_DEFAULT;
@@ -1258,8 +1389,8 @@ function renderS1(){
   const totPrior = rows.reduce((s, r) => s + (r.prior || 0), 0);
   const totPct = totPrior > 0 ? (tot - totPrior) / totPrior * 100 : null;
   const flagged = rows.filter(r => r.flag);
-  const exc = openExceptions();
-  const excTx = TX.filter(t => excByCode.has(t.code) && !(state.excDecisions.get(t.code) || {}).subId);
+  const unm = agg.unmapped;
+  const unmCodes = Object.keys(unm.byCode).length;
   $('#s1-fy').textContent = 'FY' + fy;
   $('#s1-kpis').innerHTML =
     kpi(`Total disbursements · FY${fy}`, fmtM(tot), `${fmtPct(totPct)} vs FY${fy-1}`) +
@@ -1267,7 +1398,7 @@ function renderS1(){
     kpi('Flagged for comprehensive assessment', flagged.length,
       `trigger: ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% YoY · ${state.cfg.direction.replace('_',' ')}`,
       flagged.length ? 'alert' : 'ok') +
-    kpi('Exception queue', exc.length, `${exc.length} unmapped codes · ${excTx.length} records held out of rollups`, exc.length ? '' : 'ok');
+    kpi('Exception queue', unmCodes, `${unmCodes} unmapped codes · ${unm.count} records held out of rollups`, unmCodes ? '' : 'ok');
   $('#s1-chart-hint').textContent = `FY${fy} disbursements per program, computed live from ${TX.length.toLocaleString()} ledger rows. Red = breaches the trigger in force.`;
   hbars('#s1-chart', rows.map(r => ({
     label: shortName(progById.get(r.progId).name),
@@ -1298,9 +1429,10 @@ function renderS2(){
   const dirty = TX.filter(t => t.raw !== t.code);
   const alias = dirty.filter(t => DATA.config.alias_map[t.raw]);
   const fmtDirt = dirty.filter(t => !DATA.config.alias_map[t.raw]);
-  const excTx = TX.filter(t => codeInfo.get(t.code) && !codeInfo.get(t.code).subId);
+  const excTx = TX.filter(t => !codeInfo.has(t.code) || !codeInfo.get(t.code).subId);
   $('#s2-kpis').innerHTML =
-    kpi('Extract rows landed', TX.length.toLocaleString(), `record-level ledger · FY${FYS[0]}–FY${FYS[FYS.length-1]}`) +
+    kpi('Extract rows landed', TX.length.toLocaleString(),
+      state.customExtract ? `from ${esc(state.customExtract)} · ingested this session` : `record-level ledger · FY${FYS[0]}–FY${FYS[FYS.length-1]}`) +
     kpi('Format-dirty raw codes', fmtDirt.length, 'lowercase / separators — normalized deterministically') +
     kpi('Legacy alias remaps', alias.length, `retired codes ${Object.keys(DATA.config.alias_map).join(', ').slice(0, 26)}…`) +
     kpi('Routed to exception queue', excTx.length, 'new codes with no rule in force', excTx.length ? 'alert' : 'ok');
@@ -1350,6 +1482,18 @@ function renderS2(){
   ];
   $('#s2-schema tbody').innerHTML = schema.map(r =>
     `<tr><td class="mono">${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('');
+  /* ingestion card state */
+  $('#s2-restore').hidden = !state.customExtract;
+  const lr = $('#s2-load-result');
+  if (!lastLoad) lr.innerHTML = '';
+  else if (lastLoad.error) lr.innerHTML = `<div class="note amber"><b>Load failed:</b> ${esc(lastLoad.error)}</div>`;
+  else {
+    const l = lastLoad;
+    lr.innerHTML = `<div class="note blue"><b>${esc(l.name)}</b> ingested: <b>${l.loaded.toLocaleString()}</b> rows ·
+      ${l.aliased} legacy alias${l.aliased === 1 ? '' : 'es'} remapped · ${l.repaired} format repair${l.repaired === 1 ? '' : 's'} ·
+      ${l.rejCount} rejected${l.unknown.length ? ` · <b>${l.unknown.length} unknown code${l.unknown.length === 1 ? '' : 's'}</b> held out of every total (<span class="mono">${l.unknown.slice(0, 4).map(esc).join(', ')}${l.unknown.length > 4 ? ', …' : ''}</span> — see the exception queue, screen 3)` : ''}.
+      ${l.rejCount ? `<br>First rejection${l.rejected.length === 1 ? '' : 's'}: ${l.rejected.map(x => 'row ' + x.n + ' — ' + esc(x.why)).join('; ')}${l.rejCount > l.rejected.length ? ' …' : ''}` : ''}</div>`;
+  }
 }
 
 function renderS3(){
@@ -1372,7 +1516,8 @@ function renderS3Work(){
     kpi('Financial codes', codeInfo.size, `${codeInfo.size - EXC.length} mapped by rules in force`) +
     kpi('Mapping rules', DATA.rules.length + state.sessionRules.length,
       `${DATA.rules.filter(r => r.status === 'inferred').length} inferred — pending confirmation`) +
-    kpi('Open exceptions', open.length, 'below-confidence → human decision', open.length ? 'alert' : 'ok') +
+    kpi('Open exceptions', open.length + Object.keys(agg.unmapped.byCode).filter(c => !excByCode.has(c)).length,
+      'below-confidence or unknown → human decision', (open.length || Object.keys(agg.unmapped.byCode).some(c => !excByCode.has(c))) ? 'alert' : 'ok') +
     kpi('Session overrides', state.overrides.size + (EXC.length - open.length), 'in-memory · reload resets · all audited');
   /* exception queue */
   $('#s3-exceptions tbody').innerHTML = exc.map(e => {
@@ -1393,7 +1538,12 @@ function renderS3Work(){
       <td class="num">${fmtFull(spend)} <span class="small">(${nTx} txns)</span></td>
       <td>${esc(shortName(sub.name))} → ${esc(shortName(prog.name))} <span class="ai-tag" title="Similarity match over segment structure, co-occurring codes and amount profile — deterministic stand-in; the connected product scores this live">AI-SUGGESTED · PRECOMPUTED</span></td>
       <td>${confChip(e.conf)}</td><td>${status}</td><td class="flexrow">${action}</td></tr>`;
-  }).join('');
+  }).join('') + Object.entries(agg.unmapped.byCode).filter(([c]) => !excByCode.has(c)).sort((a, b) => b[1].amt - a[1].amt).map(([c, b]) => `
+    <tr><td class="mono">${esc(c)}</td>
+      <td class="num">${fmtFull(b.amt)} <span class="small">(${b.count} txns)</span></td>
+      <td><span class="small">none — code not in the embedded reference data (from the ingested extract)</span></td>
+      <td>—</td><td><span class="badge warn">unknown code</span></td>
+      <td><span class="small">held out of every total — fix the extract or restore the embedded one (screen 2)</span></td></tr>`).join('');
   $$('#s3-exceptions [data-exc-approve]').forEach(b => b.addEventListener('click', () => {
     const e = excByCode.get(b.dataset.excApprove);
     const dsnap = diffSnap();                                  // FLOW-07: before-state
@@ -1593,10 +1743,10 @@ function renderS5(){
       <td class="num">${fmtFull(r.amt)}</td><td class="num">${(r.amt / Math.max(tot, 1) * 100).toFixed(1)}%</td><td>${bar(r.amt, max)}</td></tr>`).join('');
     foot.innerHTML = `<tr><td colspan="2">${esc(shortName(progById.get(progId).name))} — event split</td><td class="num">${fmtFull(tot)}</td><td class="num">100%</td><td></td></tr>`;
   }
-  const exc = openExceptions();
-  const excAmt = exc.reduce((s, e) => s + TX.filter(t => t.code === e.code).reduce((x, t) => x + t.amt, 0), 0);
-  $('#s5-count').textContent = `computed live from ${TX.length.toLocaleString()} embedded transactions`;
-  $('#s5-note').innerHTML = `Exception-queue spend is excluded until a reviewer maps it${exc.length ? `: <b>${fmtM(excAmt)}</b> across ${exc.length} codes currently held out (screen 3)` : ''}.`;
+  const unm = agg.unmapped;
+  const unmCodes = Object.keys(unm.byCode).length;
+  $('#s5-count').textContent = `computed live from ${TX.length.toLocaleString()} ${state.customExtract ? 'ingested' : 'embedded'} transactions`;
+  $('#s5-note').innerHTML = `Exception-queue spend is excluded until a reviewer maps it${unmCodes ? `: <b>${fmtM(unm.amt)}</b> across ${unmCodes} codes currently held out (screen 3)` : ''}.`;
 }
 
 function renderS6(){
@@ -1772,6 +1922,16 @@ function renderS8(){
 }
 
 function renderS9(){
+  /* parity baselines describe the embedded dataset only */
+  const pbtn = $('#s9-parity-run'), pres = $('#s9-parity-result');
+  if (state.customExtract){
+    pbtn.disabled = true;
+    pres.innerHTML = '<span class="small">A custom extract is loaded — the committed baselines describe the embedded dataset. Restore the embedded extract (screen 2) to run the parity check.</span>';
+    pres.dataset.custom = 1;
+  } else {
+    pbtn.disabled = false;
+    if (pres.dataset.custom){ pres.innerHTML = ''; delete pres.dataset.custom; }
+  }
   /* assumptions */
   /* register display: internal traceability IDs and mechanics-only entries are
      suppressed from the UI; the underlying register data is unchanged. */
@@ -2842,6 +3002,18 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
   });
   /* guided tour (B2) */
   $$('[data-tour-start]').forEach(b => b.addEventListener('click', tourStart));
+  /* CSV extract ingestion (screen 2) */
+  $('#s2-upload-btn').addEventListener('click', () => $('#s2-upload').click());
+  $('#s2-upload').addEventListener('change', ev => {
+    const f = ev.target.files && ev.target.files[0];
+    if (f) loadExtractFile(f);
+    ev.target.value = '';                       // allow re-selecting the same file
+  });
+  $('#s2-sample').addEventListener('click', () => {
+    download(`extract-FY${FYS[0]}-FY${FYS[FYS.length-1]}-SYNTHETIC-DEMO.csv`, 'text/csv', exportExtractCsv());
+    toast('Embedded extract downloaded — edit a number in Excel and re-ingest it to watch every screen recompute.');
+  });
+  $('#s2-restore').addEventListener('click', restoreExtract);
   /* reload = reset is deliberate; confirm it once session decisions exist */
   window.addEventListener('beforeunload', ev => {
     if (!state.audit.length) return;

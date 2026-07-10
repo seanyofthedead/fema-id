@@ -20,6 +20,7 @@ The **wow moments** are marked ★. Don't rush them. (★ wow #1 — the follow-
 - **Say:** "File in. The extract layout is a config contract, not code — when we see your real extract (SME-03), we swap this panel, not the system. That's also how it survives the financial-system migration (REQ-019)."
 - Point at a red *dirty* raw code next to its green cleansed code: "Today's 'behind-the-scenes adjustments' become visible, deterministic rules."
 - Every sample row has a **Trace →** button — you'll use its big brother on the next screen.
+- (Optional, +60s, high-impact for a data-minded audience) **Live ingestion:** click *Download the embedded extract (.csv)*, open it in Excel, change one amount (or add a row with a dirty spelling like `pa/97036/4332`), save, then *Choose CSV to ingest…* — the dashboard, trigger flags and PRA all recompute from the edited file. *Restore embedded extract* resets. **Say:** "That's the whole product loop on your own file — no server anywhere."
 
 ## 1:30 — Screen 3 · Program mapping workspace (~2min) ★ wow #1 — "Follow the dollar"
 
