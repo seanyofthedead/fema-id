@@ -14,7 +14,7 @@
 2. Double-click it — it opens in any modern browser (Edge, Chrome, Firefox, Safari).
 3. That's it. It renders identically with wifi fully off.
 
-**Reset to a clean state = reload the page** (F5). All state is in browser memory only — the file uses no `localStorage`/`sessionStorage`, writes nothing to disk, and makes zero network requests (any URL you see on screen is a provenance citation, inert text).
+**Reset to a clean state = reload the page** (F5; once you have made session decisions the browser asks for confirmation first, so sign-off work is never lost to an accidental refresh). All state is in browser memory only — the file uses no `localStorage`/`sessionStorage`, writes nothing to disk, and makes zero network requests (any URL you see on screen is a provenance citation, inert text).
 
 ## 2. What each screen shows
 

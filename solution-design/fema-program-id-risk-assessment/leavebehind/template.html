@@ -345,7 +345,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
     <div class="crumb"><span class="no" id="crumb-no">1</span><span id="crumb-title">Executive dashboard</span></div>
     <div class="spacer"></div>
     <div class="ctl csearch">
-      <input id="code-search" type="search" placeholder="Where does this code go? — try LEG-0001" aria-label="Search financial codes (canonical, dirty or legacy spelling)" autocomplete="off">
+      <input id="code-search" type="search" placeholder="Try a code — e.g. LEG-0001" aria-label="Search financial codes (canonical, dirty or legacy spelling)" autocomplete="off">
       <div id="cs-pop" hidden></div>
     </div>
     <div class="ctl"><label for="fy-select">Fiscal year</label>
@@ -363,6 +363,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
         <h2 id="s1-h">Executive dashboard</h2>
         <p class="lede">One-glance program health for the fiscal year — the answer the current manual process takes weeks to months to produce after year-end close. Every figure below is computed live, in this file, from the transaction ledger.</p>
       </header>
+      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> It automates the fiscal-year-end program-integrity flow: the FY-end extract is already ingested, mapped to programs and assessed. Follow the screens in order — ingestion and mapping (2–5), the variance trigger (6), the auto-populated preliminary risk assessment (7), reviewer sign-off (8), exports (10). Nothing finalizes without human review on screen 8.</div>
       <div class="kpis" id="s1-kpis"></div>
       <div class="cols c2">
         <div class="card">
@@ -393,7 +394,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <header>
         <div class="eyebrow">Pipeline &middot; Screen 2</div>
         <h2 id="s2-h">Data ingestion</h2>
-        <p class="lede">The FY-end extract lands as a flat, record-level file. The layout is a configuration contract, not code — swapping the real extract layout is a config change, which is how the design survives the pending financial-system migration.</p>
+        <p class="lede">The FY-end extract lands as a flat, record-level file. The layout is a configuration contract, not code — swapping the real extract layout is a config change, which is how the design survives the pending financial-system migration. The extract shown below is pre-loaded; in the connected product this step is a file drop.</p>
       </header>
       <div class="kpis" id="s2-kpis"></div>
       <div class="card">
@@ -723,6 +724,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <p class="hint">The signed-off preliminary risk assessment for one program — answers, evidence, confidence, overrides, config in force, and disclaimers. Opens in any browser; print to PDF from there.</p>
           <div class="filter-row"><label for="s10-prog">Program</label><select id="s10-prog" class="inline"></select></div>
           <button class="btn primary" data-export="pra">Download PRA report (.html)</button>
+          <p class="small" id="s10-pra-status" style="margin:8px 0 0"></p>
         </div>
         <div class="card">
           <h3>Spend summary (CSV)</h3>
@@ -888,6 +890,16 @@ function praState(progId){
   if (!state.pra[progId]) state.pra[progId] = {};
   return state.pra[progId];
 }
+function signedOffCount(progId){
+  const A = praAnswers(progId), ps = praState(progId);
+  let decided = 0;
+  A.forEach(a => {
+    const st = ps[a.qid];
+    if (a.human){ if (st && st.human && st.decision) decided++; }
+    else if (st && st.decision) decided++;
+  });
+  return {decided, total: A.length};
+}
 let auditN = 0;
 function logAudit(entity, decision, refs){
   auditN++;
@@ -996,7 +1008,7 @@ const BASE_EVENTS = new Map();
 
 /* ============================ PRA engine (FY2026 assessment cycle) ============================ */
 const PRA_FY = CUR_FY_DEFAULT;
-function aiTag(){ return '<span class="ai-tag">AI-SUGGESTED</span>'; }
+function aiTag(){ return '<span class="ai-tag" title="Deterministic stand-in text — in the connected product a live model writes this; it never computes a number either way.">AI-SUGGESTED · PRECOMPUTED</span>'; }
 function praAnswers(progId){
   const agg = aggregate();
   const p = progById.get(progId);
@@ -1309,7 +1321,7 @@ function renderS3Work(){
     }
     return `<tr><td class="mono">${esc(e.code)}</td>
       <td class="num">${fmtFull(spend)} <span class="small">(${nTx} txns)</span></td>
-      <td>${esc(shortName(sub.name))} → ${esc(shortName(prog.name))} <span class="ai-tag" title="Similarity match over segment structure, co-occurring codes and amount profile">AI-SUGGESTED</span></td>
+      <td>${esc(shortName(sub.name))} → ${esc(shortName(prog.name))} <span class="ai-tag" title="Similarity match over segment structure, co-occurring codes and amount profile — deterministic stand-in; the connected product scores this live">AI-SUGGESTED · PRECOMPUTED</span></td>
       <td>${confChip(e.conf)}</td><td>${status}</td><td class="flexrow">${action}</td></tr>`;
   }).join('');
   $$('#s3-exceptions [data-exc-approve]').forEach(b => b.addEventListener('click', () => {
@@ -1594,12 +1606,7 @@ function renderS8(){
   const progId = state.praProg;
   const A = praAnswers(progId);
   const ps = praState(progId);
-  let decided = 0;
-  A.forEach(a => {
-    const st = ps[a.qid];
-    if (a.human){ if (st && st.human && st.decision) decided++; }
-    else if (st && st.decision) decided++;
-  });
+  const decided = signedOffCount(progId).decided;
   $('#s8-progress-label').textContent = `${decided} of ${A.length} answers signed off — nothing finalizes without human review`;
   $('#s8-progress').style.width = (decided / A.length * 100) + '%';
   const fin = state.finalized[progId];
@@ -1863,6 +1870,10 @@ function renderS10(){
     }));
   }
   progOptions(psel, state.praProg);
+  const so = signedOffCount(state.praProg);
+  $('#s10-pra-status').innerHTML = state.finalized[state.praProg]
+    ? `<span class="badge good">Finalized</span> all ${so.total} answers signed off — the export carries full review status.`
+    : `<span class="badge warn">Draft</span> ${so.decided} of ${so.total} answers signed off — this export will be marked DRAFT; finalize on screen 8.`;
   $('#s10-preview-hint').textContent = `Live preview of the PRA report for ${shortName(progById.get(state.praProg).name)} — exactly what the .html export contains, reflecting current config, overrides and sign-off state.`;
   const holder = $('#s10-preview');
   holder.innerHTML = '';
@@ -2672,6 +2683,12 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     if (!$('#lineage').hidden){ closeLineage(); return; }
     if ($('#diff-drawer').classList.contains('open')){ closeDiffDrawer(false); return; }
     if (!$('#cs-pop').hidden) csClose();
+  });
+  /* reload = reset is deliberate; confirm it once session decisions exist */
+  window.addEventListener('beforeunload', ev => {
+    if (!state.audit.length) return;
+    ev.preventDefault();
+    ev.returnValue = '';
   });
   refreshChip();
   setScreen(1);

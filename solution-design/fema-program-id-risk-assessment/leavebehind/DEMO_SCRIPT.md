@@ -1,7 +1,7 @@
 # Demo script — single-file leave-behind (5–8 minutes)
 
 **Package:** FEMA Program ID & PRA Automation (demo) · aligned to the talk track (file 14) and storyboard (file 11).
-**Setup:** double-click `fema-demo.html`. Wifi can be off — say so, it's part of the story. Reload = clean reset.
+**Setup:** double-click `fema-demo.html`. Wifi can be off — say so, it's part of the story. Reload = clean reset (once you've made session decisions the browser asks to confirm the reload first — click through it to reset).
 **Say twice, minimum:** *"Everything on screen is synthetic, watermarked data — calibrated to public FEMA obligation data, never real spend."* (There is no on-screen banner anymore — the disclosure was moved off-screen in the 2026-07-09 UX scrub, so saying it is entirely on the presenter. Every export the file generates still carries the SYNTHETIC-DEMO watermark.)
 
 The **wow moments** are marked ★. Don't rush them. (★ wow #1 — the follow-the-dollar trace landing in the flow map — is the mapping-story centerpiece. ★ **THE wow moment** for this stakeholder is the **crawler holdout reveal** on screen 3's *Inference test* tab: the tool rediscovers the grouping logic from history alone and is scored against a year it never saw.)
