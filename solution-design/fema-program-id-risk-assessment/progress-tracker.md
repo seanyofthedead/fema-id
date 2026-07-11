@@ -27,7 +27,7 @@
 | `11-demo-storyboard.md` | ✅ | 2026-07-08 | 10 screens with value/AI/talking points | Passed Pass D |
 | `12-implementation-roadmap.md` | ✅ | 2026-07-08 | Waves 0–8; Waves 0–1 substantially complete | Passed Pass D |
 | `13-sme-validation-questions.md` | ✅ | 2026-07-08 | All `SME-01..18`; carries `SME-01..13` from file 03 | Passed Pass D |
-| `14-demo-talk-track.md` | ✅ | 2026-07-08 | Presenter script for Mike Walker/Greg/Laura | Passed Pass D |
+| `14-demo-talk-track.md` | ✅ | 2026-07-11 | Presenter script for Mike Walker / Laura Pollard / Greg Teets (acting DCFO); names corrected per CH-13 | Passed Pass D |
 | `15-risks-and-limitations.md` | ✅ | 2026-07-08 | Risk register RL-01..18; demo-vs-production | Passed Pass D |
 | `16-decision-log.md` | ✅ | 2026-07-08 | DEC-01..18; seeded with made decisions | Passed Pass D |
 | `17-appendix.md` | ✅ | 2026-07-08 | Glossary, acronyms, example rules/data, refs | Passed Pass D |

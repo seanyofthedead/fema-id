@@ -2,7 +2,7 @@
 
 **Package:** FEMA Program ID & Preliminary Risk Assessment (PRA) Automation — **concept demo**
 **Document date:** 2026-07-08
-**Audience:** Mike Walker (sponsor), Greg, Laura, and FEMA stakeholders (`REQ-025`).
+**Audience:** Mike Walker (sponsor), Laura Pollard, and Greg Teets (acting DCFO), and FEMA stakeholders (`REQ-025`; names confirmed 2026-07-11).
 **Status:** Conceptual demo on **synthetic, watermarked data**. Not a production system; no real FEMA spend data is used or implied.
 
 ---

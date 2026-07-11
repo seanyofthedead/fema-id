@@ -2,7 +2,7 @@
 
 **Package:** FEMA Program ID & PRA Automation (demo)
 **Document date:** 2026-07-08
-**Audience:** Mike Walker (sponsor), Greg, Laura, and FEMA stakeholders (`REQ-025`).
+**Audience:** Mike Walker (sponsor), Laura Pollard, and Greg Teets (acting DCFO; attends all AI demos) — all three non-technical (`REQ-025`; names confirmed in the 2026-07-11 feedback meeting, CH-13).
 **Status:** Conceptual demo. The presenter must state clearly, more than once, that this is a **concept built on synthetic data** — never production, never real FEMA figures.
 **Cross-references:** storyboard (file 11); `REQ-` (02), `ASSUMP-` (03), `SRC-` (04), `SME-` (13).
 

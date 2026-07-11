@@ -148,7 +148,7 @@ Named individuals from the transcript are retained **only as roles to confirm** 
 | Stakeholder / role | Interest in the solution | Demo touchpoint |
 |---|---|---|
 | Program stakeholder (Mike Walker's office) | Sponsor; wants the automation vision realized | Executive dashboard; talk track (file 14) |
-| Greg, Laura (FEMA stakeholders) | Demo audience; evaluate concept fidelity | Walkthrough (file 11) |
+| Laura Pollard, Greg Teets (acting DCFO) (FEMA stakeholders) | Demo audience; evaluate concept fidelity | Walkthrough (file 11) |
 | Finance-center contact | Owns the extract and adjustment know-how | Ingestion + mapping screens; `SME-03`, `SME-04` |
 | Program office analyst (future user) | Would run assessments, supply qualitative answers | Review/override + qualitative stub |
 | Reviewer / approver (future user) | Signs off finalized PRA | Human-in-the-loop screen (`ASSUMP-17`) |

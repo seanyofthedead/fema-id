@@ -1218,11 +1218,11 @@ function praAnswers(progId){
   A.push({qid: 'Q2', value: fmtPct(y.pct), conf: 1, spark: progId,
     evidence: `FY${PRA_FY} ${fmtFull(y.cur)} vs FY${PRA_FY-1} ${fmtFull(y.prior || 0)}. Binding: <span class="mono">fiscal_year_spend_summary.yoy_pct_change</span>.`,
     rationale: `Spend moved ${fmtPct(y.pct)} year over year (${fmtM(y.prior||0)} → ${fmtM(y.cur)}). The change is concentrated in the program's ${evs.length}-event mix — see screen 4.`});
-  A.push({qid: 'Q3', value: flag ? 'Yes — comprehensive assessment required' : 'No — preliminary on file', conf: 1,
+  A.push({qid: 'Q3', value: flag ? 'Yes — comprehensive assessment required from the start' : 'No — begins with the preliminary assessment', conf: 1,
     evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). |${fmtPct(y.pct)}| ${flag ? '≥' : '<'} ${state.cfg.threshold}%.`,
     rationale: flag
       ? `${fmtPct(y.pct)} breaches the ±${state.cfg.threshold}% corridor, so ${name} is flagged for a comprehensive risk assessment at data-land time — weeks-to-months earlier than the manual close.`
-      : `${fmtPct(y.pct)} sits inside the ±${state.cfg.threshold}% corridor; the preliminary assessment stands and no comprehensive assessment is triggered.`});
+      : `${fmtPct(y.pct)} sits inside the ±${state.cfg.threshold}% corridor; this program begins with the preliminary assessment and nothing forces a comprehensive at the outset.`});
   A.push({qid: 'Q4', value: `${subs.length} sub-programs; ${codes.size} financial codes`, conf: 1,
     evidence: `Distinct sub-programs and codes with FY${PRA_FY} spend after the mapping in force (screen 3): ${subs.map(s => esc(shortName(subById.get(s.subId).name))).join('; ') || '—'}.`,
     rationale: `The rollup hierarchy maps ${codes.size} codes through ${subs.length} sub-programs into ${name}; edit any mapping on screen 3 and this answer recomputes.`});
@@ -1239,9 +1239,9 @@ function praAnswers(progId){
     rationale: excMine.length
       ? `${excMine.length} unmapped code(s) may belong here; their spend is excluded from every total until a human decides.`
       : `All records affecting ${name} are classified by a rule in force; nothing sits in the exception queue.`});
-  A.push({qid: 'Q8', value: `FY${PRA_FY-1}: ${priorFlag ? 'comprehensive assessment triggered' : 'preliminary only, no trigger'}`, conf: 0.90,
+  A.push({qid: 'Q8', value: `FY${PRA_FY-1}: ${priorFlag ? 'comprehensive assessment triggered' : 'began and closed with the preliminary, no trigger'}`, conf: 0.90,
     evidence: `Prior-cycle recomputation: FY${PRA_FY-1} YoY ${fmtPct(yPrior.pct)} vs the trigger in force.`,
-    rationale: `Based on the ${FYS.length}-year history, ${name} ${priorFlag ? 'was flagged in the prior cycle — recency raises this year’s review priority' : 'closed the prior cycle on a preliminary assessment only'}.`});
+    rationale: `Based on the ${FYS.length}-year history, ${name} ${priorFlag ? 'was flagged in the prior cycle — recency raises this year’s review priority' : 'closed the prior cycle with its preliminary assessment (no escalation)'}.`});
   A.push({qid: 'Q9', human: true});
   A.push({qid: 'Q10', human: true});
   return A;
@@ -1360,8 +1360,8 @@ function kpi(lbl, val, sub, cls){
 }
 function badgeAssess(flag){
   return flag
-    ? '<span class="badge crit" title="Year-over-year change breached the configured trigger — this program requires a full (comprehensive) risk assessment">Comprehensive required</span>'
-    : '<span class="badge good" title="Year-over-year change stayed inside the configured trigger — the preliminary assessment on file stands">Preliminary only</span>';
+    ? '<span class="badge crit" title="Known from the start: the year-over-year change breached the configured trigger, so this program goes straight to a full (comprehensive) risk assessment">Comprehensive required</span>'
+    : '<span class="badge good" title="Start with a preliminary assessment — the year-over-year change stayed inside the configured trigger, so nothing forces a comprehensive from the outset. A preliminary can still escalate to a comprehensive on its findings.">Preliminary first</span>';
 }
 function yoyCell(pct){
   if (pct == null) return '<td class="num">—</td>';
@@ -1775,7 +1775,7 @@ function renderS6(){
     const why = r.pct == null ? '—' :
       `${aiTag()} ${r.flag
         ? `${fmtPct(r.pct)} breaches the ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% trigger — comprehensive assessment required; earlier identification enables in-year remediation.`
-        : `${fmtPct(r.pct)} is within the corridor; preliminary assessment stands.`}`;
+        : `${fmtPct(r.pct)} is within the corridor; the program begins with the preliminary assessment.`}`;
     return `<tr><td>${esc(shortName(p.name))}</td>
       <td class="num">${r.prior == null ? '—' : fmtFull(r.prior)}</td>
       <td class="num">${fmtFull(r.cur)}</td>${yoyCell(r.pct)}
@@ -2034,7 +2034,7 @@ function praReportHtml(progId){
 <table><tr><th>FY${PRA_FY} disbursements</th><th>FY${PRA_FY-1}</th><th>YoY</th><th>Trigger in force</th><th>Assessment path</th></tr>
 <tr><td class="n">${fmtFull(y.cur)}</td><td class="n">${y.prior == null ? '—' : fmtFull(y.prior)}</td>
 <td class="n">${fmtPct(y.pct)}</td><td>${cfg.threshold}% · ${esc(cfg.direction.replace('_',' '))} · min prior ${fmtM(cfg.minPrior)} (REQ-010, configurable)</td>
-<td><b>${flag ? 'COMPREHENSIVE ASSESSMENT REQUIRED' : 'Preliminary only'}</b></td></tr></table>
+<td><b>${flag ? 'COMPREHENSIVE ASSESSMENT REQUIRED FROM THE START' : 'Begins with preliminary assessment'}</b></td></tr></table>
 <h2>Questionnaire (illustrative — ASSUMP-04)</h2>
 <table><tr><th>#</th><th>Question</th><th>Answer</th><th>Populated by</th><th>Confidence</th><th>Review status</th></tr>
 ${rows.map(r => `<tr><td class="mono">${r.qid}</td><td>${esc(r.text)}</td>
@@ -2502,7 +2502,7 @@ function openDiffDrawer(title, before, undoFn){
         <details><summary>all affected fiscal years</summary><table>${x.perFy.map(f => `<tr><td>FY${f.fy}</td><td class="num">${fmtD(f.d)}</td></tr>`).join('')}</table></details></div>`).join('')
     : '<div class="dd-line">No program totals changed in any fiscal year.</div>');
   lines.push(d.flips.length
-    ? d.flips.map(f => `<div class="dd-line"><b>Trigger flip:</b> ${esc(shortName(progById.get(f.progId).name))} — now ${f.to ? '<span class="badge crit">Comprehensive required</span>' : '<span class="badge good">Preliminary only</span>'} (FY${state.fy}, configuration in force)</div>`).join('')
+    ? d.flips.map(f => `<div class="dd-line"><b>Trigger flip:</b> ${esc(shortName(progById.get(f.progId).name))} — now ${f.to ? '<span class="badge crit">Comprehensive required</span>' : '<span class="badge good">Preliminary first</span>'} (FY${state.fy}, configuration in force)</div>`).join('')
     : `<div class="dd-line">0 trigger flips at the configuration in force (FY${state.fy}).</div>`);
   lines.push(d.praChanges.length
     ? `<div class="dd-line"><b>${d.praChanges.length}</b> PRA answer(s) changed (FY${PRA_FY} assessment cycle)
