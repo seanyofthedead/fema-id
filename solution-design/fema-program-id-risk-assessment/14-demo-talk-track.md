@@ -10,9 +10,9 @@
 
 ## 1. Opening (≈1 min)
 
-> "Thanks for the time. What you're about to see is a **concept demo** — everything on screen is **synthetic data**, watermarked, calibrated to public FEMA obligation data but not real spend. The goal today isn't a finished product; it's to show that the automation Mike's office has been asking about for a while is **feasible**, and to line up the handful of questions we need your SMEs to answer to make it real."
+> "Thanks for the time. What you're about to see is a **representation — the art of the possible** (2026-07-11 feedback, CH-12). The **program names on screen are real, public FEMA programs** — Public Assistance, the Hazard Mitigation Grant Program, Individual Assistance, the Homeland Security Grant Program, Urban Search & Rescue — but **every dollar is dummy data**, watermarked, shaped against public FEMA funding figures, never real spend. The goal today isn't a finished product; it's to show that the automation Mike's office has been asking about for a while is **doable**, and to line up the handful of questions we need your experts to answer to make it real. Once we have your actual program IDs and data, this is the structure we build down into."
 
-Key: set expectations (concept, not production), name the sponsor's long-standing ask (~16:50), and frame today as *feasibility + validation*.
+Key: set expectations (representation / art of the possible, not production), real public names + dummy spend caveat in the same breath, name the sponsor's long-standing ask, and frame today as *feasibility + validation*.
 
 ---
 
@@ -45,8 +45,8 @@ Follow the 10 screens (file 11). Presenter cues:
 | 3 Mapping workspace | "We don't have your rules — so we **inferred** them from history and made them **editable**. Your SOP drops in right here (`REQ-013`, `REQ-015`)." |
 | 4 Event grouping | "Harvey/Irma/Maria split — anchored to real declaration numbers (`SRC-02`)." |
 | 5 Spend aggregation | "Reminder: public data is *funding*; this is synthetic *disbursements* calibrated to it (`ASSUMP-05`)." |
-| 6 YoY variance | "Here's the 20% trigger — and it's a **slider**, because we want your exact rule (`REQ-010`, `SME-01`). Watch it re-flag." |
-| 7 PRA auto-generator | "~8 of 10 questions auto-fill from data you already hold (`REQ-008`); 2 need your program office (`REQ-009`). This form is illustrative until we get yours (`SME-05`)." |
+| 6 YoY variance | "Here's the 20% trigger — a **slider**, because we want your exact rule (`REQ-010`, `SME-01`). And per your **2024 change, it watches transaction volume as well as dollars** (`REQ-031`): Individual Assistance's dollars barely moved, but its payment count jumped — the amber bar. Watch it re-flag." |
+| 7 PRA — computed answers | "~8 of 10 questions auto-fill from data you already hold (`REQ-008`); 2 need your program office (`REQ-009`). A program either **starts with a preliminary** or is already known to need a comprehensive (`REQ-032`). This form is illustrative until we get yours (`SME-05`)." |
 | 8 Review/override | "Auto-filled is **not** auto-accepted — a human signs off, every override captured (`ASSUMP-17`)." |
 | 9 Assumptions | "Every assumption is on the table, not hidden — we'll check these off with your SMEs (`REQ-016`)." |
 | 10 Export | "Excel-compatible outputs, modern auditable logic underneath (`ASSUMP-15`)." |
@@ -79,9 +79,15 @@ This pre-empts the "black box" and "over-automation" objections.
 
 ---
 
-## 8. Next steps (≈1 min)
+## 8. What production actually takes — say this unprompted (≈1 min; CH-14)
 
-> "Two asks. First, the **blocking questions**: the exact trigger (`SME-01`), what your extract looks like (`SME-03`), your real 10 questions (`SME-05`), and your definition of spend (`SME-11`). Second, help us chase the **SOP** (`SME-02`). We'll iterate Friday and early next week, checking assumptions off as we go (`REQ-025`). From there we can scope a pilot — including cloud and security, which are Brett's confirms (`SME-09`)."
+The audience has repeatedly assumed "you already did the hard work, just put it in." Pre-empt it:
+
+> "One thing I want to be straight about: **this is not plug-and-play**. What you saw today runs on public information and dummy spend. The real work starts after: getting **access to the financial system** and building the actual extract — that's the big lift; writing the **SOPs, job aids and desk guides** your people would run this with; setting up the **governance** around who approves what; and working the **cloud question with your OCIO** — which tools you have access to, how cost-sharing works, and the timeline for that. We've seen that negotiation alone take a year-plus elsewhere. And your **financial system of record is modernizing, with go-live around October 1** — the program-ID data pool comes from that system, so some of this can't be built until it lands. That's exactly why this demo is file-in/file-out: it's built to be **portable across that migration** (`REQ-019`)."
+
+## 8a. Next steps (≈1 min)
+
+> "Two asks. First, the **blocking questions**: the exact trigger rule — including how the 2024 transaction-volume change works (`SME-01`, `SME-28`); what your extract looks like, including the fund-symbol and disbursement-type fields (`SME-03`, `SME-27`); your real 10 questions (`SME-05`); and your definition of spend (`SME-11`). Second, help us chase the **SOP** (`SME-02`) and confirm the fuller program list you offered (`SME-30`). From there we can scope a pilot — including cloud and security (`SME-09`)."
 
 Close on: *feasible today, validated with you, production-scoped separately.*
 
@@ -91,9 +97,10 @@ Close on: *feasible today, validated with you, production-scoped separately.*
 
 | Likely question | Response |
 |---|---|
-| "Is this real FEMA data?" | "No — synthetic, watermarked, calibrated to public obligations (`ASSUMP-10`). No real spend or PII." |
-| "Where did the 20% come from?" | "Your transcript, hedged — that's why it's configurable and why `SME-01` is our top question." |
-| "Are those our real questions?" | "No — illustrative placeholder on OMB factors; we need your instrument (`SME-05`)." |
-| "Can it run in our cloud?" | "Built cloud-portable; exact platform is Brett's confirm (`SME-09`). Demo runs on a laptop." |
-| "Is it production-ready?" | "No — this is a concept. Production readiness (security, FedRAMP, integration) is a separate assessment (Wave 8)." |
-| "What about the system migration?" | "File-in/file-out design; same codes expected to carry over (`REQ-019`, `SME-10`)." |
+| "Is this real FEMA data?" | "The **program names are real and public**; every dollar, code, fund symbol and disbursement type is dummy data, watermarked (`ASSUMP-10`, `ASSUMP-20`). No real spend or PII." |
+| "Are those our real programs?" | "The five names are real public programs your team pointed us to; the sub-structures follow what you described — Public Assistance grouped by disaster number, IA's three components, HSGP's three. Your fuller 8–10 list drops in as a config change (`SME-30`)." |
+| "Where did the 20% come from?" | "Your team, hedged — that's why it's a slider and why the exact rule is our top question (`SME-01`). We've also built in your 2024 change: it watches the **number of payments** as well as the dollars, in both directions (`SME-28`)." |
+| "Are those our real questions?" | "No — illustrative placeholder on the federal payment-integrity factors; we need your instrument (`SME-05`)." |
+| "Can it run in our cloud?" | "Built cloud-portable; the exact platform, access and cost-sharing are the OCIO conversation (`SME-09`). The demo runs on a laptop with the wifi off." |
+| "Is it production-ready?" | "No — this is the art of the possible. Production means financial-system access, SOPs/job aids/desk guides, governance, security and the OCIO work — a scoped effort, not a hand-off (Wave 8)." |
+| "What about the system modernization?" | "Your system of record goes live around **October 1**, and the program-ID data pool comes from it. That's why this is file-in/file-out — the concept ports across the migration; some build steps simply wait for the new system (`REQ-019`, `SME-10`, `ASSUMP-22`)." |

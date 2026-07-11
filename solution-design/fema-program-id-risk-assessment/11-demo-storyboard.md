@@ -87,17 +87,17 @@ flowchart LR
 | Aspect | Detail |
 |---|---|
 | Purpose | The analytical centerpiece: the configurable trigger |
-| User action | Adjust threshold/direction slider; re-run; watch programs re-flag |
-| Data shown | YoY % per program/event, trigger flags, threshold config panel |
+| User action | Adjust threshold/direction slider and the measure checkboxes (dollars / transaction volume); re-run; watch programs re-flag |
+| Data shown | YoY % per program on both measures, per-measure trigger flags (count-only breaches drawn amber), threshold config panel |
 | AI capability | Deterministic math; AI explains *why* a spike occurred (context) |
-| Talking point | "The threshold is configurable — default 20%, either direction — because the transcript hedged the exact value (`REQ-010`, `SME-01`). Watch it re-flag live." |
+| Talking point | "The threshold is configurable — default 20%, either direction, on dollars **or transaction volume** per your 2024 change (`REQ-010`, `REQ-031`, `SME-01/28`). Individual Assistance moves +8% in dollars but +37.5% in volume — the dollar-only rule misses it; yours catches it. Watch it re-flag live." |
 | Stakeholder value | Proves the math is transparent and client-tunable, not a black box |
 | Traces to | `REQ-010`, `ASSUMP-03`, `SME-01` |
 
-### Screen 7 — Risk assessment auto-generator
+### Screen 7 — PRA: computed answers (read-only evidence view)
 | Aspect | Detail |
 |---|---|
-| Purpose | Auto-populate the PRA from spend data |
+| Purpose | Auto-populate the PRA from spend data; show how every value was computed. All input happens on screen 8 (CH-07, 2026-07-11) |
 | User action | Open a program's PRA; see ~8/10 pre-filled, ~2 flagged for input |
 | Data shown | Illustrative 10-question form (labeled placeholder, `ASSUMP-04`), evidence + confidence per answer |
 | AI capability | Deterministic binds for quant answers; LLM rationale; RAG citation to public guidance |
@@ -144,10 +144,10 @@ flowchart LR
 
 | Need | Setup |
 |---|---|
-| Fiscal years | FY23–FY26 synthetic (`ASSUMP-07`) |
-| Programs | PROG-PA (97.036), PROG-HM (97.039) (`ASSUMP-09`) |
-| Events | DR-4332/4337/4338/4339/4340/4341/4346 (`SRC-02`) |
-| Trigger cases | ≥1 program breaching, ≥1 not (file 08 §6) |
+| Fiscal years | FY22–FY26 synthetic (`ASSUMP-07`) |
+| Programs | **Real public taxonomy (REQ-027, 2026-07-11):** Public Assistance (97.036, sub-grouped by disaster number), HMGP (97.039, no subs), Individual Assistance (IHP/Mass Care/DCM), HSGP (97.067, SHSP/UASI/OPSG — non-disaster), US&R (97.025, no subs — non-disaster) |
+| Events | DR-4332/4337/4338/4339/4340/4341/4346 (`SRC-02`); non-disaster programs carry no DR (`REQ-030`) |
+| Trigger cases | ≥1 breaching up, ≥1 down, ≥1 within, and **1 count-only breach** (Individual Assistance, `REQ-031`) |
 | Watermark | Every record `SYNTHETIC-DEMO` |
 | Config | `variance_trigger.yaml`, mapping rules YAML (editable live) |
 

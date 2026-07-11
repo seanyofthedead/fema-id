@@ -82,6 +82,18 @@ Decisions logged as DEC-24…DEC-28 (file 16); roadmap note added under Wave 6 (
 | `updates/FEEDBACK_UPDATE_ANALYSIS.md` | ✅ | 2026-07-11 | 17 classified change items (CH-01…17: 13 Confirmed Feedback / 4 Strong Inference) with transcript evidence, origin (team ask vs presenter), target, generator-change flag, effort, risk, dependency, demo-criticality; authoritative real-FEMA-program taxonomy mapping (§3); constraint-preservation check (§4). **New IDs coined here (frozen files 02/03/13 untouched): REQ-027…035, ASSUMP-20…24, SME-27…30** — continuing from REQ-026/ASSUMP-19/SME-26, nothing renumbered |
 | `updates/FEEDBACK_UPDATE_PLAN.md` | ✅ | 2026-07-11 | Waved plan for the weekend build before Tuesday's in-person demo (Mike Walker, Laura Pollard, Greg Teets — acting DCFO): one-screen must-do list; Waves A (status wording/names) → B (real taxonomy + TAFS/disbursement-type/disaster-indicator; single generator edit + regeneration; live-CSV smoke test) → C (transaction-count trigger dimension, team-sanctioned fallback) → D (optional: PRA 7/8 differentiation, flow-map decision) → E (framing/docs/slides/Monday email) → F (future/pilot: historical RA ingestion, 3-year cycle, region drill-down, upload hardening, WebFMIS integration). **Plan only — no app/design files modified in this pass** |
 
+## 1f. Feedback-update EXECUTION pass (2026-07-11 — waves A–E of `updates/FEEDBACK_UPDATE_PLAN.md`)
+
+| Wave | Status | Commits | Notes |
+|---|---|---|---|
+| A — status wording + names | ✅ | `4b0e70d` | "Preliminary first / begins with preliminary" starting-point wording (REQ-032) across badges, PRA Q3/Q8, export, drawer; audience names corrected (Mike Walker / Laura Pollard / Greg Teets, acting DCFO) in files 01/05/14 |
+| B1 — generator taxonomy + fields | ✅ | `dd1301e` | **Real public 5-program taxonomy** (REQ-027): PA by disaster number, HMGP/US&R no subs, IA = exactly-3 rollup, HSGP non-disaster; TAFS / disbursement-type / disaster-indicator fields (REQ-028/029/030); count columns + per-measure flags; IA count-only breach planted (+37.5% count / +8% $). 10/10 self-checks; 1,459 txns / 57 codes / 15 sub-groupings |
+| B2+B3+C — template, smoke test, dual-measure trigger | ✅ | `14f5373` | Leave-behind rebuilt on the new payload; combined any-measure trigger everywhere; screen-6 measures UI (count-only breaches amber ⚑); TAFS/Type columns; non-disaster support end-to-end; live-CSV matrix green (round-trip 1,459/0, edge rejections, ND rows). Verified via scripted in-browser harness: 10 screens, parity 260/260, FLOW-05 47/47 + 10 review / 0 wrong, exports watermarked |
+| D — PRA screens 7/8 differentiated | ✅ | `d9bc3ff` | Screen 7 = read-only "computed answers" evidence view; screen 8 = sole input surface (CH-07; full merge deferred to roadmap) |
+| E — framing, docs, slides, email | ✅ | (this commit) | Talk track: art-of-the-possible opening, real-names+dummy-spend caveat, count-trigger beat, **not-plug-and-play** section, Oct-1 modernization Q&A; DEMO_SCRIPT rewritten (new counts, wow #3 = count-only catch, plain language); leavebehind README refreshed; RL-19/RL-20 added to file 15; file 12 feedback-pass + Wave-F roadmap note; file 10 dual-measure config + new worked example; file 11 screen rows; `updates/TUESDAY_SLIDES_AND_MONDAY_EMAIL.md` (CH-16). On-screen ID tokens swept from new UI copy (badge convention preserved) |
+
+Deferred to roadmap (plan Wave F): historical-RA ingestion (REQ-033), 3-year-cycle field (REQ-034), region drill-down (REQ-035), deeper upload hardening, WebFMIS/modernized-system integration, flow-map alternative spike, full 7/8 merge.
+
 ---
 
 ## 2. Pass D quality-gate results

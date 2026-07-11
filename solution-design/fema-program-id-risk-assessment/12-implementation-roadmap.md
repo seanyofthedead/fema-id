@@ -133,7 +133,7 @@ flowchart LR
 | | |
 |---|---|
 | Objective | Scope what production would require (NOT build it) |
-| Tasks | Security/FedRAMP assessment; cloud/tenant confirm (`SME-09`); RBAC (`SME-16`); audit/retention (`SME-18`); live-system integration (`REQ-023`); continuous feed (`REQ-022`) |
+| Tasks | Security/FedRAMP assessment; cloud/tenant + OCIO access & cost-sharing confirm (`SME-09`); RBAC (`SME-16`); audit/retention (`SME-18`); live-system integration with the **modernized system of record (go-live ~2026-10-01, `ASSUMP-22`; WebFMIS extract contract `SME-27`)** (`REQ-023`); continuous feed (`REQ-022`); SOPs/job aids/desk guides + governance (CH-14) |
 | Deliverables | Production-readiness assessment + gap list |
 | Acceptance | Explicit go/no-go criteria and controls documented |
 | Dependencies | Waves 1–7; `ASSUMP-11` |
@@ -143,6 +143,8 @@ flowchart LR
 ---
 
 ## 3. Critical path & top risks
+
+> **Feedback pass (2026-07-11, waves A–E of `updates/FEEDBACK_UPDATE_PLAN.md`):** the leave-behind now runs on the **real public program taxonomy** (REQ-027), carries the WebFMIS-style TAFS/disbursement-type/disaster-indicator stand-ins (REQ-028/029/030), and implements the **dual-measure trigger** — dollars + transaction volume, the client's 2024 rule (REQ-031) — with a planted count-only breach on Individual Assistance. **Future/pilot items captured for this roadmap (plan Wave F):** client-side ingestion of the client's historical risk-assessment records (~2018/19 onward; client-owned, never embedded — REQ-033/ASSUMP-24) enabling trend dashboards; the 3-year comprehensive-cycle rule as a first-class trigger path with a date-of-last-comprehensive field (REQ-034/SME-29); region drill-down (REQ-035); deeper live-upload hardening; WebFMIS/modernized-system integration post go-live (~2026-10-01, ASSUMP-22); flow-map alternative spike and full PRA screen 7/8 merge only if Tuesday's feedback asks for them.
 
 - **Critical path:** Wave 1 dataset → Wave 2 ingestion → Wave 3 rules → Wave 5 PRA → Wave 6 UI. AI (Wave 4) enriches but does not block the core demo.
 - **Highest-priority wave to start now:** **Wave 2 (data model + ingestion)** — it unblocks Waves 3–6 and the demo date is fixed (`REQ-025`).

@@ -442,8 +442,8 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <div class="tblwrap"><table id="s2-sample"><thead><tr>
             <th scope="col">txn_id</th><th scope="col">raw_code (landed)</th><th scope="col">code (cleansed)</th>
             <th scope="col">DR</th><th scope="col">FY</th><th scope="col" class="num">Amount</th>
-            <th scope="col" title="Treasury Account Fund Symbol — synthetic stand-in; real WebFMIS field pending (SME-27)">TAFS</th>
-            <th scope="col" title="Disbursement type — illustrative value set; real WebFMIS values pending (SME-27)">Type</th>
+            <th scope="col" title="Treasury Account Fund Symbol — synthetic stand-in; real WebFMIS field name and format pending SME confirmation">TAFS</th>
+            <th scope="col" title="Disbursement type — illustrative value set; real WebFMIS values pending SME confirmation">Type</th>
             <th scope="col">Date</th><th scope="col">Lineage</th>
           </tr></thead><tbody></tbody></table></div>
         </div>
@@ -1530,9 +1530,9 @@ function renderS2(){
     ['disaster_number', 'disaster_event.disaster_number', frac(val.drKnown) + ' resolve to a declared disaster or are non-disaster (blank)'],
     ['fiscal_year', 'fiscal_year.fiscal_year', 'FY' + FYS[0] + '–FY' + FYS[FYS.length - 1] + ' · ' + frac(val.fyKnown)],
     ['disbursement_amount', 'transaction.disbursement_amount', frac(val.amtPop) + ' populated'],
-    ['disbursement_type', 'transaction.disbursement_type', 'illustrative value set — real WebFMIS values pending (SME-27)'],
+    ['disbursement_type', 'transaction.disbursement_type', 'illustrative value set — real WebFMIS values pending SME confirmation'],
     ['disbursement_date', 'transaction.disbursement_date', frac(val.dateInFy) + ' within the FY window'],
-    ['(join) tafs', 'financial_code.tafs — Treasury Account Fund Symbol', 'synthetic stand-in per fund family; real WebFMIS field pending (SME-27)'],
+    ['(join) tafs', 'financial_code.tafs — Treasury Account Fund Symbol', 'synthetic stand-in per fund family; real WebFMIS field pending SME confirmation'],
   ];
   $('#s2-schema tbody').innerHTML = schema.map(r =>
     `<tr><td class="mono">${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('');
@@ -1771,7 +1771,7 @@ function renderS5(){
   const bar = (v, max) => `<span style="display:inline-block;width:${Math.max(2, v / max * 120)}px;height:8px;border-radius:3px;background:#86b6ef;vertical-align:0"></span>`;
   let rows = [], tot = 0;
   if (mode === 'program'){
-    head.innerHTML = `<tr><th>Program</th><th>Listing</th><th title="Treasury Account Fund Symbol — synthetic stand-in (SME-27)">TAFS</th><th>Disaster?</th><th class="num">Txns</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th></th></tr>`;
+    head.innerHTML = `<tr><th>Program</th><th>Listing</th><th title="Treasury Account Fund Symbol — synthetic stand-in pending SME confirmation">TAFS</th><th>Disaster?</th><th class="num">Txns</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th></th></tr>`;
     rows = PROGS.map(p => ({label: shortName(p.name), listing: p.listing, tafs: p.tafs, isDis: p.isDisaster,
       tx: agg.progFyTx[p.id + '|' + fy] || 0,
       codes: (agg.progFyCodes[p.id + '|' + fy] || new Set()).size,
@@ -2261,7 +2261,7 @@ function codeCard(code, aliasKey){
       <span class="small">rule <b class="mono">${esc(ruleId)}</b></span> ${stat} ${confChip(conf)}</div>`;
   }
   return `<h4 class="mono">${esc(code)}</h4>
-    <div class="cs-anat">${esc(ci.fund)} <span class="small">(fund)</span> · ${esc(ci.seg)} <span class="small">(segment)</span> · ${ci.event == null ? 'ND <span class="small">(non-disaster)</span>' : `DR-${ci.event} <span class="small">(event)</span>`}${ci.tafs ? ` · <span class="mono">${esc(ci.tafs)}</span> <span class="small" title="Treasury Account Fund Symbol — synthetic stand-in (SME-27)">(TAFS)</span>` : ''}</div>
+    <div class="cs-anat">${esc(ci.fund)} <span class="small">(fund)</span> · ${esc(ci.seg)} <span class="small">(segment)</span> · ${ci.event == null ? 'ND <span class="small">(non-disaster)</span>' : `DR-${ci.event} <span class="small">(event)</span>`}${ci.tafs ? ` · <span class="mono">${esc(ci.tafs)}</span> <span class="small" title="Treasury Account Fund Symbol — synthetic stand-in pending SME confirmation">(TAFS)</span>` : ''}</div>
     ${aliasNote}${chain}
     <div class="small" style="margin-top:8px">Disbursements by fiscal year:</div>${fybars}
     <div class="flexrow" style="margin:4px 0 8px">${drs.map(d => d == null ? '<span class="badge info">non-disaster</span>' : `<span class="badge gray">DR-${d}</span>`).join(' ')}</div>

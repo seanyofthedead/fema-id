@@ -29,6 +29,8 @@
 | RL-16 | SME gaps | SOP never materializes | Medium | Medium | Inference is the permanent path; still swappable if found | `ASSUMP-06`, `SME-02` |
 | RL-17 | Scope | Audience expects a production tool | Medium | High | Repeated concept framing; roadmap separates demo from pilot | `REQ-025`, file 12 |
 | RL-18 | Scope | Event-split mechanism guessed | Medium | Medium | Synthetic anatomy anchored to real DRs; flagged `SME-06` | `ASSUMP-08` |
+| RL-19 | Dependency | Financial-system modernization (system of record, go-live ~2026-10-01) slips or changes scope — the program-ID data pool comes from it, and the team reports it is "not going smoothly" | Medium | High (pilot timeline) | File-in/file-out portability (`REQ-019`); build steps that need the new system explicitly sequenced after go-live; validate timeline via `SME-10` | `ASSUMP-22` (2026-07-11 feedback) |
+| RL-20 | Expectation | Audience assumes plug-and-play ("you already did all the hard work — just put it in", said repeatedly) | High | High (scope/commercial) | Unprompted not-plug-and-play beat in the talk track (file 14 §8): financial-system access, SOPs/job aids/desk guides, governance, OCIO cloud-access & cost-sharing; ROM task list makes remaining work explicit | CH-14 (2026-07-11 feedback) |
 
 ---
 

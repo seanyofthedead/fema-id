@@ -10,7 +10,7 @@
 
 ## 1. What the PRA does (in this concept)
 
-For every reporting program, the PRA is a **fixed 10-question template** with per-program data bindings (`REQ-011`): one template, N data bindings, not N bespoke forms. ~8 questions are **quantitative and auto-populatable** from the synthetic disbursement ledger (`REQ-008`); ~2 are **qualitative** and require program-office input (`REQ-009`). A ≥20% year-over-year change in program spend flags the program for a **comprehensive** risk assessment (`REQ-010`).
+For every reporting program, the PRA is a **fixed 10-question template** with per-program data bindings (`REQ-011`): one template, N data bindings, not N bespoke forms. ~8 questions are **quantitative and auto-populatable** from the synthetic disbursement ledger (`REQ-008`); ~2 are **qualitative** and require program-office input (`REQ-009`). A ≥20% year-over-year change in program spend **or in transaction volume** (the client's 2024 rule change, `REQ-031`) flags the program for a **comprehensive** risk assessment (`REQ-010`). Status wording reads as a **starting point** — a program begins with a preliminary or is already known to require a comprehensive (`REQ-032`).
 
 The exact 8/2 split is parameterizable (`REQ-008` is hedged "probably like eight"); confirm with `SME-05`.
 
@@ -22,7 +22,7 @@ The exact 8/2 split is parameterizable (`REQ-008` is hedged "probably like eight
 |---|---|---|---|---|---|---|
 | Q1 | Total program disbursements this FY | Quant | ✅ Auto | `spend_summary.total_disbursement` | Ledger rows, program rollup | Binding completeness |
 | Q2 | Year-over-year change in program spend (%) | Quant | ✅ Auto | `spend_summary.yoy_pct_change` | FY vs prior-FY totals | Two-year data present |
-| Q3 | Does YoY change breach the comprehensive-assessment threshold? | Quant | ✅ Auto | `spend_summary.trigger_flag` (§5) | Threshold, measure, direction | Deterministic |
+| Q3 | Does YoY change breach the comprehensive-assessment threshold on dollars **or transaction volume**? (REQ-031) | Quant | ✅ Auto | `fiscal_year_spend_summary.trigger_flag` (§5 — combined any-measure flag) | Threshold, measures, direction | Deterministic |
 | Q4 | Number of sub-programs / codes rolled into this program | Quant | ✅ Auto | count of `sub_program` / `financial_code` | Mapping table | Mapping confidence |
 | Q5 | Number of disaster events contributing to spend | Quant | ✅ Auto | distinct `disaster_number` in `spend_summary` | Event split (`REQ-005`) | Event-rule confidence |
 | Q6 | Share of spend concentrated in the top event/sub-program (%) | Quant | ✅ Auto | derived from `spend_summary` | Concentration calc | Data present |
@@ -85,21 +85,25 @@ Every field traces to the data model (file 08 §8); every auto value writes an `
 **Do not hard-code.** Threshold, direction, and measure are configuration parameters, surfaced on-screen (`REQ-010`, `ASSUMP-03`; confirm `SME-01`).
 
 ```yaml
-# variance_trigger.yaml  (rules-as-data)
+# variance_trigger.yaml  (rules-as-data) — revised 2026-07-11 (REQ-031)
 comprehensive_assessment_trigger:
-  measure: disbursements        # ASSUMP-05; alt: obligations | outlays (SME-01)
+  measures: [disbursements, transaction_count]  # the client's 2024 change: volume AND dollars (REQ-031; SME-28)
+  combine: any                  # a breach on either enabled measure flags the program (ASSUMP-21)
   threshold_pct: 20             # transcript hedged "I think it's like 20%" (REQ-010)
-  direction: either             # either | increase_only | decrease_only (SME-01)
-  min_prior_year_amount: 0      # optional floor to suppress noise on tiny programs
+  direction: either             # either | increase_only | decrease_only (SME-01; decrease added because "Mike was concerned about the decrease")
+  min_prior_year_amount: 0      # optional dollar floor to suppress noise on tiny programs
+  min_prior_year_count: 0       # optional count floor (SME-28)
   compare: prior_fiscal_year    # YoY basis
 ```
 
-**Computation (deterministic):**
+**Computation (deterministic, per measure):**
 
 ```
-yoy_pct_change = (current_disbursement - prior_disbursement) / prior_disbursement * 100
-trigger_flag   = match(direction) AND abs(yoy_pct_change) >= threshold_pct
-                 AND prior_disbursement >= min_prior_year_amount
+yoy_pct_change        = (current_disbursement - prior_disbursement) / prior_disbursement * 100
+count_yoy_pct_change  = (current_txn_count   - prior_txn_count)    / prior_txn_count    * 100
+dollar_flag = match(direction) AND abs(yoy_pct_change)       >= threshold_pct AND prior_disbursement >= min_prior_year_amount
+count_flag  = match(direction) AND abs(count_yoy_pct_change) >= threshold_pct AND prior_txn_count    >= min_prior_year_count
+trigger_flag = dollar_flag OR count_flag        # combine: any
 ```
 
 | direction | Fires when |
@@ -108,12 +112,14 @@ trigger_flag   = match(direction) AND abs(yoy_pct_change) >= threshold_pct
 | `increase_only` | `change ≥ +threshold` |
 | `decrease_only` | `change ≤ -threshold` |
 
-**Worked example (synthetic, file 08 §6):**
+**Worked example (synthetic, FY2026 planted outcomes — 2026-07-11 dataset):**
 
-| Program/event | FY24 | FY25 | YoY | Threshold 20% either | Result |
-|---|---|---|---|---|---|
-| PA / DR-4332 | $1.25M | $3.40M | +172% | breach | 🔴 Comprehensive assessment |
-| PA / DR-4337 | $1.95M | $2.10M | +7.7% | no | 🟢 Preliminary only |
+| Program | YoY $ | YoY txn volume | Threshold 20% either, any measure | Result |
+|---|---|---|---|---|
+| Public Assistance | +34.0% | +32.4% | breach (both) | 🔴 Comprehensive required |
+| HMGP | −31.0% | −28.3% | breach (both, decrease) | 🔴 Comprehensive required |
+| **Individual Assistance** | **+8.0%** | **+37.5%** | **breach on volume only — the 2024-rule catch** | 🔴 Comprehensive required |
+| US&R | +19.0% | +9.1% | no (near-miss on dollars) | 🟢 Begins with preliminary |
 
 > Changing `threshold_pct` or `direction` in the YAML and re-running visibly re-flags programs — this is the live proof of rules-as-data (`REQ-015`) and directly de-risks `SME-01`.
 
