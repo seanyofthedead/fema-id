@@ -3,74 +3,25 @@ BR-001,event_split,event_segment -> disaster_number (SRC-02),1.00,sme_confirmed,
 BR-002,cleansing,"normalize: strip_whitespace, uppercase, separators_to_hyphen",1.00,sme_confirmed,SYNTHETIC-DEMO
 BR-003,cleansing,alias LEG-0001 -> PA-97036-4332 (legacy code retired after FY2023),0.97,sme_confirmed,SYNTHETIC-DEMO
 BR-004,cleansing,alias LEG-0002 -> HM-97039-4340 (legacy code retired after FY2023),0.97,sme_confirmed,SYNTHETIC-DEMO
-BR-005,cleansing,alias LEG-0003 -> DB-61401-4339 (legacy code retired after FY2023),0.97,sme_confirmed,SYNTHETIC-DEMO
-BR-006,cleansing,alias LEG-0004 -> LG-62201-4340 (legacy code retired after FY2023),0.97,sme_confirmed,SYNTHETIC-DEMO
-BR-007,code_to_subprogram,"fund_segment == 'PA' and program_segment == '97036' and event_segment in [4332, 4340] -> SUB-PA-A",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-008,code_to_subprogram,"fund_segment == 'PA' and program_segment == '97036' and event_segment in [4337, 4338] -> SUB-PA-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-009,code_to_subprogram,"fund_segment == 'PA' and program_segment == '97036' and event_segment in [4339, 4341, 4346] -> SUB-PA-C",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-010,rollup,"['SUB-PA-A', 'SUB-PA-B', 'SUB-PA-C'] -> PROG-PA",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-011,code_to_subprogram,"fund_segment == 'HM' and program_segment == '97039' and event_segment in [4340, 4339] -> SUB-HM-A",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-012,code_to_subprogram,"fund_segment == 'HM' and program_segment == '97039' and event_segment in [4332, 4337] -> SUB-HM-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-013,rollup,"['SUB-HM-A', 'SUB-HM-B'] -> PROG-HM",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-014,code_to_subprogram,"fund_segment == 'DC' and program_segment in ['61101', '61102'] -> SUB-S01-A",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-015,code_to_subprogram,fund_segment == 'DC' and program_segment in ['61103'] -> SUB-S01-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-016,code_to_subprogram,fund_segment == 'DC' and program_segment in ['61104'] -> SUB-S01-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-017,code_to_subprogram,"fund_segment == 'DC' and program_segment in ['61105', '61106'] -> SUB-S01-D",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-018,rollup,"['SUB-S01-A', 'SUB-S01-B', 'SUB-S01-C', 'SUB-S01-D'] -> PROG-S01",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-019,code_to_subprogram,fund_segment == 'CL' and program_segment in ['61201'] -> SUB-S02-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-020,code_to_subprogram,"fund_segment == 'CL' and program_segment in ['61202', '61203'] -> SUB-S02-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-021,code_to_subprogram,fund_segment == 'CL' and program_segment in ['61204'] -> SUB-S02-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-022,rollup,"['SUB-S02-A', 'SUB-S02-B', 'SUB-S02-C'] -> PROG-S02",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-023,code_to_subprogram,"fund_segment == 'SH' and program_segment in ['61301', '61302'] -> SUB-S03-A",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-024,code_to_subprogram,fund_segment == 'SH' and program_segment in ['61303'] -> SUB-S03-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-025,code_to_subprogram,fund_segment == 'SH' and program_segment in ['61304'] -> SUB-S03-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-026,code_to_subprogram,fund_segment == 'SH' and program_segment in ['61305'] -> SUB-S03-D,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-027,rollup,"['SUB-S03-A', 'SUB-S03-B', 'SUB-S03-C', 'SUB-S03-D'] -> PROG-S03",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-028,code_to_subprogram,fund_segment == 'DB' and program_segment in ['61401'] -> SUB-S04-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-029,code_to_subprogram,"fund_segment == 'DB' and program_segment in ['61402', '61403'] -> SUB-S04-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-030,code_to_subprogram,fund_segment == 'DB' and program_segment in ['61404'] -> SUB-S04-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-031,rollup,"['SUB-S04-A', 'SUB-S04-B', 'SUB-S04-C'] -> PROG-S04",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-032,code_to_subprogram,fund_segment == 'MP' and program_segment in ['55501'] -> SUB-S05-A,0.88,inferred,SYNTHETIC-DEMO
-BR-033,code_to_subprogram,fund_segment == 'MP' and program_segment in ['61502'] -> SUB-S05-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-034,rollup,"['SUB-S05-A', 'SUB-S05-B'] -> PROG-S05",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-035,code_to_subprogram,fund_segment == 'CS' and program_segment in ['55501'] -> SUB-S06-A,0.88,inferred,SYNTHETIC-DEMO
-BR-036,code_to_subprogram,fund_segment == 'CS' and program_segment in ['61602'] -> SUB-S06-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-037,rollup,"['SUB-S06-A', 'SUB-S06-B'] -> PROG-S06",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-038,code_to_subprogram,fund_segment == 'EO' and program_segment in ['61701'] -> SUB-S07-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-039,code_to_subprogram,fund_segment == 'EO' and program_segment in ['61702'] -> SUB-S07-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-040,code_to_subprogram,"fund_segment == 'EO' and program_segment in ['61703', '61704'] -> SUB-S07-C",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-041,rollup,"['SUB-S07-A', 'SUB-S07-B', 'SUB-S07-C'] -> PROG-S07",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-042,code_to_subprogram,"fund_segment == 'IR' and program_segment in ['61801', '61802'] -> SUB-S08-A",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-043,code_to_subprogram,fund_segment == 'IR' and program_segment in ['61803'] -> SUB-S08-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-044,code_to_subprogram,fund_segment == 'IR' and program_segment in ['61804'] -> SUB-S08-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-045,code_to_subprogram,fund_segment == 'IR' and program_segment in ['61805'] -> SUB-S08-D,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-046,rollup,"['SUB-S08-A', 'SUB-S08-B', 'SUB-S08-C', 'SUB-S08-D'] -> PROG-S08",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-047,code_to_subprogram,fund_segment == 'FR' and program_segment in ['61901'] -> SUB-S09-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-048,code_to_subprogram,"fund_segment == 'FR' and program_segment in ['61902', '61903'] -> SUB-S09-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-049,code_to_subprogram,fund_segment == 'FR' and program_segment in ['61904'] -> SUB-S09-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-050,rollup,"['SUB-S09-A', 'SUB-S09-B', 'SUB-S09-C'] -> PROG-S09",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-051,code_to_subprogram,fund_segment == 'VA' and program_segment in ['62001'] -> SUB-S10-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-052,code_to_subprogram,fund_segment == 'VA' and program_segment in ['62002'] -> SUB-S10-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-053,rollup,"['SUB-S10-A', 'SUB-S10-B'] -> PROG-S10",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-054,code_to_subprogram,fund_segment == 'WF' and program_segment in ['62101'] -> SUB-S11-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-055,code_to_subprogram,fund_segment == 'WF' and program_segment in ['62102'] -> SUB-S11-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-056,code_to_subprogram,"fund_segment == 'WF' and program_segment in ['62103', '62104'] -> SUB-S11-C",0.88,inferred,SYNTHETIC-DEMO
-BR-057,rollup,"['SUB-S11-A', 'SUB-S11-B', 'SUB-S11-C'] -> PROG-S11",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-058,code_to_subprogram,"fund_segment == 'LG' and program_segment in ['62201', '62202'] -> SUB-S12-A",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-059,code_to_subprogram,fund_segment == 'LG' and program_segment in ['62203'] -> SUB-S12-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-060,code_to_subprogram,fund_segment == 'LG' and program_segment in ['62204'] -> SUB-S12-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-061,code_to_subprogram,fund_segment == 'LG' and program_segment in ['62205'] -> SUB-S12-D,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-062,rollup,"['SUB-S12-A', 'SUB-S12-B', 'SUB-S12-C', 'SUB-S12-D'] -> PROG-S12",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-063,code_to_subprogram,fund_segment == 'RD' and program_segment in ['62301'] -> SUB-S13-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-064,code_to_subprogram,fund_segment == 'RD' and program_segment in ['62302'] -> SUB-S13-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-065,rollup,"['SUB-S13-A', 'SUB-S13-B'] -> PROG-S13",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-066,code_to_subprogram,fund_segment == 'HZ' and program_segment in ['62401'] -> SUB-S14-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-067,code_to_subprogram,"fund_segment == 'HZ' and program_segment in ['62402', '62403'] -> SUB-S14-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-068,rollup,"['SUB-S14-A', 'SUB-S14-B'] -> PROG-S14",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-069,code_to_subprogram,fund_segment == 'PN' and program_segment in ['62501'] -> SUB-S15-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-070,code_to_subprogram,fund_segment == 'PN' and program_segment in ['62502'] -> SUB-S15-B,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-071,rollup,"['SUB-S15-A', 'SUB-S15-B'] -> PROG-S15",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-072,code_to_subprogram,fund_segment == 'GM' and program_segment in ['62601'] -> SUB-S16-A,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-073,code_to_subprogram,"fund_segment == 'GM' and program_segment in ['62602', '62603'] -> SUB-S16-B",0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-074,code_to_subprogram,fund_segment == 'GM' and program_segment in ['62604'] -> SUB-S16-C,0.98,sme_confirmed,SYNTHETIC-DEMO
-BR-075,rollup,"['SUB-S16-A', 'SUB-S16-B', 'SUB-S16-C'] -> PROG-S16",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-005,cleansing,alias LEG-0003 -> IA-61101-4339 (legacy code retired after FY2023),0.97,sme_confirmed,SYNTHETIC-DEMO
+BR-006,cleansing,alias LEG-0004 -> PA-60101-4340 (legacy code retired after FY2023),0.97,sme_confirmed,SYNTHETIC-DEMO
+BR-007,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4332] -> SUB-PA-4332",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-008,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4337] -> SUB-PA-4337",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-009,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4338] -> SUB-PA-4338",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-010,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4339] -> SUB-PA-4339",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-011,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4340] -> SUB-PA-4340",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-012,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4341] -> SUB-PA-4341",0.88,inferred,SYNTHETIC-DEMO
+BR-013,code_to_subprogram,"fund_segment == 'PA' and program_segment in ['97036', '60101', '60102', '60103'] and event_segment in [4346] -> SUB-PA-4346",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-014,rollup,"['SUB-PA-4332', 'SUB-PA-4337', 'SUB-PA-4338', 'SUB-PA-4339', 'SUB-PA-4340', 'SUB-PA-4341', 'SUB-PA-4346'] -> PROG-PA",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-015,code_to_subprogram,"fund_segment == 'HM' and program_segment in ['97039', '60201'] and event_segment in [4332, 4337, 4339, 4340] -> SUB-HM-ALL",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-016,rollup,['SUB-HM-ALL'] -> PROG-HM,0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-017,code_to_subprogram,"fund_segment == 'IA' and program_segment in ['61101', '61102'] -> SUB-IA-IHP",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-018,code_to_subprogram,fund_segment == 'IA' and program_segment in ['61103'] -> SUB-IA-MC,0.88,inferred,SYNTHETIC-DEMO
+BR-019,code_to_subprogram,"fund_segment == 'IA' and program_segment in ['61104', '55501'] -> SUB-IA-DCM",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-020,rollup,"['SUB-IA-IHP', 'SUB-IA-MC', 'SUB-IA-DCM'] -> PROG-IA",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-021,code_to_subprogram,"fund_segment == 'HS' and program_segment in ['97067', '61501'] -> SUB-HS-SHSP",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-022,code_to_subprogram,fund_segment == 'HS' and program_segment in ['61502'] -> SUB-HS-UASI,0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-023,code_to_subprogram,"fund_segment == 'HS' and program_segment in ['61503', '55501'] -> SUB-HS-OPSG",0.88,inferred,SYNTHETIC-DEMO
+BR-024,rollup,"['SUB-HS-SHSP', 'SUB-HS-UASI', 'SUB-HS-OPSG'] -> PROG-HS",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-025,code_to_subprogram,"fund_segment == 'UR' and program_segment in ['97025', '61601'] -> SUB-UR-ALL",0.98,sme_confirmed,SYNTHETIC-DEMO
+BR-026,rollup,['SUB-UR-ALL'] -> PROG-UR,0.98,sme_confirmed,SYNTHETIC-DEMO

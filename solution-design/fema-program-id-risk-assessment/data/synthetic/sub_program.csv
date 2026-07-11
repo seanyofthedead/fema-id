@@ -1,52 +1,16 @@
 sub_program_id,program_id,sub_program_name,data_watermark
-SUB-PA-A,PROG-PA,Emergency Work (illustrative),SYNTHETIC-DEMO
-SUB-PA-B,PROG-PA,Permanent Work (illustrative),SYNTHETIC-DEMO
-SUB-PA-C,PROG-PA,Debris/Protective (illustrative),SYNTHETIC-DEMO
-SUB-HM-A,PROG-HM,Mitigation Projects (illustrative),SYNTHETIC-DEMO
-SUB-HM-B,PROG-HM,Resilience Infrastructure (illustrative),SYNTHETIC-DEMO
-SUB-S01-A,PROG-S01,Case Intake Services (illustrative),SYNTHETIC-DEMO
-SUB-S01-B,PROG-S01,Casework Field Teams (illustrative),SYNTHETIC-DEMO
-SUB-S01-C,PROG-S01,Referral Coordination (illustrative),SYNTHETIC-DEMO
-SUB-S01-D,PROG-S01,Case Quality Review (illustrative),SYNTHETIC-DEMO
-SUB-S02-A,PROG-S02,Loan Origination (illustrative),SYNTHETIC-DEMO
-SUB-S02-B,PROG-S02,Loan Servicing (illustrative),SYNTHETIC-DEMO
-SUB-S02-C,PROG-S02,Loan Cancellation (illustrative),SYNTHETIC-DEMO
-SUB-S03-A,PROG-S03,Emergency Sheltering (illustrative),SYNTHETIC-DEMO
-SUB-S03-B,PROG-S03,Temporary Power Missions (illustrative),SYNTHETIC-DEMO
-SUB-S03-C,PROG-S03,Shelter Wraparound Services (illustrative),SYNTHETIC-DEMO
-SUB-S03-D,PROG-S03,Host-State Reimbursement (illustrative),SYNTHETIC-DEMO
-SUB-S04-A,PROG-S04,Right-of-Way Clearance (illustrative),SYNTHETIC-DEMO
-SUB-S04-B,PROG-S04,Waterway Debris (illustrative),SYNTHETIC-DEMO
-SUB-S04-C,PROG-S04,Monitoring & Compliance (illustrative),SYNTHETIC-DEMO
-SUB-S05-A,PROG-S05,Local Plan Development (illustrative),SYNTHETIC-DEMO
-SUB-S05-B,PROG-S05,Plan Integration (illustrative),SYNTHETIC-DEMO
-SUB-S06-A,PROG-S06,Building Code Advisory (illustrative),SYNTHETIC-DEMO
-SUB-S06-B,PROG-S06,Standards Field Support (illustrative),SYNTHETIC-DEMO
-SUB-S07-A,PROG-S07,EOC Activation Staffing (illustrative),SYNTHETIC-DEMO
-SUB-S07-B,PROG-S07,EOC Systems & Comms (illustrative),SYNTHETIC-DEMO
-SUB-S07-C,PROG-S07,Interagency Liaison (illustrative),SYNTHETIC-DEMO
-SUB-S08-A,PROG-S08,Power Grid Restoration (illustrative),SYNTHETIC-DEMO
-SUB-S08-B,PROG-S08,Water Systems (illustrative),SYNTHETIC-DEMO
-SUB-S08-C,PROG-S08,Roads & Bridges (illustrative),SYNTHETIC-DEMO
-SUB-S08-D,PROG-S08,Public Buildings (illustrative),SYNTHETIC-DEMO
-SUB-S09-A,PROG-S09,Substantial Damage Assessment (illustrative),SYNTHETIC-DEMO
-SUB-S09-B,PROG-S09,Elevation Advisory (illustrative),SYNTHETIC-DEMO
-SUB-S09-C,PROG-S09,Floodplain Mapping Support (illustrative),SYNTHETIC-DEMO
-SUB-S10-A,PROG-S10,VOAD Liaison (illustrative),SYNTHETIC-DEMO
-SUB-S10-B,PROG-S10,Donations Management (illustrative),SYNTHETIC-DEMO
-SUB-S11-A,PROG-S11,Reservist Deployment (illustrative),SYNTHETIC-DEMO
-SUB-S11-B,PROG-S11,Surge Capacity Force (illustrative),SYNTHETIC-DEMO
-SUB-S11-C,PROG-S11,Local Hire Program (illustrative),SYNTHETIC-DEMO
-SUB-S12-A,PROG-S12,Commodity Staging (illustrative),SYNTHETIC-DEMO
-SUB-S12-B,PROG-S12,Transportation Missions (illustrative),SYNTHETIC-DEMO
-SUB-S12-C,PROG-S12,Warehouse Operations (illustrative),SYNTHETIC-DEMO
-SUB-S12-D,PROG-S12,Last-Mile Distribution (illustrative),SYNTHETIC-DEMO
-SUB-S13-A,PROG-S13,Recovery Metrics (illustrative),SYNTHETIC-DEMO
-SUB-S13-B,PROG-S13,Reporting Automation (illustrative),SYNTHETIC-DEMO
-SUB-S14-A,PROG-S14,Risk Model Development (illustrative),SYNTHETIC-DEMO
-SUB-S14-B,PROG-S14,Hazard Data Acquisition (illustrative),SYNTHETIC-DEMO
-SUB-S15-A,PROG-S15,Multilingual Outreach (illustrative),SYNTHETIC-DEMO
-SUB-S15-B,PROG-S15,Public Notice Compliance (illustrative),SYNTHETIC-DEMO
-SUB-S16-A,PROG-S16,Grants Platform Operations (illustrative),SYNTHETIC-DEMO
-SUB-S16-B,PROG-S16,Legacy System Support (illustrative),SYNTHETIC-DEMO
-SUB-S16-C,PROG-S16,Applicant Portal Services (illustrative),SYNTHETIC-DEMO
+SUB-PA-4332,PROG-PA,DR-4332 — Hurricane Harvey (TX),SYNTHETIC-DEMO
+SUB-PA-4337,PROG-PA,DR-4337 — Hurricane Irma (FL),SYNTHETIC-DEMO
+SUB-PA-4338,PROG-PA,DR-4338 — Hurricane Irma (GA),SYNTHETIC-DEMO
+SUB-PA-4339,PROG-PA,DR-4339 — Hurricane Maria (PR),SYNTHETIC-DEMO
+SUB-PA-4340,PROG-PA,DR-4340 — Hurricane Maria (VI),SYNTHETIC-DEMO
+SUB-PA-4341,PROG-PA,DR-4341 — Hurricane Irma (Seminole Tribe),SYNTHETIC-DEMO
+SUB-PA-4346,PROG-PA,DR-4346 — Hurricane Irma follow-on (SC),SYNTHETIC-DEMO
+SUB-HM-ALL,PROG-HM,HMGP — direct (no sub-programs),SYNTHETIC-DEMO
+SUB-IA-IHP,PROG-IA,Individuals and Households Program (IHP),SYNTHETIC-DEMO
+SUB-IA-MC,PROG-IA,Mass Care,SYNTHETIC-DEMO
+SUB-IA-DCM,PROG-IA,Disaster Case Management,SYNTHETIC-DEMO
+SUB-HS-SHSP,PROG-HS,State Homeland Security Program (SHSP),SYNTHETIC-DEMO
+SUB-HS-UASI,PROG-HS,Urban Area Security Initiative (UASI),SYNTHETIC-DEMO
+SUB-HS-OPSG,PROG-HS,Operation Stonegarden,SYNTHETIC-DEMO
+SUB-UR-ALL,PROG-UR,US&R — direct (no sub-programs),SYNTHETIC-DEMO

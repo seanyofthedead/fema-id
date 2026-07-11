@@ -1,7 +1,7 @@
 question_id,text,qtype,auto_populatable,source_binding,data_watermark
 Q1,"Total program disbursements this FY (illustrative placeholder, ASSUMP-04)",quantitative,true,fiscal_year_spend_summary.total_disbursement,SYNTHETIC-DEMO
 Q2,"Year-over-year change in program spend, percent (illustrative placeholder, ASSUMP-04)",quantitative,true,fiscal_year_spend_summary.yoy_pct_change,SYNTHETIC-DEMO
-Q3,"Does YoY change breach the comprehensive-assessment threshold? (illustrative placeholder, ASSUMP-04)",quantitative,true,fiscal_year_spend_summary.trigger_flag,SYNTHETIC-DEMO
+Q3,"Does YoY change breach the comprehensive-assessment threshold on dollars or transaction volume? (illustrative placeholder, ASSUMP-04)",quantitative,true,"fiscal_year_spend_summary.trigger_flag (dollar or transaction-count measure, REQ-031)",SYNTHETIC-DEMO
 Q4,"Number of sub-programs / financial codes rolled into this program (illustrative placeholder, ASSUMP-04)",quantitative,true,"fiscal_year_spend_summary.sub_program_count,financial_code_count",SYNTHETIC-DEMO
 Q5,"Number of disaster events contributing to spend (illustrative placeholder, ASSUMP-04)",quantitative,true,fiscal_year_spend_summary.event_count,SYNTHETIC-DEMO
 Q6,"Share of spend concentrated in the top event, percent (illustrative placeholder, ASSUMP-04)",quantitative,true,fiscal_year_spend_summary.top_event_share_pct,SYNTHETIC-DEMO

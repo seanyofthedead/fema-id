@@ -1,19 +1,6 @@
-program_id,program_name,assistance_listing,data_watermark
-PROG-PA,Public Assistance (illustrative),97.036,SYNTHETIC-DEMO
-PROG-HM,Hazard Mitigation (illustrative),97.039,SYNTHETIC-DEMO
-PROG-S01,Disaster Case Management Support (illustrative),,SYNTHETIC-DEMO
-PROG-S02,Community Disaster Loans (illustrative),,SYNTHETIC-DEMO
-PROG-S03,Sheltering & Temporary Essential Power (illustrative),,SYNTHETIC-DEMO
-PROG-S04,Debris Removal Operations (illustrative),,SYNTHETIC-DEMO
-PROG-S05,Mitigation Planning Support (illustrative),,SYNTHETIC-DEMO
-PROG-S06,Codes & Standards Technical Assistance (illustrative),,SYNTHETIC-DEMO
-PROG-S07,Emergency Operations Center Support (illustrative),,SYNTHETIC-DEMO
-PROG-S08,Infrastructure Restoration Grants (illustrative),,SYNTHETIC-DEMO
-PROG-S09,Flood Recovery Technical Services (illustrative),,SYNTHETIC-DEMO
-PROG-S10,Voluntary Agency Coordination (illustrative),,SYNTHETIC-DEMO
-PROG-S11,Disaster Workforce Augmentation (illustrative),,SYNTHETIC-DEMO
-PROG-S12,Logistics & Commodity Distribution (illustrative),,SYNTHETIC-DEMO
-PROG-S13,Recovery Data & Reporting Services (illustrative),,SYNTHETIC-DEMO
-PROG-S14,Hazard Analysis & Risk Modeling (illustrative),,SYNTHETIC-DEMO
-PROG-S15,Public Notice & Outreach Operations (illustrative),,SYNTHETIC-DEMO
-PROG-S16,Grants Management Modernization (illustrative),,SYNTHETIC-DEMO
+program_id,program_name,assistance_listing,is_disaster,tafs,data_watermark
+PROG-PA,Public Assistance,97.036,true,070-X-9801,SYNTHETIC-DEMO
+PROG-HM,Hazard Mitigation Grant Program (HMGP),97.039,true,070-X-9802,SYNTHETIC-DEMO
+PROG-IA,Individual Assistance,,true,070-X-9803,SYNTHETIC-DEMO
+PROG-HS,Homeland Security Grant Program (HSGP),97.067,false,070-26/27-9804,SYNTHETIC-DEMO
+PROG-UR,Urban Search & Rescue (US&R),97.025,false,070-26/26-9805,SYNTHETIC-DEMO

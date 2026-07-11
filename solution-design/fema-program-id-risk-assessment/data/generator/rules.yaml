@@ -4,15 +4,29 @@
 # =============================================================================
 # EVERYTHING in this file is synthetic demo configuration (SYNTHETIC-DEMO).
 # It encodes the PLANTED ground truth the generator uses to build the ledger:
-#   - program taxonomy (parent -> sub-program -> financial-code segments)
+#   - program taxonomy (parent -> sub-grouping -> financial-code segments)
 #   - mapping rules (code_to_subprogram / rollup / event_split), per file 09 §2
 #   - cleansing / adjustment rules (REQ-003)
 #   - the configurable YoY variance trigger, per file 10 §5 (REQ-010, ASSUMP-03)
+#     now dual-measure: dollars AND transaction count (REQ-031, 2024 change)
 #   - the planted per-FY growth plan that drives the variance scenarios
+#
+# TAXONOMY (updated 2026-07-11, CH-01/REQ-027): the five parent programs are
+# REAL, PUBLIC FEMA program names supplied by the client team after the
+# 2026-07-11 feedback meeting (names public; every dollar remains synthetic):
+#   - Public Assistance ............. sub-grouped BY DISASTER NUMBER (no named subs)
+#   - Hazard Mitigation Grant Program no sub-programs (single direct grouping)
+#   - Urban Search & Rescue ......... no sub-programs (single direct grouping);
+#                                     modeled NON-disaster (readiness funding —
+#                                     synthetic choice, ASSUMP-23/SME-30)
+#   - Individual Assistance ......... subs: IHP / Mass Care / Disaster Case Mgmt
+#   - Homeland Security Grant Program subs: SHSP / UASI / Operation Stonegarden;
+#                                     NON-disaster (preparedness grants, REQ-030)
+# Everything below program names — segments, codes, TAFS values, disbursement
+# types, dollar amounts, growth plans — is fictional (ASSUMP-20/23; SME-27/30).
 # Real public identifiers used as skeleton: DR numbers (SRC-02) and assistance
-# listings 97.036 / 97.039 (SRC-03/04/12). Everything else is fictional.
-# The Wave 4 inference crawler must NOT read this file's taxonomy; it must
-# rediscover groupings from the transaction history alone (REQ-013).
+# listings (SRC-12). The Wave 4 inference crawler must NOT read this file's
+# taxonomy; it must rediscover groupings from transaction history alone (REQ-013).
 # =============================================================================
 
 seed: 20260708                # single fixed seed; re-runs are byte-identical
@@ -22,12 +36,19 @@ fiscal_years: [2022, 2023, 2024, 2025, 2026]   # >= 4 consecutive FYs (ASSUMP-07
 # NOTE: FY2026 is modeled as a complete fiscal year (dates through 2026-09-30)
 # so YoY math is illustratively whole-year. Stated in DATA_DICTIONARY.md.
 
-# --- file 10 §5, verbatim structure (REQ-010, ASSUMP-03; confirm SME-01) -----
+# --- file 10 §5 structure, extended per REQ-031 (2024 change; SME-28) --------
+# The trigger now evaluates BOTH measures; a breach on ANY enabled measure
+# flags the program for a comprehensive assessment (ASSUMP-21). Direction
+# options retained ("Mike was concerned about the decrease"); the dollar floor
+# stays, with an analogous optional count floor.
 variance_trigger:
-  measure: disbursements        # ASSUMP-05; alt: obligations | outlays (SME-01)
+  measures: [disbursements, transaction_count]  # REQ-031; drop to one entry to disable a measure
+  combine: any                  # any | all (team's rule reads as either-measure; SME-28)
+  measure: disbursements        # legacy single-measure key (template compat until Wave C UI)
   threshold_pct: 20             # transcript hedged "I think it's like 20%" (REQ-010)
   direction: either             # either | increase_only | decrease_only (SME-01)
-  min_prior_year_amount: 0      # optional floor to suppress noise on tiny programs
+  min_prior_year_amount: 0      # optional dollar floor to suppress noise on tiny programs
+  min_prior_year_count: 0       # optional count floor (SME-28)
   compare: prior_fiscal_year    # YoY basis
 
 # --- file 09 §9 routing (ASSUMP-16; confirm SME-15) --------------------------
@@ -35,10 +56,24 @@ confidence_routing:
   prefill_threshold: 0.85       # >= prefill+editable; < exception queue
 
 # --- calibration (SRC-03 / SRC-04 obligation envelopes; ASSUMP-10) -----------
+# Applies to DISASTER programs only. Non-disaster programs (HSGP, US&R) have
+# no public per-DR envelope; their synthetic bases are fixed below and carry a
+# no-public-envelope note in DATA_DICTIONARY.md (never presented as calibrated).
 calibration:
   anchors_file: anchors.json    # cached live pull; --refresh-anchors re-pulls
   max_envelope_utilization: 0.90   # cumulative synthetic disbursements per DR
                                    # must stay <= 90% of that DR's obligation envelope
+
+# --- WebFMIS-style field stand-ins (CH-02/03, REQ-028/029; ASSUMP-20/SME-27) --
+# TAFS values use clearly-synthetic 98xx main accounts under agency 070 (DHS):
+# realistically FORMATTED, deliberately not real Treasury accounts. "X" =
+# no-year money (ties to the no-year disaster-fund narrative, REQ-026).
+# Disbursement-type values are generic illustrative labels, not FEMA codes.
+disbursement_types:
+  - {name: "Grant award payment", weight: 0.55}
+  - {name: "Vendor / contract payment", weight: 0.20}
+  - {name: "Direct assistance payment", weight: 0.15}
+  - {name: "Interagency transfer", weight: 0.10}
 
 # --- cleansing / adjustment rules (REQ-002 / REQ-003) ------------------------
 # Applied to transaction.raw_code to recover the canonical code. The generator
@@ -51,8 +86,8 @@ cleansing:
   alias_map:                    # legacy codes retired after FY2023 (adjustment cases)
     LEG-0001: PA-97036-4332
     LEG-0002: HM-97039-4340
-    LEG-0003: DB-61401-4339
-    LEG-0004: LG-62201-4340
+    LEG-0003: IA-61101-4339
+    LEG-0004: PA-60101-4340
   dirty_raw_share: 0.06         # ~6% of rows land with a non-canonical raw_code
 
 # --- disaster events (verbatim SRC-02 set; file 08 §5; REQ-005) --------------
@@ -66,257 +101,108 @@ disaster_events:
   - {disaster_number: 4346, incident_type: Hurricane Irma,   state: SC, fy_declared: 2018, declaration_title: Irma follow-on (FY2018)}
 
 # =============================================================================
-# PROGRAM TAXONOMY + PLANTED GROWTH PLAN
+# PROGRAM TAXONOMY + PLANTED GROWTH PLAN (real public names; synthetic dollars)
 # -----------------------------------------------------------------------------
 # growth: FY-over-FY multiplier deltas applied to base_annual_disbursement
-#   (FY2022 = base). These plant the variance scenarios (REQ-010):
+#   (FY2022 = base). These plant the DOLLAR variance scenarios (REQ-010):
 #     FY2026 crossings at threshold 20%, direction either:
-#       +20% crossers : PROG-PA (+34%), PROG-S03 (+52%), PROG-S09 (+21%)
-#       -20% crossers : PROG-HM (-31%), PROG-S12 (-24%)
-#       within +/-20% : PROG-S01 (+7%), PROG-S02 (-11%), PROG-S06 (+3%),
-#                       PROG-S07 (+19% near-miss), PROG-S10 (-6%), others
+#       +20% crossers : PROG-PA (+34%), PROG-HS (+21%)
+#       -20% crossers : PROG-HM (-31%)
+#       within +/-20% : PROG-IA (+8%), PROG-UR (+19% near-miss)
+#     prior-year texture: PROG-IA FY2024 +24%, PROG-HS FY2023 +28%,
+#                         PROG-UR FY2025 -22%
+# txn_count_plan (optional): plants the TRANSACTION-COUNT dimension (REQ-031).
+#   PROG-IA is the count-only breach showcase: FY2026 dollars +8% (inside the
+#   corridor) while transaction count jumps 32 -> 44 = +37.5% (breach).
 # sub_program mapping styles:
-#   event_driven   : one program_segment; the EVENT segment decides the sub
-#                    (mirrors file 08 §6: PA-97036-4332 -> SUB-PA-A, etc.)
+#   event_driven   : the EVENT segment decides the sub-grouping (PA: one
+#                    grouping per disaster number; HMGP: single direct grouping)
 #   segment_driven : each sub owns program_segment(s); event is free
+# Non-disaster programs (is_disaster: false) have no DR events: their codes
+# carry the ND event segment and transactions carry no disaster number.
 # Small-envelope DRs (4338, 4341, 4346) only ever appear alongside a large DR;
-# within a sub, spend splits across its events in proportion to the real
-# obligation envelope of each DR, so tiny DRs receive tiny synthetic dollars.
+# within a sub, disaster spend splits across its events in proportion to the
+# real obligation envelope of each DR, so tiny DRs receive tiny synthetic dollars.
 # =============================================================================
 programs:
 
   - program_id: PROG-PA
-    program_name: Public Assistance (illustrative)
+    program_name: Public Assistance
     assistance_listing: "97.036"
+    is_disaster: true
+    tafs: "070-X-9801"
     fund_segment: PA
     mapping_style: event_driven
-    program_segments: ["97036"]
+    program_segments: ["97036", "60101", "60102", "60103"]
     base_annual_disbursement: 620000000
     growth: {2023: 0.09, 2024: 0.14, 2025: 0.06, 2026: 0.34}
-    scenario: "trigger_up_1; rollup_exactly_3_subs (REQ-004); multi_event_split (REQ-005)"
-    sub_programs:                       # exactly 3 subs -> one reporting program
-      - {sub_program_id: SUB-PA-A, sub_program_name: Emergency Work (illustrative),   events: [4332, 4340]}
-      - {sub_program_id: SUB-PA-B, sub_program_name: Permanent Work (illustrative),   events: [4337, 4338]}
-      - {sub_program_id: SUB-PA-C, sub_program_name: Debris/Protective (illustrative), events: [4339, 4341, 4346]}
+    scenario: "trigger_up_1; subgrouped_by_disaster_number (REQ-005/taxonomy); multi_event_split"
+    sub_programs:                       # PA sub-grouping IS the disaster number
+      - {sub_program_id: SUB-PA-4332, sub_program_name: "DR-4332 — Hurricane Harvey (TX)",          events: [4332]}
+      - {sub_program_id: SUB-PA-4337, sub_program_name: "DR-4337 — Hurricane Irma (FL)",            events: [4337]}
+      - {sub_program_id: SUB-PA-4338, sub_program_name: "DR-4338 — Hurricane Irma (GA)",            events: [4338]}
+      - {sub_program_id: SUB-PA-4339, sub_program_name: "DR-4339 — Hurricane Maria (PR)",           events: [4339]}
+      - {sub_program_id: SUB-PA-4340, sub_program_name: "DR-4340 — Hurricane Maria (VI)",           events: [4340]}
+      - {sub_program_id: SUB-PA-4341, sub_program_name: "DR-4341 — Hurricane Irma (Seminole Tribe)", events: [4341]}
+      - {sub_program_id: SUB-PA-4346, sub_program_name: "DR-4346 — Hurricane Irma follow-on (SC)",  events: [4346]}
 
   - program_id: PROG-HM
-    program_name: Hazard Mitigation (illustrative)
+    program_name: Hazard Mitigation Grant Program (HMGP)
     assistance_listing: "97.039"
+    is_disaster: true
+    tafs: "070-X-9802"
     fund_segment: HM
     mapping_style: event_driven
-    program_segments: ["97039"]
+    program_segments: ["97039", "60201"]
     base_annual_disbursement: 210000000
     growth: {2023: 0.12, 2024: -0.06, 2025: 0.09, 2026: -0.31}
-    scenario: "trigger_down_1; multi_event_split"
-    sub_programs:
-      - {sub_program_id: SUB-HM-A, sub_program_name: Mitigation Projects (illustrative),            events: [4340, 4339]}
-      - {sub_program_id: SUB-HM-B, sub_program_name: Resilience Infrastructure (illustrative),      events: [4332, 4337]}
+    scenario: "trigger_down_1; no_sub_programs (single direct grouping per taxonomy); multi_event_split"
+    sub_programs:                       # HMGP has NO sub-programs: one pass-through
+      - {sub_program_id: SUB-HM-ALL, sub_program_name: "HMGP — direct (no sub-programs)", events: [4332, 4337, 4339, 4340]}
 
-  - program_id: PROG-S01
-    program_name: Disaster Case Management Support (illustrative)
-    assistance_listing: ""
-    fund_segment: DC
+  - program_id: PROG-IA
+    program_name: Individual Assistance
+    assistance_listing: ""              # umbrella program; listings live at sub level (SME-30)
+    is_disaster: true
+    tafs: "070-X-9803"
+    fund_segment: IA
     mapping_style: segment_driven
-    base_annual_disbursement: 88000000
-    growth: {2023: 0.06, 2024: 0.03, 2025: 0.09, 2026: 0.07}
-    scenario: "stable_within_threshold_1"
+    base_annual_disbursement: 310000000
+    growth: {2023: 0.07, 2024: 0.24, 2025: -0.05, 2026: 0.08}
+    txn_count_plan: {2022: 24, 2023: 26, 2024: 30, 2025: 32, 2026: 44}
+    scenario: "rollup_exactly_3_subs (REQ-004); count_only_trigger FY2026 (REQ-031: dollars +8%, txn count +37.5%); texture_prior_year_crossing (FY2024 +24%)"
     sub_programs:
-      - {sub_program_id: SUB-S01-A, sub_program_name: Case Intake Services (illustrative),      segments: ["61101", "61102"], events: [4339]}
-      - {sub_program_id: SUB-S01-B, sub_program_name: Casework Field Teams (illustrative),      segments: ["61103"],          events: [4340, 4332]}
-      - {sub_program_id: SUB-S01-C, sub_program_name: Referral Coordination (illustrative),     segments: ["61104"],          events: [4337]}
-      - {sub_program_id: SUB-S01-D, sub_program_name: Case Quality Review (illustrative),       segments: ["61105", "61106"], events: [4339, 4340]}
+      - {sub_program_id: SUB-IA-IHP, sub_program_name: "Individuals and Households Program (IHP)", segments: ["61101", "61102"], events: [4339, 4340]}
+      - {sub_program_id: SUB-IA-MC,  sub_program_name: "Mass Care",                                segments: ["61103"],          events: [4332, 4337]}
+      - {sub_program_id: SUB-IA-DCM, sub_program_name: "Disaster Case Management",                 segments: ["61104", "55501"], events: [4339]}
 
-  - program_id: PROG-S02
-    program_name: Community Disaster Loans (illustrative)
-    assistance_listing: ""
-    fund_segment: CL
-    mapping_style: segment_driven
-    base_annual_disbursement: 140000000
-    growth: {2023: -0.03, 2024: 0.11, 2025: -0.02, 2026: -0.11}
-    scenario: "stable_within_threshold_2"
-    sub_programs:
-      - {sub_program_id: SUB-S02-A, sub_program_name: Loan Origination (illustrative),   segments: ["61201"],          events: [4339, 4346]}
-      - {sub_program_id: SUB-S02-B, sub_program_name: Loan Servicing (illustrative),     segments: ["61202", "61203"], events: [4340]}
-      - {sub_program_id: SUB-S02-C, sub_program_name: Loan Cancellation (illustrative),  segments: ["61204"],          events: [4332, 4337]}
-
-  - program_id: PROG-S03
-    program_name: Sheltering & Temporary Essential Power (illustrative)
-    assistance_listing: ""
-    fund_segment: SH
+  - program_id: PROG-HS
+    program_name: Homeland Security Grant Program (HSGP)
+    assistance_listing: "97.067"
+    is_disaster: false                  # preparedness grants — the non-disaster carrier (REQ-030)
+    tafs: "070-26/27-9804"
+    fund_segment: HS
     mapping_style: segment_driven
     base_annual_disbursement: 260000000
-    growth: {2023: 0.15, 2024: 0.02, 2025: -0.04, 2026: 0.52}
-    scenario: "trigger_up_2"
+    growth: {2023: 0.28, 2024: 0.05, 2025: 0.11, 2026: 0.21}
+    scenario: "trigger_up_2; non_disaster (REQ-030); rollup_exactly_3_subs; texture_prior_year_crossing (FY2023 +28%); shared_segment_55501 (needs fund+segment rule)"
     sub_programs:
-      - {sub_program_id: SUB-S03-A, sub_program_name: Emergency Sheltering (illustrative),        segments: ["61301", "61302"], events: [4339, 4340]}
-      - {sub_program_id: SUB-S03-B, sub_program_name: Temporary Power Missions (illustrative),    segments: ["61303"],          events: [4332]}
-      - {sub_program_id: SUB-S03-C, sub_program_name: Shelter Wraparound Services (illustrative), segments: ["61304"],          events: [4337, 4338]}
-      - {sub_program_id: SUB-S03-D, sub_program_name: Host-State Reimbursement (illustrative),    segments: ["61305"],          events: [4339]}
+      - {sub_program_id: SUB-HS-SHSP, sub_program_name: "State Homeland Security Program (SHSP)", segments: ["97067", "61501"], events: []}
+      - {sub_program_id: SUB-HS-UASI, sub_program_name: "Urban Area Security Initiative (UASI)",  segments: ["61502"],          events: []}
+      - {sub_program_id: SUB-HS-OPSG, sub_program_name: "Operation Stonegarden",                  segments: ["61503", "55501"], events: []}
 
-  - program_id: PROG-S04
-    program_name: Debris Removal Operations (illustrative)
-    assistance_listing: ""
-    fund_segment: DB
+  - program_id: PROG-UR
+    program_name: Urban Search & Rescue (US&R)
+    assistance_listing: "97.025"
+    is_disaster: false                  # readiness funding — synthetic choice (ASSUMP-23, SME-30)
+    tafs: "070-26/26-9805"
+    fund_segment: UR
     mapping_style: segment_driven
-    base_annual_disbursement: 330000000
-    growth: {2023: 0.24, 2024: -0.09, 2025: 0.13, 2026: 0.16}
-    scenario: "texture_prior_year_crossing (FY2023 +24%)"
+    base_annual_disbursement: 38000000
+    growth: {2023: 0.04, 2024: 0.08, 2025: -0.22, 2026: 0.19}
+    scenario: "near_miss_below_threshold (FY2026 +19%); no_sub_programs (single direct grouping); non_disaster (ASSUMP-23); texture_prior_year_down_crossing (FY2025 -22%)"
     sub_programs:
-      - {sub_program_id: SUB-S04-A, sub_program_name: Right-of-Way Clearance (illustrative), segments: ["61401"],          events: [4339, 4340]}
-      - {sub_program_id: SUB-S04-B, sub_program_name: Waterway Debris (illustrative),        segments: ["61402", "61403"], events: [4332]}
-      - {sub_program_id: SUB-S04-C, sub_program_name: Monitoring & Compliance (illustrative), segments: ["61404"],         events: [4337, 4346]}
-
-  - program_id: PROG-S05
-    program_name: Mitigation Planning Support (illustrative)
-    assistance_listing: ""
-    fund_segment: MP
-    mapping_style: segment_driven
-    base_annual_disbursement: 46000000
-    growth: {2023: 0.05, 2024: 0.07, 2025: -0.25, 2026: 0.12}
-    scenario: "texture_prior_year_down_crossing (FY2025 -25%); shared_segment_55501 (needs fund+segment rule)"
-    sub_programs:
-      - {sub_program_id: SUB-S05-A, sub_program_name: Local Plan Development (illustrative), segments: ["55501"], events: [4339]}
-      - {sub_program_id: SUB-S05-B, sub_program_name: Plan Integration (illustrative),       segments: ["61502"], events: [4340, 4338]}
-
-  - program_id: PROG-S06
-    program_name: Codes & Standards Technical Assistance (illustrative)
-    assistance_listing: ""
-    fund_segment: CS
-    mapping_style: segment_driven
-    base_annual_disbursement: 39000000
-    growth: {2023: 0.04, 2024: 0.06, 2025: 0.08, 2026: 0.03}
-    scenario: "stable_within_threshold_3; shared_segment_55501 (same segment as PROG-S05, different fund)"
-    sub_programs:
-      - {sub_program_id: SUB-S06-A, sub_program_name: Building Code Advisory (illustrative),  segments: ["55501"], events: [4340]}
-      - {sub_program_id: SUB-S06-B, sub_program_name: Standards Field Support (illustrative), segments: ["61602"], events: [4339, 4337]}
-
-  - program_id: PROG-S07
-    program_name: Emergency Operations Center Support (illustrative)
-    assistance_listing: ""
-    fund_segment: EO
-    mapping_style: segment_driven
-    base_annual_disbursement: 120000000
-    growth: {2023: 0.10, 2024: 0.18, 2025: -0.07, 2026: 0.19}
-    scenario: "near_miss_below_threshold (FY2026 +19%)"
-    sub_programs:
-      - {sub_program_id: SUB-S07-A, sub_program_name: EOC Activation Staffing (illustrative), segments: ["61701"],          events: [4339, 4332]}
-      - {sub_program_id: SUB-S07-B, sub_program_name: EOC Systems & Comms (illustrative),     segments: ["61702"],          events: [4340]}
-      - {sub_program_id: SUB-S07-C, sub_program_name: Interagency Liaison (illustrative),     segments: ["61703", "61704"], events: [4337]}
-
-  - program_id: PROG-S08
-    program_name: Infrastructure Restoration Grants (illustrative)
-    assistance_listing: ""
-    fund_segment: IR
-    mapping_style: segment_driven
-    base_annual_disbursement: 410000000
-    growth: {2023: 0.07, 2024: 0.31, 2025: 0.05, 2026: -0.08}
-    scenario: "texture_prior_year_crossing (FY2024 +31%)"
-    sub_programs:
-      - {sub_program_id: SUB-S08-A, sub_program_name: Power Grid Restoration (illustrative),   segments: ["61801", "61802"], events: [4339, 4340]}
-      - {sub_program_id: SUB-S08-B, sub_program_name: Water Systems (illustrative),            segments: ["61803"],          events: [4340]}
-      - {sub_program_id: SUB-S08-C, sub_program_name: Roads & Bridges (illustrative),          segments: ["61804"],          events: [4332, 4338]}
-      - {sub_program_id: SUB-S08-D, sub_program_name: Public Buildings (illustrative),         segments: ["61805"],          events: [4337, 4346]}
-
-  - program_id: PROG-S09
-    program_name: Flood Recovery Technical Services (illustrative)
-    assistance_listing: ""
-    fund_segment: FR
-    mapping_style: segment_driven
-    base_annual_disbursement: 95000000
-    growth: {2023: -0.12, 2024: 0.09, 2025: 0.14, 2026: 0.21}
-    scenario: "trigger_up_3 (buffer)"
-    sub_programs:
-      - {sub_program_id: SUB-S09-A, sub_program_name: Substantial Damage Assessment (illustrative), segments: ["61901"],          events: [4339]}
-      - {sub_program_id: SUB-S09-B, sub_program_name: Elevation Advisory (illustrative),            segments: ["61902", "61903"], events: [4340, 4332]}
-      - {sub_program_id: SUB-S09-C, sub_program_name: Floodplain Mapping Support (illustrative),    segments: ["61904"],          events: [4337]}
-
-  - program_id: PROG-S10
-    program_name: Voluntary Agency Coordination (illustrative)
-    assistance_listing: ""
-    fund_segment: VA
-    mapping_style: segment_driven
-    base_annual_disbursement: 28000000
-    growth: {2023: 0.06, 2024: -0.04, 2025: 0.07, 2026: -0.06}
-    scenario: "stable_within_threshold_4"
-    sub_programs:
-      - {sub_program_id: SUB-S10-A, sub_program_name: VOAD Liaison (illustrative),      segments: ["62001"], events: [4339, 4337]}
-      - {sub_program_id: SUB-S10-B, sub_program_name: Donations Management (illustrative), segments: ["62002"], events: [4340]}
-
-  - program_id: PROG-S11
-    program_name: Disaster Workforce Augmentation (illustrative)
-    assistance_listing: ""
-    fund_segment: WF
-    mapping_style: segment_driven
-    base_annual_disbursement: 150000000
-    growth: {2023: 0.19, 2024: 0.03, 2025: -0.16, 2026: 0.11}
-    scenario: "stable_texture"
-    sub_programs:
-      - {sub_program_id: SUB-S11-A, sub_program_name: Reservist Deployment (illustrative),  segments: ["62101"],          events: [4339]}
-      - {sub_program_id: SUB-S11-B, sub_program_name: Surge Capacity Force (illustrative),  segments: ["62102"],          events: [4340, 4346]}
-      - {sub_program_id: SUB-S11-C, sub_program_name: Local Hire Program (illustrative),    segments: ["62103", "62104"], events: [4332]}
-
-  - program_id: PROG-S12
-    program_name: Logistics & Commodity Distribution (illustrative)
-    assistance_listing: ""
-    fund_segment: LG
-    mapping_style: segment_driven
-    base_annual_disbursement: 240000000
-    growth: {2023: 0.08, 2024: 0.12, 2025: 0.22, 2026: -0.24}
-    scenario: "trigger_down_2 (buffer); texture FY2025 +22%"
-    sub_programs:
-      - {sub_program_id: SUB-S12-A, sub_program_name: Commodity Staging (illustrative),     segments: ["62201", "62202"], events: [4339, 4340]}
-      - {sub_program_id: SUB-S12-B, sub_program_name: Transportation Missions (illustrative), segments: ["62203"],        events: [4332]}
-      - {sub_program_id: SUB-S12-C, sub_program_name: Warehouse Operations (illustrative),  segments: ["62204"],          events: [4337]}
-      - {sub_program_id: SUB-S12-D, sub_program_name: Last-Mile Distribution (illustrative), segments: ["62205"],         events: [4339, 4338]}
-
-  - program_id: PROG-S13
-    program_name: Recovery Data & Reporting Services (illustrative)
-    assistance_listing: ""
-    fund_segment: RD
-    mapping_style: segment_driven
-    base_annual_disbursement: 33000000
-    growth: {2023: 0.05, 2024: 0.09, 2025: 0.04, 2026: 0.14}
-    scenario: "stable_within_threshold_5"
-    sub_programs:
-      - {sub_program_id: SUB-S13-A, sub_program_name: Recovery Metrics (illustrative),   segments: ["62301"], events: [4339, 4340]}
-      - {sub_program_id: SUB-S13-B, sub_program_name: Reporting Automation (illustrative), segments: ["62302"], events: [4337]}
-
-  - program_id: PROG-S14
-    program_name: Hazard Analysis & Risk Modeling (illustrative)
-    assistance_listing: ""
-    fund_segment: HZ
-    mapping_style: segment_driven
-    base_annual_disbursement: 61000000
-    growth: {2023: 0.11, 2024: 0.06, 2025: 0.17, 2026: 0.09}
-    scenario: "stable_texture"
-    sub_programs:
-      - {sub_program_id: SUB-S14-A, sub_program_name: Risk Model Development (illustrative), segments: ["62401"],          events: [4339]}
-      - {sub_program_id: SUB-S14-B, sub_program_name: Hazard Data Acquisition (illustrative), segments: ["62402", "62403"], events: [4340, 4332]}
-
-  - program_id: PROG-S15
-    program_name: Public Notice & Outreach Operations (illustrative)
-    assistance_listing: ""
-    fund_segment: PN
-    mapping_style: segment_driven
-    base_annual_disbursement: 24000000
-    growth: {2023: 0.03, 2024: 0.08, 2025: -0.05, 2026: 0.04}
-    scenario: "stable_within_threshold_6"
-    sub_programs:
-      - {sub_program_id: SUB-S15-A, sub_program_name: Multilingual Outreach (illustrative), segments: ["62501"], events: [4339, 4337]}
-      - {sub_program_id: SUB-S15-B, sub_program_name: Public Notice Compliance (illustrative), segments: ["62502"], events: [4340]}
-
-  - program_id: PROG-S16
-    program_name: Grants Management Modernization (illustrative)
-    assistance_listing: ""
-    fund_segment: GM
-    mapping_style: segment_driven
-    base_annual_disbursement: 175000000
-    growth: {2023: 0.28, 2024: 0.14, 2025: 0.07, 2026: 0.18}
-    scenario: "texture_prior_year_crossing (FY2023 +28%)"
-    sub_programs:
-      - {sub_program_id: SUB-S16-A, sub_program_name: Grants Platform Operations (illustrative), segments: ["62601"],          events: [4339, 4340]}
-      - {sub_program_id: SUB-S16-B, sub_program_name: Legacy System Support (illustrative),      segments: ["62602", "62603"], events: [4332]}
-      - {sub_program_id: SUB-S16-C, sub_program_name: Applicant Portal Services (illustrative),  segments: ["62604"],          events: [4337, 4346]}
+      - {sub_program_id: SUB-UR-ALL, sub_program_name: "US&R — direct (no sub-programs)", segments: ["97025", "61601"], events: []}
 
 # =============================================================================
 # EXCEPTION-QUEUE PLANTS (REQ-003; file 09 §2 — "new code never seen")
@@ -325,9 +211,9 @@ programs:
 # (suggested_* is the planted truth; confidence < prefill_threshold).
 # =============================================================================
 exception_codes:
-  - {code: XR-88001-4339, fund_segment: XR, program_segment: "88001", event: 4339, suggested_sub_program: SUB-S01-A, suggested_program: PROG-S01, suggested_confidence: 0.58, total_amount: 1800000, txn_count: 4}
-  - {code: XR-88002-4340, fund_segment: XR, program_segment: "88002", event: 4340, suggested_sub_program: SUB-S07-B, suggested_program: PROG-S07, suggested_confidence: 0.52, total_amount: 950000,  txn_count: 3}
-  - {code: XR-88003-4339, fund_segment: XR, program_segment: "88003", event: 4339, suggested_sub_program: SUB-S10-A, suggested_program: PROG-S10, suggested_confidence: 0.61, total_amount: 420000,  txn_count: 3}
-  - {code: NC-88101-4332, fund_segment: NC, program_segment: "88101", event: 4332, suggested_sub_program: SUB-S02-C, suggested_program: PROG-S02, suggested_confidence: 0.55, total_amount: 730000,  txn_count: 3}
-  - {code: NC-88102-4337, fund_segment: NC, program_segment: "88102", event: 4337, suggested_sub_program: SUB-S13-B, suggested_program: PROG-S13, suggested_confidence: 0.49, total_amount: 260000,  txn_count: 2}
-  - {code: NC-88103-4346, fund_segment: NC, program_segment: "88103", event: 4346, suggested_sub_program: SUB-S15-A, suggested_program: PROG-S15, suggested_confidence: 0.44, total_amount: 180000,  txn_count: 2}
+  - {code: XR-88001-4339, fund_segment: XR, program_segment: "88001", event: 4339, suggested_sub_program: SUB-IA-IHP,  suggested_program: PROG-IA, suggested_confidence: 0.58, total_amount: 1800000, txn_count: 4}
+  - {code: XR-88002-4340, fund_segment: XR, program_segment: "88002", event: 4340, suggested_sub_program: SUB-PA-4340, suggested_program: PROG-PA, suggested_confidence: 0.52, total_amount: 950000,  txn_count: 3}
+  - {code: XR-88003-4339, fund_segment: XR, program_segment: "88003", event: 4339, suggested_sub_program: SUB-HM-ALL,  suggested_program: PROG-HM, suggested_confidence: 0.61, total_amount: 420000,  txn_count: 3}
+  - {code: NC-88101-4332, fund_segment: NC, program_segment: "88101", event: 4332, suggested_sub_program: SUB-PA-4332, suggested_program: PROG-PA, suggested_confidence: 0.55, total_amount: 730000,  txn_count: 3}
+  - {code: NC-88102-4337, fund_segment: NC, program_segment: "88102", event: 4337, suggested_sub_program: SUB-IA-MC,   suggested_program: PROG-IA, suggested_confidence: 0.49, total_amount: 260000,  txn_count: 2}
+  - {code: NC-88103-4346, fund_segment: NC, program_segment: "88103", event: 4346, suggested_sub_program: SUB-PA-4346, suggested_program: PROG-PA, suggested_confidence: 0.44, total_amount: 180000,  txn_count: 2}
