@@ -187,7 +187,7 @@ programs:
     growth: {2023: 0.28, 2024: 0.05, 2025: 0.11, 2026: 0.21}
     scenario: "trigger_up_2; non_disaster (REQ-030); rollup_exactly_3_subs; texture_prior_year_crossing (FY2023 +28%); shared_segment_55501 (needs fund+segment rule)"
     sub_programs:
-      - {sub_program_id: SUB-HS-SHSP, sub_program_name: "State Homeland Security Program (SHSP)", segments: ["97067", "61501"], events: []}
+      - {sub_program_id: SUB-HS-SHSP, sub_program_name: "State Homeland Security Grant Program (SHSP)", segments: ["97067", "61501"], events: []}
       - {sub_program_id: SUB-HS-UASI, sub_program_name: "Urban Area Security Initiative (UASI)",  segments: ["61502"],          events: []}
       - {sub_program_id: SUB-HS-OPSG, sub_program_name: "Operation Stonegarden",                  segments: ["61503", "55501"], events: []}
 

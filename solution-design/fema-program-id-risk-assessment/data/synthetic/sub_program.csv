@@ -10,7 +10,7 @@ SUB-HM-ALL,PROG-HM,HMGP — direct (no sub-programs),SYNTHETIC-DEMO
 SUB-IA-IHP,PROG-IA,Individuals and Households Program (IHP),SYNTHETIC-DEMO
 SUB-IA-MC,PROG-IA,Mass Care,SYNTHETIC-DEMO
 SUB-IA-DCM,PROG-IA,Disaster Case Management,SYNTHETIC-DEMO
-SUB-HS-SHSP,PROG-HS,State Homeland Security Program (SHSP),SYNTHETIC-DEMO
+SUB-HS-SHSP,PROG-HS,State Homeland Security Grant Program (SHSP),SYNTHETIC-DEMO
 SUB-HS-UASI,PROG-HS,Urban Area Security Initiative (UASI),SYNTHETIC-DEMO
 SUB-HS-OPSG,PROG-HS,Operation Stonegarden,SYNTHETIC-DEMO
 SUB-UR-ALL,PROG-UR,US&R — direct (no sub-programs),SYNTHETIC-DEMO
