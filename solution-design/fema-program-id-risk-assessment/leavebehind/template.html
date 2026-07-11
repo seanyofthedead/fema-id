@@ -350,7 +350,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <button data-screen="5"><span class="n">5</span>Spend aggregation</button>
       <div class="grp">Assess</div>
       <button data-screen="6"><span class="n">6</span>YoY variance &amp; trigger</button>
-      <button data-screen="7"><span class="n">7</span>PRA auto-generator</button>
+      <button data-screen="7"><span class="n">7</span>PRA — computed answers</button>
       <button data-screen="8"><span class="n">8</span>Review &amp; override</button>
       <div class="grp">Govern</div>
       <button data-screen="9"><span class="n">9</span>Assumptions &amp; validation</button>
@@ -668,8 +668,8 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
     <section class="screen" id="screen-7" aria-labelledby="s7-h">
       <header>
         <div class="eyebrow">Assess &middot; Screen 7</div>
-        <h2 id="s7-h">Preliminary risk assessment — auto-generator</h2>
-        <p class="lede">One fixed template, N data bindings. About 8 of 10 questions auto-populate from data the finance center already holds; 2 are qualitative and route to the program office.</p>
+        <h2 id="s7-h">Preliminary risk assessment — how each answer is computed</h2>
+        <p class="lede">One fixed template, N data bindings. About 8 of 10 questions auto-populate from data the finance center already holds; 2 are qualitative and route to the program office. <b>This screen is the read-only evidence view</b> — where every value came from, its confidence and its rationale. All input — approve, override, qualitative answers, finalize — happens on screen 8.</p>
       </header>
       <div id="s7-rail"></div>
       <div class="card">
@@ -688,8 +688,8 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
     <section class="screen" id="screen-8" aria-labelledby="s8-h">
       <header>
         <div class="eyebrow">Assess &middot; Screen 8</div>
-        <h2 id="s8-h">Human review &amp; override</h2>
-        <p class="lede">Auto-populated is <b>not</b> auto-accepted. A reviewer approves or overrides every answer — overrides capture a reason — and nothing finalizes without sign-off. Below-threshold confidence routes to mandatory review.</p>
+        <h2 id="s8-h">Human review &amp; override — the input surface</h2>
+        <p class="lede">Auto-populated is <b>not</b> auto-accepted. This is the <b>only</b> place decisions happen: a reviewer approves or overrides every answer — overrides capture a reason — the program office enters Q9–Q10, and nothing finalizes without sign-off. (Screen 7 shows how each value was computed.)</p>
       </header>
       <div id="s8-rail"></div>
       <div class="card">
@@ -2890,8 +2890,8 @@ const TOUR_TEXT = {
   4: 'Harvey, Irma and Maria had to be tracked separately: spend splits by federal disaster declaration, with an anomaly flag if an event leaves its historical set.',
   5: 'Transactions roll up to program, sub-program and event totals — deterministic aggregation over the record-level ledger. Exception-queue spend stays visibly held out.',
   6: 'The centerpiece: threshold, direction, noise floor and both measures — dollars and transaction volume (the 2024 rule) — are configuration, on screen. Drag the slider and watch programs re-flag live.',
-  7: 'One fixed template, per-program data bindings: about 8 of 10 questions auto-populate with evidence and confidence; 2 route to the program office.',
-  8: 'Auto-populated is not auto-accepted: approve or override every answer (overrides need a reason), then finalize — the audit trail records each decision.',
+  7: 'The read-only evidence view: about 8 of 10 questions auto-populate, each showing where its value came from, its confidence and its rationale. Nothing is decided here.',
+  8: 'The input surface: approve or override every answer (overrides need a reason), enter the two program-office questions, then finalize — the audit trail records each decision.',
   9: 'Every gap became a documented assumption with a validation question. Run the parity check to recompute every summary value against the committed baselines.',
   10: 'Take the artifacts with you: the PRA report, a spend-summary CSV and a machine-readable package — generated entirely client-side.'
 };
@@ -2921,7 +2921,7 @@ function tourEnd(){ state.tour = false; renderTour(); }
 /* ============================ navigation & refresh ============================ */
 const TITLES = {1: 'Executive dashboard', 2: 'Data ingestion', 3: 'Program mapping workspace',
   4: 'Disaster / event grouping', 5: 'Spend aggregation', 6: 'YoY variance & trigger',
-  7: 'PRA auto-generator', 8: 'Human review & override', 9: 'Assumptions & validation', 10: 'Export & reporting'};
+  7: 'PRA — computed answers', 8: 'Human review & override', 9: 'Assumptions & validation', 10: 'Export & reporting'};
 const RENDER = {1: renderS1, 2: renderS2, 3: renderS3, 4: renderS4, 5: renderS5,
   6: renderS6, 7: renderS7, 8: renderS8, 9: renderS9, 10: renderS10};
 function setScreen(n){
