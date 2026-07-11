@@ -420,7 +420,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <div class="kpis" id="s2-kpis"></div>
       <div class="card">
         <h3>Load your own extract (CSV)</h3>
-        <p class="hint">Ingestion, live: drop a record-level CSV and the rules in this file cleanse, validate, map and aggregate it — every screen recomputes. Required columns: <span class="mono">raw_code, disaster_number, fiscal_year, disbursement_amount, disbursement_date</span> (<span class="mono">txn_id</span> optional; any <span class="mono">code</span> column is ignored — the cleansing rules recompute it). Fiscal years and disaster numbers must belong to the embedded reference set; unknown codes are held out in the exception queue.</p>
+        <p class="hint">Ingestion, live: drop a record-level CSV and the rules in this file cleanse, validate, map and aggregate it — every screen recomputes. Required columns: <span class="mono">raw_code, disaster_number, fiscal_year, disbursement_amount, disbursement_date</span> (<span class="mono">txn_id</span> and <span class="mono">disbursement_type</span> optional; leave <span class="mono">disaster_number</span> blank for non-disaster spend; any <span class="mono">code</span> column is ignored — the cleansing rules recompute it). Fiscal years and disaster numbers must belong to the embedded reference set; unknown codes are held out in the exception queue.</p>
         <div class="flexrow">
           <button class="btn primary" id="s2-upload-btn">Choose CSV to ingest&hellip;</button>
           <input type="file" id="s2-upload" accept=".csv,text/csv" hidden aria-label="Select a CSV extract to ingest">
@@ -441,7 +441,10 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <p class="hint">Record-level rows from the extract. <mark class="dirty">Dirty raw codes</mark> are shown as landed; <mark class="fixed">canonical codes</mark> as recovered by the cleansing rules.</p>
           <div class="tblwrap"><table id="s2-sample"><thead><tr>
             <th scope="col">txn_id</th><th scope="col">raw_code (landed)</th><th scope="col">code (cleansed)</th>
-            <th scope="col">DR</th><th scope="col">FY</th><th scope="col" class="num">Amount</th><th scope="col">Date</th><th scope="col">Lineage</th>
+            <th scope="col">DR</th><th scope="col">FY</th><th scope="col" class="num">Amount</th>
+            <th scope="col" title="Treasury Account Fund Symbol — synthetic stand-in; real WebFMIS field pending (SME-27)">TAFS</th>
+            <th scope="col" title="Disbursement type — illustrative value set; real WebFMIS values pending (SME-27)">Type</th>
+            <th scope="col">Date</th><th scope="col">Lineage</th>
           </tr></thead><tbody></tbody></table></div>
         </div>
         <div class="card">
@@ -636,8 +639,11 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <div class="fld"><span>Min prior-FY amount ($ · noise floor)</span>
             <input type="number" id="s6-minprior" class="inline" min="0" step="1000000" value="0" aria-label="Minimum prior-year amount in dollars" title="Programs whose prior-year disbursements fall below this dollar amount are never flagged — suppresses noise on tiny programs">
           </div>
-          <div class="fld"><span>Measure</span>
-            <span class="badge gray">disbursements</span>
+          <div class="fld"><span>Measures <small>(2024 rule — a breach on either flags the program)</small></span>
+            <div class="radio-row" role="group" aria-label="Trigger measures">
+              <label title="Year-over-year change in disbursement dollars"><input type="checkbox" id="s6-m-dollars" checked> disbursement $</label>
+              <label title="Year-over-year change in the NUMBER of disbursement transactions — added to the rule in 2024"><input type="checkbox" id="s6-m-count" checked> transaction volume</label>
+            </div>
           </div>
           <div class="fld"><span>&nbsp;</span><button class="btn sm" id="s6-reset">Reset to config default</button></div>
         </div>
@@ -645,14 +651,15 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <div class="kpis" id="s6-kpis"></div>
       <div class="card">
         <h3>YoY change vs. trigger corridor — <span id="s6-fy-label"></span></h3>
-        <p class="hint">Bars outside the shaded corridor breach the trigger and are flagged for a comprehensive assessment. Deterministic math: <span class="mono">(current − prior) / prior × 100</span>.</p>
+        <p class="hint">Bars show the DOLLAR change; bars outside the shaded corridor breach on dollars (red). An <span style="color:#8a5a00;font-weight:600">amber ⚑ bar</span> breaches on <b>transaction volume only</b> — dollars stayed inside the corridor but the number of disbursements moved past the threshold (the 2024 rule). Deterministic math: <span class="mono">(current − prior) / prior × 100</span>, per measure.</p>
         <div class="chart" id="s6-chart"></div>
       </div>
       <div class="card">
         <h3>Detail</h3>
         <div class="tblwrap tall"><table id="s6-table"><thead><tr>
           <th scope="col">Program</th><th scope="col" class="num">Prior FY</th><th scope="col" class="num">Current FY</th>
-          <th scope="col" class="num">YoY</th><th scope="col">Assessment path</th><th scope="col">Why (AI-suggested)</th>
+          <th scope="col" class="num">YoY ($)</th><th scope="col" class="num" title="Year-over-year change in the number of disbursement transactions (2024 rule)">YoY (txn volume)</th>
+          <th scope="col">Assessment path</th><th scope="col">Why (AI-suggested)</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
     </section>
@@ -718,7 +725,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       </header>
       <div class="card">
         <h3>Deterministic parity check</h3>
-        <p class="hint">Proof the numbers are checkable: this recomputes every program &times; fiscal-year total, YoY delta and trigger flag from the embedded 2,019-row transaction ledger in JavaScript, and compares against the committed baseline summary tables.</p>
+        <p class="hint">Proof the numbers are checkable: this recomputes every program &times; fiscal-year total, YoY delta, transaction count and trigger flag (both measures) from the embedded transaction ledger in JavaScript, and compares against the committed baseline summary tables.</p>
         <div class="flexrow">
           <button class="btn primary" id="s9-parity-run">Run parity check</button>
           <span id="s9-parity-result" class="small" role="status"></span>
@@ -892,8 +899,9 @@ const DR_ORDER = DATA.events.map(e => e.dr);                        // ascending
 const DR_COLOR = {};
 ['#2a78d6','#1baf7a','#eda100','#008300','#4a3aa7','#e34948','#e87ba4','#eb6834']
   .forEach((c, i) => { if (DR_ORDER[i] != null) DR_COLOR[DR_ORDER[i]] = c; });
-/* transactions hydrated once: [id, raw, code, dr, fy, amt, date] */
-const TX = DATA.txns.map(r => ({id: r[0], raw: r[1], code: r[2], dr: r[3], fy: r[4], amt: r[5], date: r[6]}));
+/* transactions hydrated once: [id, raw, code, dr|null, fy, amt, date, dtype].
+   dr === null means non-disaster spend (annual/preparedness funding — REQ-030). */
+const TX = DATA.txns.map(r => ({id: r[0], raw: r[1], code: r[2], dr: r[3], fy: r[4], amt: r[5], date: r[6], dtype: r[7]}));
 const TX_EMBEDDED = TX.slice();   // pristine copy — CSV ingestion swaps TX in place; restore refills from here
 /* exception queue baseline: mapping rows with status exception_queue carry the AI SUGGESTION */
 const EXC = DATA.mappings.filter(m => m[6] === 'exception_queue')
@@ -901,7 +909,8 @@ const EXC = DATA.mappings.filter(m => m[6] === 'exception_queue')
 const excByCode = new Map(EXC.map(e => [e.code, e]));
 /* baseline generator summaries (parity checks + Q8) */
 const GEN_FY = DATA.fySummary.map(r => ({progId: r[0], fy: r[1], total: r[2], prior: r[3], yoy: r[4], flag: r[5],
-  subs: r[6], codes: r[7], events: r[8], topShare: r[9], exc: r[10]}));
+  subs: r[6], codes: r[7], events: r[8], topShare: r[9], exc: r[10],
+  txn: r[11], txnPrior: r[12], cyoy: r[13], dflag: r[14], cflag: r[15]}));
 const GEN_SS = DATA.spendSummary.map(r => ({progId: r[0], fy: r[1], dr: r[2], total: r[3]}));
 const RESP_BASE = new Map(DATA.responses.map(r => [r.progId + '|' + r.qid, r]));
 
@@ -911,7 +920,10 @@ const state = {
   cfg: {
     threshold: DATA.config.threshold_pct,
     direction: DATA.config.direction,
-    minPrior: DATA.config.min_prior_year_amount
+    minPrior: DATA.config.min_prior_year_amount,
+    minPriorCount: DATA.config.min_prior_year_count,
+    measures: DATA.config.measures.slice(),   // REQ-031: dollars and/or transaction volume
+    combine: DATA.config.combine
   },
   overrides: new Map(),        // code -> subId (session mapping-rule overrides)
   sessionRules: [],            // visible registry entries for overrides
@@ -1024,10 +1036,38 @@ function trigApply(pct, prior, cfg){
   if (cfg.direction === 'decrease_only') return pct <= -cfg.threshold;
   return Math.abs(pct) >= cfg.threshold;
 }
+/* REQ-031 (the client's 2024 rule change): the trigger also evaluates YoY change
+   in TRANSACTION COUNT; a breach on either enabled measure flags the program. */
+function countYoyOf(agg, progId, fy){
+  const cur = agg.progFyTx[progId + '|' + fy] || 0;
+  const prior = FYS.includes(fy - 1) ? (agg.progFyTx[progId + '|' + (fy - 1)] || 0) : null;
+  const pct = (prior && prior > 0) ? (cur - prior) / prior * 100 : null;
+  return {cur, prior, pct};
+}
+function trigApplyCount(pct, priorN, cfg){
+  if (pct == null || priorN == null || priorN <= 0) return false;
+  if (priorN < (cfg.minPriorCount || 0)) return false;
+  if (cfg.direction === 'increase_only') return pct >= cfg.threshold;
+  if (cfg.direction === 'decrease_only') return pct <= -cfg.threshold;
+  return Math.abs(pct) >= cfg.threshold;
+}
+function trigCombined(dflag, cflag, cfg){
+  const ms = cfg.measures || ['disbursements'];
+  const flags = [];
+  if (ms.includes('disbursements')) flags.push(dflag);
+  if (ms.includes('transaction_count')) flags.push(cflag);
+  if (!flags.length) flags.push(dflag);
+  return (cfg.combine === 'all') ? flags.every(Boolean) : flags.some(Boolean);
+}
 function progRow(progId, fy, cfg, agg){
   agg = agg || aggregate();
+  cfg = cfg || state.cfg;
   const y = yoyOf(agg, progId, fy);
-  return {progId, ...y, flag: trigApply(y.pct, y.prior, cfg || state.cfg)};
+  const c = countYoyOf(agg, progId, fy);
+  const dflag = trigApply(y.pct, y.prior, cfg);
+  const cflag = trigApplyCount(c.pct, c.prior, cfg);
+  return {progId, ...y, nCur: c.cur, nPrior: c.prior, cpct: c.pct,
+          dflag, cflag, flag: trigCombined(dflag, cflag, cfg)};
 }
 function allRows(fy, cfg){
   const agg = aggregate();
@@ -1123,7 +1163,7 @@ function applyExtract(text, name){
     lastLoad = {name, error: 'Missing required column(s): ' + missing.join(', ') + '. The current ledger is unchanged.'};
     refresh(); return;
   }
-  const cId = col('txn_id');
+  const cId = col('txn_id'), cType = col('disbursement_type');
   const fyOk = new Set(FYS);
   const out = [], rejected = [];
   let rejCount = 0;
@@ -1133,12 +1173,14 @@ function applyExtract(text, name){
     const fyRawVal = String(r[col('fiscal_year')] || '').trim();
     const drRawVal = String(r[col('disaster_number')] || '').trim();
     const fy = parseInt(fyRawVal, 10);
-    const dr = parseInt(drRawVal.replace(/^DR-?/i, ''), 10);
+    /* blank or "ND" disaster_number = non-disaster spend (REQ-030) */
+    const isND = drRawVal === '' || /^ND$/i.test(drRawVal);
+    const dr = isND ? null : parseInt(drRawVal.replace(/^DR-?/i, ''), 10);
     const amt = Number(String(r[col('disbursement_amount')] || '').replace(/[$,\s]/g, ''));
     const date = String(r[col('disbursement_date')] || '').trim();
     const why = !raw ? 'raw_code is empty'
       : !fyOk.has(fy) ? `fiscal_year "${fyRawVal}" is outside the embedded FY${FYS[0]}–FY${FYS[FYS.length - 1]} reference set`
-      : !eventByDr.has(dr) ? `disaster_number "${drRawVal}" is not an embedded declaration`
+      : (!isND && !eventByDr.has(dr)) ? `disaster_number "${drRawVal}" is not an embedded declaration (leave blank for non-disaster spend)`
       : !isFinite(amt) ? 'disbursement_amount is not a number' : null;
     if (why){
       rejCount++;
@@ -1148,7 +1190,8 @@ function applyExtract(text, name){
     const norm = normalizeRaw(raw);
     const code = DATA.config.alias_map[norm] || norm;
     out.push({id: cId >= 0 && String(r[cId] || '').trim() ? String(r[cId]).trim() : 'UPL-' + String(out.length + 1).padStart(6, '0'),
-      raw, code, dr, fy, amt: Math.round(amt * 100) / 100, date});
+      raw, code, dr, fy, amt: Math.round(amt * 100) / 100, date,
+      dtype: cType >= 0 ? String(r[cType] || '').trim() : ''});
   }
   if (!out.length){
     lastLoad = {name, error: `All ${rejCount} data row(s) were rejected (first: row ${rejected[0].n} — ${rejected[0].why}). The current ledger is unchanged.`};
@@ -1181,9 +1224,10 @@ function restoreExtract(){
   refresh();
 }
 function exportExtractCsv(){
-  const lines = ['txn_id,raw_code,disaster_number,fiscal_year,disbursement_amount,disbursement_date'];
+  const lines = ['txn_id,raw_code,disaster_number,fiscal_year,disbursement_amount,disbursement_type,disbursement_date'];
   for (const t of TX_EMBEDDED)
-    lines.push([t.id, '"' + t.raw.replace(/"/g, '""') + '"', t.dr, t.fy, t.amt.toFixed(2), t.date].join(','));
+    lines.push([t.id, '"' + t.raw.replace(/"/g, '""') + '"', t.dr == null ? '' : t.dr, t.fy, t.amt.toFixed(2),
+      '"' + String(t.dtype || '').replace(/"/g, '""') + '"', t.date].join(','));
   return lines.join('\n') + '\n';
 }
 
@@ -1198,8 +1242,9 @@ function aiTag(){ return '<span class="ai-tag" title="Deterministic stand-in tex
 function praAnswers(progId){
   const agg = aggregate();
   const p = progById.get(progId);
-  const y = yoyOf(agg, progId, PRA_FY);
-  const flag = trigApply(y.pct, y.prior, state.cfg);
+  const row = progRow(progId, PRA_FY, state.cfg, agg);
+  const y = {cur: row.cur, prior: row.prior, pct: row.pct};
+  const flag = row.flag;
   const codes = agg.progFyCodes[progId + '|' + PRA_FY] || new Set();
   const nTx = agg.progFyTx[progId + '|' + PRA_FY] || 0;
   const subs = subsSpend(progId, PRA_FY, agg);
@@ -1207,22 +1252,25 @@ function praAnswers(progId){
   const top = evs.slice().sort((a, b) => b.amt - a.amt)[0];
   const topShare = (top && y.cur > 0) ? top.amt / y.cur * 100 : null;
   const excMine = openExceptions().filter(e => e.progId === progId);
-  const yPrior = yoyOf(agg, progId, PRA_FY - 1);
-  const priorFlag = trigApply(yPrior.pct, yPrior.prior, state.cfg);
-  const cfgTxt = `${state.cfg.threshold}% · ${state.cfg.direction.replace('_',' ')} · min prior ${fmtM(state.cfg.minPrior)}`;
+  const priorRow = progRow(progId, PRA_FY - 1, state.cfg, agg);
+  const priorFlag = priorRow.flag;
+  const measTxt = (state.cfg.measures || []).includes('transaction_count') ? 'dollars or txn volume' : 'dollars';
+  const cfgTxt = `${state.cfg.threshold}% · ${state.cfg.direction.replace('_',' ')} · ${measTxt} · min prior ${fmtM(state.cfg.minPrior)}`;
   const name = shortName(p.name);
   const A = [];
   A.push({qid: 'Q1', value: fmtFull(y.cur), conf: 1,
     evidence: `Σ <b>disbursement_amount</b> over ${nTx.toLocaleString()} mapped ledger rows · ${codes.size} financial codes · FY${PRA_FY}. Binding: <span class="mono">fiscal_year_spend_summary.total_disbursement</span>.`,
     rationale: `${name} disbursed ${fmtM(y.cur)} of FY${PRA_FY} funds across ${codes.size} codes; the figure is a deterministic ledger sum, not a model output. Measure = disbursements.`});
   A.push({qid: 'Q2', value: fmtPct(y.pct), conf: 1, spark: progId,
-    evidence: `FY${PRA_FY} ${fmtFull(y.cur)} vs FY${PRA_FY-1} ${fmtFull(y.prior || 0)}. Binding: <span class="mono">fiscal_year_spend_summary.yoy_pct_change</span>.`,
-    rationale: `Spend moved ${fmtPct(y.pct)} year over year (${fmtM(y.prior||0)} → ${fmtM(y.cur)}). The change is concentrated in the program's ${evs.length}-event mix — see screen 4.`});
+    evidence: `Dollars: FY${PRA_FY} ${fmtFull(y.cur)} vs FY${PRA_FY-1} ${fmtFull(y.prior || 0)}. Transaction volume: ${row.nCur.toLocaleString()} vs ${(row.nPrior || 0).toLocaleString()} rows (${fmtPct(row.cpct)}). Binding: <span class="mono">fiscal_year_spend_summary.yoy_pct_change / count_yoy_pct_change</span>.`,
+    rationale: `Spend moved ${fmtPct(y.pct)} year over year (${fmtM(y.prior||0)} → ${fmtM(y.cur)}); transaction volume moved ${fmtPct(row.cpct)}. ${evs.length ? `The change is concentrated in the program's ${evs.length}-event mix — see screen 4.` : 'Non-disaster program — annual funding, no event mix.'}`});
   A.push({qid: 'Q3', value: flag ? 'Yes — comprehensive assessment required from the start' : 'No — begins with the preliminary assessment', conf: 1,
-    evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). |${fmtPct(y.pct)}| ${flag ? '≥' : '<'} ${state.cfg.threshold}%.`,
+    evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). Dollars: |${fmtPct(y.pct)}| ${row.dflag ? '≥' : '<'} ${state.cfg.threshold}%. Txn volume: |${fmtPct(row.cpct)}| ${row.cflag ? '≥' : '<'} ${state.cfg.threshold}% — either measure breaching flags the program (2024 rule).`,
     rationale: flag
-      ? `${fmtPct(y.pct)} breaches the ±${state.cfg.threshold}% corridor, so ${name} is flagged for a comprehensive risk assessment at data-land time — weeks-to-months earlier than the manual close.`
-      : `${fmtPct(y.pct)} sits inside the ±${state.cfg.threshold}% corridor; this program begins with the preliminary assessment and nothing forces a comprehensive at the outset.`});
+      ? (row.dflag
+          ? `${fmtPct(y.pct)} breaches the ±${state.cfg.threshold}% corridor on dollars${row.cflag ? ` (transaction volume ${fmtPct(row.cpct)} breaches too)` : ''}, so ${name} is flagged for a comprehensive risk assessment at data-land time — weeks-to-months earlier than the manual close.`
+          : `Dollars moved only ${fmtPct(y.pct)} — inside the corridor — but transaction volume jumped ${fmtPct(row.cpct)}, so the count measure flags ${name} for a comprehensive assessment. This is exactly the case the 2024 rule change was written for.`)
+      : `${fmtPct(y.pct)} (dollars) and ${fmtPct(row.cpct)} (txn volume) both sit inside the ±${state.cfg.threshold}% corridor; this program begins with the preliminary assessment and nothing forces a comprehensive at the outset.`});
   A.push({qid: 'Q4', value: `${subs.length} sub-programs; ${codes.size} financial codes`, conf: 1,
     evidence: `Distinct sub-programs and codes with FY${PRA_FY} spend after the mapping in force (screen 3): ${subs.map(s => esc(shortName(subById.get(s.subId).name))).join('; ') || '—'}.`,
     rationale: `The rollup hierarchy maps ${codes.size} codes through ${subs.length} sub-programs into ${name}; edit any mapping on screen 3 and this answer recomputes.`});
@@ -1240,7 +1288,7 @@ function praAnswers(progId){
       ? `${excMine.length} unmapped code(s) may belong here; their spend is excluded from every total until a human decides.`
       : `All records affecting ${name} are classified by a rule in force; nothing sits in the exception queue.`});
   A.push({qid: 'Q8', value: `FY${PRA_FY-1}: ${priorFlag ? 'comprehensive assessment triggered' : 'began and closed with the preliminary, no trigger'}`, conf: 0.90,
-    evidence: `Prior-cycle recomputation: FY${PRA_FY-1} YoY ${fmtPct(yPrior.pct)} vs the trigger in force.`,
+    evidence: `Prior-cycle recomputation: FY${PRA_FY-1} YoY ${fmtPct(priorRow.pct)} ($) / ${fmtPct(priorRow.cpct)} (txn volume) vs the trigger in force.`,
     rationale: `Based on the ${FYS.length}-year history, ${name} ${priorFlag ? 'was flagged in the prior cycle — recency raises this year’s review priority' : 'closed the prior cycle with its preliminary assessment (no escalation)'}.`});
   A.push({qid: 'Q9', human: true});
   A.push({qid: 'Q10', human: true});
@@ -1327,12 +1375,13 @@ function divergingChart(container, rows, cfg){
     const w = Math.abs(r.pct) * scale;
     const x = r.pct >= 0 ? x0 : x0 - w;
     const bar = svgNode('rect', {x, y, width: Math.max(w, 1.5), height: rowH - 6, rx: 3, tabindex: 0,
-      fill: r.flag ? '#d03b3b' : '#86b6ef'}, svg);
+      fill: r.countOnly ? '#d98e04' : r.flag ? '#d03b3b' : '#86b6ef'}, svg);
     const vx = r.pct >= 0 ? x0 + w + 6 : x0 - w - 6;
     const vl = svgNode('text', {x: vx, y: y + rowH / 2 + 3, class: 'dlabel',
       'text-anchor': r.pct >= 0 ? 'start' : 'end'}, svg);
-    vl.textContent = fmtPct(r.pct);
-    if (r.flag){ vl.setAttribute('fill', '#a12525'); vl.setAttribute('font-weight', '600'); }
+    vl.textContent = fmtPct(r.pct) + (r.countOnly ? ' ⚑' : '');
+    if (r.countOnly){ vl.setAttribute('fill', '#8a5a00'); vl.setAttribute('font-weight', '600'); }
+    else if (r.flag){ vl.setAttribute('fill', '#a12525'); vl.setAttribute('font-weight', '600'); }
     if (r.tip) attachTip(bar, () => r.tip);
   });
   el.appendChild(svg);
@@ -1396,7 +1445,7 @@ function renderS1(){
     kpi(`Total disbursements · FY${fy}`, fmtM(tot), `${fmtPct(totPct)} vs FY${fy-1}`) +
     kpi('Reporting programs', PROGS.length, '<span title="Programs FEMA must assess for improper-payment risk under PIIA / OMB A-123 Appendix C">improper-payment testing population</span>') +
     kpi('Flagged for comprehensive assessment', flagged.length,
-      `trigger: ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% YoY · ${state.cfg.direction.replace('_',' ')}`,
+      `trigger: ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% YoY · ${state.cfg.direction.replace('_',' ')} · ${(state.cfg.measures || []).includes('transaction_count') ? 'dollars or txn volume (2024 rule)' : 'dollars'}`,
       flagged.length ? 'alert' : 'ok') +
     kpi('Exception queue', unmCodes, `${unmCodes} unmapped codes · ${unm.count} records held out of rollups`, unmCodes ? '' : 'ok');
   $('#s1-chart-hint').textContent = `FY${fy} disbursements per program, computed live from ${TX.length.toLocaleString()} ledger rows. Red = breaches the trigger in force.`;
@@ -1442,7 +1491,7 @@ function renderS2(){
   const val = {
     idUnique: new Set(TX.map(t => t.id)).size,
     codeKnown: TX.filter(t => codeInfo.has(t.code)).length,
-    drKnown: TX.filter(t => eventByDr.has(t.dr)).length,
+    drKnown: TX.filter(t => t.dr == null || eventByDr.has(t.dr)).length,
     fyKnown: TX.filter(t => fyWin.has(t.fy)).length,
     amtPop: TX.filter(t => typeof t.amt === 'number' && isFinite(t.amt)).length,
     dateInFy: TX.filter(t => { const w = fyWin.get(t.fy); return w && t.date >= w.start && t.date <= w.end; }).length
@@ -1467,18 +1516,23 @@ function renderS2(){
     <tr><td class="mono">${t.id}</td>
       <td class="mono">${t.raw === t.code ? esc(t.raw) : `<mark class="dirty">${esc(t.raw)}</mark>`}</td>
       <td class="mono">${t.raw === t.code ? esc(t.code) : `<mark class="fixed">${esc(t.code)}</mark>`}</td>
-      <td class="mono">DR-${t.dr}</td><td>${t.fy}</td>
-      <td class="num">${fmtFull(t.amt)}</td><td class="mono">${t.date}</td>
+      <td class="mono">${t.dr == null ? '<span class="small" title="Non-disaster spend — annual/preparedness funding">non-disaster</span>' : 'DR-' + t.dr}</td><td>${t.fy}</td>
+      <td class="num">${fmtFull(t.amt)}</td>
+      <td class="mono">${esc((codeInfo.get(t.code) || {}).tafs || '—')}</td>
+      <td class="small">${esc(t.dtype || '—')}</td>
+      <td class="mono">${t.date}</td>
       <td><button class="btn ghost sm" data-trace="${t.id}" title="Follow this dollar end-to-end (raw code → rules → program → event → PRA)">Trace &rarr;</button></td></tr>`).join('');
   $$('#s2-sample [data-trace]').forEach(b => b.addEventListener('click', () => openLineage(b.dataset.trace)));
   const schema = [
     ['txn_id', 'transaction.txn_id', 'unique · ' + frac(val.idUnique)],
     ['raw_code', 'transaction.raw_code (as landed)', (fmtDirt.length + alias.length) + ' rows repaired by cleansing rules'],
     ['code', 'transaction.code → financial_code.code', codeInfo.size + ' distinct codes · ' + frac(val.codeKnown) + ' resolve'],
-    ['disaster_number', 'disaster_event.disaster_number', frac(val.drKnown) + ' resolve to declared disasters'],
+    ['disaster_number', 'disaster_event.disaster_number', frac(val.drKnown) + ' resolve to a declared disaster or are non-disaster (blank)'],
     ['fiscal_year', 'fiscal_year.fiscal_year', 'FY' + FYS[0] + '–FY' + FYS[FYS.length - 1] + ' · ' + frac(val.fyKnown)],
     ['disbursement_amount', 'transaction.disbursement_amount', frac(val.amtPop) + ' populated'],
+    ['disbursement_type', 'transaction.disbursement_type', 'illustrative value set — real WebFMIS values pending (SME-27)'],
     ['disbursement_date', 'transaction.disbursement_date', frac(val.dateInFy) + ' within the FY window'],
+    ['(join) tafs', 'financial_code.tafs — Treasury Account Fund Symbol', 'synthetic stand-in per fund family; real WebFMIS field pending (SME-27)'],
   ];
   $('#s2-schema tbody').innerHTML = schema.map(r =>
     `<tr><td class="mono">${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('');
@@ -1605,7 +1659,7 @@ function renderS3Work(){
       : `<select class="inline" data-remap="${c.code}" aria-label="Sub-program for ${esc(c.code)}">${allSubOpts}</select>`;
     return `<tr>
       <td class="mono">${esc(c.code)}</td>
-      <td class="mono small">${esc(c.fund)} · ${esc(c.seg)} · DR-${c.event}</td>
+      <td class="mono small">${esc(c.fund)} · ${esc(c.seg)} · ${c.event == null ? 'ND' : 'DR-' + c.event}</td>
       <td>${sel}</td>
       <td>${curProg ? esc(shortName(progById.get(curProg).name)) : '—'}</td>
       <td class="mono">${esc(ruleId || '—')}</td>
@@ -1672,6 +1726,13 @@ function renderS4(){
     <tr><td class="mono">DR-${e.dr}</td><td>${esc(e.type)}</td><td>${esc(e.state)}</td>
     <td>${e.fyDeclared}</td><td>${esc(e.title)}</td></tr>`).join('');
   const agg = aggregate();
+  const pmeta = progById.get(progId);
+  if (pmeta && pmeta.isDisaster === false){
+    $('#s4-chart').innerHTML = '';
+    $('#s4-table tbody').innerHTML = '';
+    $('#s4-anomaly').innerHTML = `<div class="note blue"><b>${esc(shortName(pmeta.name))} is a non-disaster program</b> — its funding is annual/preparedness money, so there is no disaster-number split to show. That distinction is itself a field the team tracks (disaster vs non-disaster); pick Public Assistance, HMGP or Individual Assistance to see the event grouping.</div>`;
+    return;
+  }
   const evs = eventsOf(progId, state.fy, agg).sort((a, b) => b.amt - a.amt);
   hbars('#s4-chart', evs.map(e => ({
     label: `DR-${e.dr} · ${eventByDr.get(e.dr).type.replace('Hurricane ', '')} (${eventByDr.get(e.dr).state})`,
@@ -1710,17 +1771,19 @@ function renderS5(){
   const bar = (v, max) => `<span style="display:inline-block;width:${Math.max(2, v / max * 120)}px;height:8px;border-radius:3px;background:#86b6ef;vertical-align:0"></span>`;
   let rows = [], tot = 0;
   if (mode === 'program'){
-    head.innerHTML = `<tr><th>Program</th><th>Listing</th><th class="num">Txns</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th></th></tr>`;
-    rows = PROGS.map(p => ({label: shortName(p.name), listing: p.listing,
+    head.innerHTML = `<tr><th>Program</th><th>Listing</th><th title="Treasury Account Fund Symbol — synthetic stand-in (SME-27)">TAFS</th><th>Disaster?</th><th class="num">Txns</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th></th></tr>`;
+    rows = PROGS.map(p => ({label: shortName(p.name), listing: p.listing, tafs: p.tafs, isDis: p.isDisaster,
       tx: agg.progFyTx[p.id + '|' + fy] || 0,
       codes: (agg.progFyCodes[p.id + '|' + fy] || new Set()).size,
       v: totalOf(agg, p.id, fy)})).sort((a, b) => b.v - a.v);
     tot = rows.reduce((s, r) => s + r.v, 0);
     const max = Math.max(...rows.map(r => r.v), 1);
     body.innerHTML = rows.map(r => `<tr><td>${esc(r.label)}</td><td class="mono">${r.listing || '—'}</td>
+      <td class="mono">${esc(r.tafs || '—')}</td>
+      <td>${r.isDis ? '<span class="badge gray">disaster</span>' : '<span class="badge info">non-disaster</span>'}</td>
       <td class="num">${r.tx.toLocaleString()}</td><td class="num">${r.codes}</td>
       <td class="num">${fmtFull(r.v)}</td><td>${bar(r.v, max)}</td></tr>`).join('');
-    foot.innerHTML = `<tr><td colspan="4">Total (${PROGS.length} programs)</td><td class="num">${fmtFull(tot)}</td><td></td></tr>`;
+    foot.innerHTML = `<tr><td colspan="6">Total (${PROGS.length} programs)</td><td class="num">${fmtFull(tot)}</td><td></td></tr>`;
   } else if (mode === 'sub'){
     head.innerHTML = `<tr><th>Sub-program</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th class="num">Share of program</th><th></th></tr>`;
     const subs = subsSpend(progId, fy, agg);
@@ -1736,10 +1799,12 @@ function renderS5(){
   } else {
     head.innerHTML = `<tr><th>Event</th><th>Incident</th><th class="num">FY${fy} disbursements</th><th class="num">Share</th><th></th></tr>`;
     const evs = eventsOf(progId, fy, agg).sort((a, b) => b.amt - a.amt);
+    const nd = agg.progFyDr[progId + '|' + fy + '|null'] || 0;
+    if (nd) evs.push({dr: null, amt: nd});
     tot = evs.reduce((s, r) => s + r.amt, 0);
     const max = Math.max(...evs.map(r => r.amt), 1);
-    body.innerHTML = evs.map(r => `<tr><td class="mono">DR-${r.dr}</td>
-      <td>${esc(eventByDr.get(r.dr).type)} (${esc(eventByDr.get(r.dr).state)})</td>
+    body.innerHTML = evs.map(r => `<tr><td class="mono">${r.dr == null ? 'non-disaster' : 'DR-' + r.dr}</td>
+      <td>${r.dr == null ? 'Annual / preparedness funding — no disaster split' : esc(eventByDr.get(r.dr).type) + ' (' + esc(eventByDr.get(r.dr).state) + ')'}</td>
       <td class="num">${fmtFull(r.amt)}</td><td class="num">${(r.amt / Math.max(tot, 1) * 100).toFixed(1)}%</td><td>${bar(r.amt, max)}</td></tr>`).join('');
     foot.innerHTML = `<tr><td colspan="2">${esc(shortName(progById.get(progId).name))} — event split</td><td class="num">${fmtFull(tot)}</td><td class="num">100%</td><td></td></tr>`;
   }
@@ -1754,31 +1819,38 @@ function renderS6(){
   $('#s6-threshold').value = state.cfg.threshold;
   $$('input[name="s6-dir"]').forEach(r => r.checked = r.value === state.cfg.direction);
   $('#s6-minprior').value = state.cfg.minPrior;
+  $('#s6-m-dollars').checked = state.cfg.measures.includes('disbursements');
+  $('#s6-m-count').checked = state.cfg.measures.includes('transaction_count');
   $('#s6-fy-label').textContent = `FY${state.fy} vs FY${state.fy - 1}`;
   const rows = allRows(state.fy).sort((a, b) => (b.pct == null ? -999 : b.pct) - (a.pct == null ? -999 : a.pct));
   const flagged = rows.filter(r => r.flag);
+  const countOnly = rows.filter(r => r.flag && r.cflag && !r.dflag).length;
   const up = flagged.filter(r => r.pct >= 0).length, down = flagged.length - up;
   const near = rows.filter(r => !r.flag && r.pct != null && Math.abs(Math.abs(r.pct) - state.cfg.threshold) <= 5).length;
   $('#s6-kpis').innerHTML =
     kpi('Programs flagged', flagged.length, `of ${PROGS.length} at the configuration in force`, flagged.length ? 'alert' : 'ok') +
     kpi('Breaches — increase', up, 'YoY growth beyond threshold') +
     kpi('Breaches — decrease', down, 'YoY decline beyond threshold') +
-    kpi('Near-misses (±5 pts)', near, 'watch list just inside the corridor');
+    kpi('Caught by txn volume only', countOnly, 'dollars inside the corridor — the 2024 rule catches it', countOnly ? 'alert' : '');
   divergingChart('#s6-chart', rows.map(r => ({
     label: shortName(progById.get(r.progId).name),
-    pct: r.pct, flag: r.flag,
+    pct: r.pct, flag: r.flag, countOnly: r.flag && r.cflag && !r.dflag,
     tip: `<div class="tt-h">${esc(shortName(progById.get(r.progId).name))}</div>
-      <div class="tt-m">FY${state.fy - 1}: ${fmtFull(r.prior || 0)}<br>FY${state.fy}: ${fmtFull(r.cur)}<br>YoY: ${fmtPct(r.pct)} — ${r.flag ? 'BREACH' : 'within corridor'}</div>`
+      <div class="tt-m">FY${state.fy - 1}: ${fmtFull(r.prior || 0)} · ${(r.nPrior || 0).toLocaleString()} txns<br>FY${state.fy}: ${fmtFull(r.cur)} · ${r.nCur.toLocaleString()} txns<br>YoY $: ${fmtPct(r.pct)}${r.dflag ? ' — BREACH' : ''}<br>YoY txn volume: ${fmtPct(r.cpct)}${r.cflag ? ' — BREACH' : ''}<br>${r.flag ? 'FLAGGED' : 'within corridor on both measures'}</div>`
   })), state.cfg);
   $('#s6-table tbody').innerHTML = rows.map(r => {
     const p = progById.get(r.progId);
     const why = r.pct == null ? '—' :
       `${aiTag()} ${r.flag
-        ? `${fmtPct(r.pct)} breaches the ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% trigger — comprehensive assessment required; earlier identification enables in-year remediation.`
-        : `${fmtPct(r.pct)} is within the corridor; the program begins with the preliminary assessment.`}`;
+        ? (r.dflag
+          ? `${fmtPct(r.pct)} breaches the ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% dollar trigger${r.cflag ? ` (txn volume ${fmtPct(r.cpct)} breaches too)` : ''} — comprehensive assessment required; earlier identification enables in-year remediation.`
+          : `Dollars moved only ${fmtPct(r.pct)} — inside the corridor — but transaction volume jumped ${fmtPct(r.cpct)} (${(r.nPrior || 0).toLocaleString()} → ${r.nCur.toLocaleString()} rows). The 2024 rule flags on either measure, so a comprehensive assessment is required.`)
+        : `${fmtPct(r.pct)} ($) and ${fmtPct(r.cpct)} (txn volume) are both within the corridor; the program begins with the preliminary assessment.`}`;
+    const cCell = r.cpct == null ? '<td class="num">—</td>'
+      : `<td class="num" ${r.cflag ? 'style="color:var(--critical-text);font-weight:600"' : ''}>${fmtPct(r.cpct)}</td>`;
     return `<tr><td>${esc(shortName(p.name))}</td>
       <td class="num">${r.prior == null ? '—' : fmtFull(r.prior)}</td>
-      <td class="num">${fmtFull(r.cur)}</td>${yoyCell(r.pct)}
+      <td class="num">${fmtFull(r.cur)}</td>${yoyCell(r.pct)}${cCell}
       <td>${badgeAssess(r.flag)}</td><td class="small" style="max-width:330px">${why}</td></tr>`;
   }).join('');
 }
@@ -1951,16 +2023,20 @@ function renderS9(){
 }
 function runParity(){
   const agg = aggregate(true);                       // baseline mapping — session overrides excluded
-  const cfg0 = {threshold: DATA.config.threshold_pct, direction: DATA.config.direction, minPrior: DATA.config.min_prior_year_amount};
+  const cfg0 = {threshold: DATA.config.threshold_pct, direction: DATA.config.direction,
+    minPrior: DATA.config.min_prior_year_amount, minPriorCount: DATA.config.min_prior_year_count,
+    measures: DATA.config.measures, combine: DATA.config.combine};
   let checked = 0, ok = 0; const misses = [];
   for (const g of GEN_FY){
-    const y = yoyOf(agg, g.progId, g.fy);
-    const flag = trigApply(y.pct, y.prior, cfg0);
+    const row = progRow(g.progId, g.fy, cfg0, agg);
     const tests = [
-      ['total', Math.abs(y.cur - g.total) <= 0.01, fmtFull(y.cur), fmtFull(g.total)],
-      ['prior', (g.prior == null && y.prior == null) || Math.abs((y.prior || 0) - (g.prior || 0)) <= 0.01, y.prior, g.prior],
-      ['yoy', (g.yoy == null && y.pct == null) || (y.pct != null && g.yoy != null && Math.abs(y.pct - g.yoy) <= 0.05), y.pct, g.yoy],
-      ['trigger', flag === g.flag, String(flag), String(g.flag)]
+      ['total', Math.abs(row.cur - g.total) <= 0.01, fmtFull(row.cur), fmtFull(g.total)],
+      ['prior', (g.prior == null && row.prior == null) || Math.abs((row.prior || 0) - (g.prior || 0)) <= 0.01, row.prior, g.prior],
+      ['yoy', (g.yoy == null && row.pct == null) || (row.pct != null && g.yoy != null && Math.abs(row.pct - g.yoy) <= 0.05), row.pct, g.yoy],
+      ['txn count', row.nCur === g.txn, String(row.nCur), String(g.txn)],
+      ['count yoy', (g.cyoy == null && row.cpct == null) || (row.cpct != null && g.cyoy != null && Math.abs(row.cpct - g.cyoy) <= 0.05), row.cpct, g.cyoy],
+      ['trigger', row.flag === g.flag, String(row.flag), String(g.flag)],
+      ['count trigger', row.cflag === g.cflag, String(row.cflag), String(g.cflag)]
     ];
     for (const [what, pass, ours, gen] of tests){
       checked++;
@@ -1972,12 +2048,12 @@ function runParity(){
     checked++;
     const v = agg.progFyDr[s.progId + '|' + s.fy + '|' + s.dr] || 0;
     if (Math.abs(v - s.total) <= 0.01) ok++;
-    else if (misses.length < 8) misses.push(`${s.progId} FY${s.fy} DR-${s.dr}: computed ${fmtFull(v)} vs generator ${fmtFull(s.total)}`);
+    else if (misses.length < 8) misses.push(`${s.progId} FY${s.fy} ${s.dr == null ? 'non-disaster' : 'DR-' + s.dr}: computed ${fmtFull(v)} vs generator ${fmtFull(s.total)}`);
   }
   const el = $('#s9-parity-result');
   const overridden = state.overrides.size || state.excDecisions.size;
   if (ok === checked){
-    el.innerHTML = `<span class="parity-ok">✔ ${ok.toLocaleString()} / ${checked.toLocaleString()} values match</span> — every program×FY total, prior, YoY delta, trigger flag (at the shipped 20%/either config) and program×FY×event total recomputed in this file equals the committed baseline output (±$0.01 / ±0.05 pt).`;
+    el.innerHTML = `<span class="parity-ok">✔ ${ok.toLocaleString()} / ${checked.toLocaleString()} values match</span> — every program×FY total, prior, YoY delta, transaction count, count YoY, both trigger flags (at the shipped ${DATA.config.threshold_pct}%/${DATA.config.direction}/dual-measure config) and program×FY×event total recomputed in this file equals the committed baseline output (±$0.01 / ±0.05 pt).`;
   } else {
     el.innerHTML = `<span class="parity-note">${ok} / ${checked} matched.</span> See detail below.`;
   }
@@ -2008,8 +2084,8 @@ function reviewStateOf(progId){
 function praReportHtml(progId){
   const p = progById.get(progId);
   const agg = aggregate();
-  const y = yoyOf(agg, progId, PRA_FY);
-  const flag = trigApply(y.pct, y.prior, state.cfg);
+  const row = progRow(progId, PRA_FY, state.cfg, agg);
+  const y = row, flag = row.flag;
   const rows = reviewStateOf(progId);
   const fin = state.finalized[progId];
   const cfg = state.cfg;
@@ -2031,10 +2107,11 @@ function praReportHtml(progId){
 <div>Fiscal year ${PRA_FY} · assistance listing ${esc(p.listing || 'n/a (synthetic program)')} · ${fin ? 'FINALIZED in-session ' + esc(fin) : 'DRAFT — pending sign-off (ASSUMP-17)'}</div>
 <div class="banner"><b>SYNTHETIC DEMO DATA.</b> Conceptual demo, not production. All figures are synthetic <b>disbursements</b> watermarked SYNTHETIC-DEMO, calibrated to public FEMA <b>obligation</b> envelopes (obligations ≠ disbursements — ASSUMP-05/10). The 10-question instrument is an <b>illustrative placeholder</b> structured on OMB M-21-19 / A-123 App. C risk factors — it is not FEMA's form (ASSUMP-04, SME-05). AI rationales are precomputed, deterministic template text labeled as such — no live model, no network.</div>
 <h2>Headline</h2>
-<table><tr><th>FY${PRA_FY} disbursements</th><th>FY${PRA_FY-1}</th><th>YoY</th><th>Trigger in force</th><th>Assessment path</th></tr>
+<table><tr><th>FY${PRA_FY} disbursements</th><th>FY${PRA_FY-1}</th><th>YoY ($)</th><th>YoY (txn volume)</th><th>Trigger in force</th><th>Assessment path</th></tr>
 <tr><td class="n">${fmtFull(y.cur)}</td><td class="n">${y.prior == null ? '—' : fmtFull(y.prior)}</td>
-<td class="n">${fmtPct(y.pct)}</td><td>${cfg.threshold}% · ${esc(cfg.direction.replace('_',' '))} · min prior ${fmtM(cfg.minPrior)} (REQ-010, configurable)</td>
-<td><b>${flag ? 'COMPREHENSIVE ASSESSMENT REQUIRED FROM THE START' : 'Begins with preliminary assessment'}</b></td></tr></table>
+<td class="n">${fmtPct(y.pct)}</td><td class="n">${fmtPct(row.cpct)} (${(row.nPrior || 0).toLocaleString()} → ${row.nCur.toLocaleString()} txns)</td>
+<td>${cfg.threshold}% · ${esc(cfg.direction.replace('_',' '))} · ${(cfg.measures || []).includes('transaction_count') ? 'dollars or txn volume (2024 rule)' : 'dollars'} · min prior ${fmtM(cfg.minPrior)} (REQ-010/031, configurable)</td>
+<td><b>${flag ? 'COMPREHENSIVE ASSESSMENT REQUIRED FROM THE START' : 'Begins with preliminary assessment'}</b>${flag && row.cflag && !row.dflag ? ' — flagged by transaction volume; dollars stayed inside the corridor' : ''}</td></tr></table>
 <h2>Questionnaire (illustrative — ASSUMP-04)</h2>
 <table><tr><th>#</th><th>Question</th><th>Answer</th><th>Populated by</th><th>Confidence</th><th>Review status</th></tr>
 ${rows.map(r => `<tr><td class="mono">${r.qid}</td><td>${esc(r.text)}</td>
@@ -2051,16 +2128,19 @@ ${state.audit.length ? `<table><tr><th>#</th><th>Entity</th><th>Decision</th><th
 }
 function exportCsv(){
   const agg = aggregate();
-  const lines = ['program_id,program_name,fiscal_year,disaster_number,total_disbursement,program_fy_total,prior_fy_total,yoy_pct_change,trigger_flag,data_watermark'];
+  const lines = ['program_id,program_name,fiscal_year,disaster_number,total_disbursement,program_fy_total,prior_fy_total,yoy_pct_change,txn_count,count_yoy_pct_change,trigger_flag,data_watermark'];
   for (const p of PROGS){
     for (const fy of FYS){
-      const y = yoyOf(agg, p.id, fy);
-      if (!y.cur && y.prior == null) continue;
-      const flag = trigApply(y.pct, y.prior, state.cfg);
-      for (const e of eventsOf(p.id, fy, agg)){
-        lines.push([p.id, '"' + shortName(p.name).replace(/"/g, '""') + '"', fy, e.dr, e.amt.toFixed(2),
-          y.cur.toFixed(2), y.prior == null ? '' : y.prior.toFixed(2),
-          y.pct == null ? '' : y.pct.toFixed(1), flag, 'SYNTHETIC-DEMO'].join(','));
+      const r = progRow(p.id, fy, state.cfg, agg);
+      if (!r.cur && r.prior == null) continue;
+      const evs = eventsOf(p.id, fy, agg);
+      const nd = agg.progFyDr[p.id + '|' + fy + '|null'] || 0;
+      if (nd) evs.push({dr: null, amt: nd});
+      for (const e of evs){
+        lines.push([p.id, '"' + shortName(p.name).replace(/"/g, '""') + '"', fy, e.dr == null ? '' : e.dr, e.amt.toFixed(2),
+          r.cur.toFixed(2), r.prior == null ? '' : r.prior.toFixed(2),
+          r.pct == null ? '' : r.pct.toFixed(1), r.nCur,
+          r.cpct == null ? '' : r.cpct.toFixed(1), r.flag, 'SYNTHETIC-DEMO'].join(','));
       }
     }
   }
@@ -2070,15 +2150,18 @@ function exportJson(){
   const agg = aggregate();
   return JSON.stringify({
     disclaimer: 'SYNTHETIC-DEMO — conceptual demo, not production. Synthetic disbursements calibrated to public obligations (ASSUMP-05/10). Illustrative PRA instrument (ASSUMP-04). AI rationales are precomputed template text.',
-    configInForce: {...state.cfg, measure: 'disbursements', prefillThreshold: DATA.config.prefill_threshold},
+    configInForce: {...state.cfg, prefillThreshold: DATA.config.prefill_threshold},
     sessionMappingOverrides: state.sessionRules.map(r => r.expr),
     exceptionDecisions: Array.from(state.excDecisions.entries()).map(([c, d]) => ({code: c, ...d})),
     programs: PROGS.map(p => {
-      const y = yoyOf(agg, p.id, PRA_FY);
+      const r = progRow(p.id, PRA_FY, state.cfg, agg);
       return {programId: p.id, name: shortName(p.name), fiscalYear: PRA_FY,
-        totalDisbursement: +y.cur.toFixed(2), priorYear: y.prior == null ? null : +y.prior.toFixed(2),
-        yoyPctChange: y.pct == null ? null : +y.pct.toFixed(1),
-        triggerFlag: trigApply(y.pct, y.prior, state.cfg),
+        isDisaster: p.isDisaster, tafs: p.tafs,
+        totalDisbursement: +r.cur.toFixed(2), priorYear: r.prior == null ? null : +r.prior.toFixed(2),
+        yoyPctChange: r.pct == null ? null : +r.pct.toFixed(1),
+        transactionCount: r.nCur,
+        countYoyPctChange: r.cpct == null ? null : +r.cpct.toFixed(1),
+        triggerFlag: r.flag, dollarTriggerFlag: r.dflag, countTriggerFlag: r.cflag,
         finalized: !!state.finalized[p.id],
         pra: reviewStateOf(p.id)};
     }),
@@ -2151,7 +2234,7 @@ function codeCard(code, aliasKey){
   const sub = resolveSub(code);
   const amts = FYS.map(fy => TX.filter(t => t.code === code && t.fy === fy).reduce((s, t) => s + t.amt, 0));
   const maxA = Math.max(...amts, 1);
-  const drs = [...new Set(TX.filter(t => t.code === code).map(t => t.dr))].sort((a, b) => a - b);
+  const drs = [...new Set(TX.filter(t => t.code === code).map(t => t.dr))].sort((a, b) => (a == null) - (b == null) || a - b);
   const fybars = '<div class="cs-fybars">' + FYS.map((fy, i) =>
     `<div class="fb" title="FY${fy}: ${fmtFull(amts[i])}"><i style="height:${Math.max(2, amts[i] / maxA * 40).toFixed(0)}px"></i><span>&rsquo;${String(fy).slice(2)}</span></div>`).join('') + '</div>';
   const aliasRule = aliasKey ? DATA.rules.find(r => r.type === 'cleansing' && r.expr.includes('alias ' + aliasKey)) : null;
@@ -2178,10 +2261,10 @@ function codeCard(code, aliasKey){
       <span class="small">rule <b class="mono">${esc(ruleId)}</b></span> ${stat} ${confChip(conf)}</div>`;
   }
   return `<h4 class="mono">${esc(code)}</h4>
-    <div class="cs-anat">${esc(ci.fund)} <span class="small">(fund)</span> · ${esc(ci.seg)} <span class="small">(segment)</span> · DR-${ci.event} <span class="small">(event)</span></div>
+    <div class="cs-anat">${esc(ci.fund)} <span class="small">(fund)</span> · ${esc(ci.seg)} <span class="small">(segment)</span> · ${ci.event == null ? 'ND <span class="small">(non-disaster)</span>' : `DR-${ci.event} <span class="small">(event)</span>`}${ci.tafs ? ` · <span class="mono">${esc(ci.tafs)}</span> <span class="small" title="Treasury Account Fund Symbol — synthetic stand-in (SME-27)">(TAFS)</span>` : ''}</div>
     ${aliasNote}${chain}
     <div class="small" style="margin-top:8px">Disbursements by fiscal year:</div>${fybars}
-    <div class="flexrow" style="margin:4px 0 8px">${drs.map(d => `<span class="badge gray">DR-${d}</span>`).join(' ')}</div>
+    <div class="flexrow" style="margin:4px 0 8px">${drs.map(d => d == null ? '<span class="badge info">non-disaster</span>' : `<span class="badge gray">DR-${d}</span>`).join(' ')}</div>
     <div class="flexrow">
       <button class="btn sm primary" data-cs-trace="${esc(code)}">Trace a transaction</button>
       <button class="btn sm" data-cs-flow="${esc(code)}">Show in flow map</button>
@@ -2270,12 +2353,14 @@ function lineageModel(txnId){
     `<div class="sio">${esc(sub)}<span class="arrow">&rarr;</span><b>${esc(shortName(progById.get(progId).name))}</b> <span class="small mono">${esc(progId)}</span></div>
      <span class="small">One of ${sibs} sub-programs feeding this reporting program — "A, B and C all equal up to program one".</span>${ruleCard(rollRule)}`});
   const evRule = DATA.rules.find(r => r.type === 'event_split');
-  const ev = eventByDr.get(t.dr);
+  const ev = t.dr != null ? eventByDr.get(t.dr) : null;
   const tot = totalOf(aggregate(), progId, t.fy);
   const share = tot > 0 ? (t.amt / tot * 100) : 0;
   stations.push({no: 5, title: 'Event split &amp; destination', html:
-    `<div class="sio">event segment<span class="arrow">&rarr;</span><span class="badge gray" style="color:${DR_COLOR[t.dr] || 'inherit'}">DR-${t.dr}</span> ${esc(ev.type)} (${esc(ev.state)})</div>
-     ${ruleCard(evRule)}
+    `<div class="sio">event segment<span class="arrow">&rarr;</span>${ev
+      ? `<span class="badge gray" style="color:${DR_COLOR[t.dr] || 'inherit'}">DR-${t.dr}</span> ${esc(ev.type)} (${esc(ev.state)})`
+      : `<span class="badge info">non-disaster</span> annual / preparedness funding — no disaster split (that distinction is itself a tracked field)`}</div>
+     ${ev ? ruleCard(evRule) : ''}
      <div class="ev" style="margin-top:8px"><b>Where this dollar reports:</b> ${esc(shortName(progById.get(progId).name))} FY${t.fy} total <b>${fmtFull(tot)}</b> — this transaction is ${share < 0.05 ? '&lt;0.1' : share.toFixed(1)}% of it.${t.fy === PRA_FY
        ? ' It feeds PRA <b>Q1</b> (total disbursements), <b>Q2</b> (YoY) and <b>Q4</b> (codes / sub-programs) for this program — screens 7–8.'
        : ` FY${t.fy} totals form the baseline the FY${t.fy + 1} trigger compares against.`}</div>`});
@@ -2321,7 +2406,7 @@ function seedPicks(){
   if (alias) picks.push({id: alias.id, label: 'Legacy alias', title: `Raw code ${alias.raw} — retired alias remapped by cleansing rules`});
   const dirty = TX.find(t => t.raw !== t.code && !DATA.config.alias_map[normalizeRaw(t.raw)]);
   if (dirty) picks.push({id: dirty.id, label: 'Format-dirty', title: `Raw code ${dirty.raw} — normalized deterministically`});
-  const clean = TX.find(t => t.fy === PRA_FY && t.raw === t.code && (codeInfo.get(t.code) || {}).subId === 'SUB-PA-A');
+  const clean = TX.find(t => t.fy === PRA_FY && t.raw === t.code && String((codeInfo.get(t.code) || {}).subId || '').startsWith('SUB-PA-'));
   if (clean) picks.push({id: clean.id, label: 'Clean row (Public Assistance)', title: 'Canonical code, straight-through mapping into PROG-PA'});
   const exc = TX.find(t => excByCode.has(t.code));
   if (exc) picks.push({id: exc.id, label: 'Exception (never-seen code)', title: `Code ${exc.code} — no rule matches; routed to human review`});
@@ -2383,6 +2468,8 @@ function renderFlowMap(){
   addNode('P|' + progId, 2, shortName(progById.get(progId).name), m.progT, '#152238');
   const drsShown = DR_ORDER.filter(dr => m.drT.has(dr));
   drsShown.forEach(dr => addNode('D|' + dr, 3, `DR-${dr} · ${eventByDr.get(dr).type.replace('Hurricane ', '')} (${eventByDr.get(dr).state})`, m.drT.get(dr), DR_COLOR[dr], {}));
+  const ndAmt = m.drT.get(null);   // non-disaster spend has no DR (REQ-030)
+  if (ndAmt) addNode('D|ND', 3, 'Non-disaster — annual/preparedness', ndAmt, '#5f7d99', {});
   const colBottom = [top, top, top, top];
   for (const n of nodes.values()){ n.y = colBottom[n.col]; colBottom[n.col] += n.h + gap; }
   const maxBottom = Math.max(...colBottom);
@@ -2401,6 +2488,8 @@ function renderFlowMap(){
     tip: `${fmtFull(amt)} · ${shortName(subById.get(s).name)} → ${shortName(progById.get(progId).name)} (rollup)`}));
   drsShown.forEach(dr => links.push({from: 'P|' + progId, to: 'D|' + dr, amt: m.drT.get(dr), color: DR_COLOR[dr], key: 'pd|' + dr,
     tip: `${fmtFull(m.drT.get(dr))} · ${shortName(progById.get(progId).name)} → DR-${dr} ${eventByDr.get(dr).type} (event split)`}));
+  if (ndAmt) links.push({from: 'P|' + progId, to: 'D|ND', amt: ndAmt, color: '#5f7d99', key: 'pd|ND',
+    tip: `${fmtFull(ndAmt)} · ${shortName(progById.get(progId).name)} → non-disaster (annual/preparedness funding)`});
   let litKeys = null;
   if (flowState.highlight){
     const hl = flowState.highlight;
@@ -2410,8 +2499,8 @@ function renderFlowMap(){
     else {
       litKeys.add('cs|' + hl.code + '|' + sub);
       litKeys.add('sp|' + sub);
-      const drs = hl.dr != null ? [hl.dr] : [...new Set(TX.filter(t => t.fy === fy && t.code === hl.code).map(t => t.dr))];
-      drs.forEach(dr => litKeys.add('pd|' + dr));
+      const drs = ('dr' in hl && hl.dr !== undefined) ? [hl.dr] : [...new Set(TX.filter(t => t.fy === fy && t.code === hl.code).map(t => t.dr))];
+      drs.forEach(dr => litKeys.add('pd|' + (dr == null ? 'ND' : dr)));
     }
   }
   const svg = svgNode('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
@@ -2800,10 +2889,10 @@ const TOUR_TEXT = {
   3: 'The undocumented Program ID rules, inferred from history, scored and editable. Try a Follow-the-dollar chip, the Flow map tab or the Inference test — or edit a mapping and watch everything downstream recompute.',
   4: 'Harvey, Irma and Maria had to be tracked separately: spend splits by federal disaster declaration, with an anomaly flag if an event leaves its historical set.',
   5: 'Transactions roll up to program, sub-program and event totals — deterministic aggregation over the record-level ledger. Exception-queue spend stays visibly held out.',
-  6: 'The centerpiece: threshold, direction and noise floor are configuration, on screen. Drag the slider and watch programs re-flag live.',
+  6: 'The centerpiece: threshold, direction, noise floor and both measures — dollars and transaction volume (the 2024 rule) — are configuration, on screen. Drag the slider and watch programs re-flag live.',
   7: 'One fixed template, per-program data bindings: about 8 of 10 questions auto-populate with evidence and confidence; 2 route to the program office.',
   8: 'Auto-populated is not auto-accepted: approve or override every answer (overrides need a reason), then finalize — the audit trail records each decision.',
-  9: 'Every gap became a documented assumption with a validation question. Run the parity check to recompute ~740 values against the committed baselines.',
+  9: 'Every gap became a documented assumption with a validation question. Run the parity check to recompute every summary value against the committed baselines.',
   10: 'Take the artifacts with you: the PRA report, a spend-summary CSV and a machine-readable package — generated entirely client-side.'
 };
 function renderTour(){
@@ -2873,9 +2962,21 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     state.cfg.minPrior = Math.max(0, +$('#s6-minprior').value || 0);
     refresh();
   });
+  const syncMeasures = () => {
+    const ms = [];
+    if ($('#s6-m-dollars').checked) ms.push('disbursements');
+    if ($('#s6-m-count').checked) ms.push('transaction_count');
+    if (!ms.length){ $('#s6-m-dollars').checked = true; ms.push('disbursements'); toast('At least one measure must stay enabled — dollars re-enabled.'); }
+    state.cfg.measures = ms;
+    refresh();
+  };
+  $('#s6-m-dollars').addEventListener('change', syncMeasures);
+  $('#s6-m-count').addEventListener('change', syncMeasures);
   $('#s6-reset').addEventListener('click', () => {
-    state.cfg = {threshold: DATA.config.threshold_pct, direction: DATA.config.direction, minPrior: DATA.config.min_prior_year_amount};
-    toast('Trigger restored to the shipped configuration: ' + DATA.config.threshold_pct + '% · ' + DATA.config.direction + ' (rules-as-data default).');
+    state.cfg = {threshold: DATA.config.threshold_pct, direction: DATA.config.direction,
+      minPrior: DATA.config.min_prior_year_amount, minPriorCount: DATA.config.min_prior_year_count,
+      measures: DATA.config.measures.slice(), combine: DATA.config.combine};
+    toast('Trigger restored to the shipped configuration: ' + DATA.config.threshold_pct + '% · ' + DATA.config.direction + ' · ' + DATA.config.measures.join(' + ') + ' (rules-as-data default).');
     refresh();
   });
   $('#s9-parity-run').addEventListener('click', runParity);

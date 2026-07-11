@@ -81,11 +81,15 @@ def parse_rules_yaml() -> dict:
     alias_map = dict(re.findall(r"(LEG-\d+):\s*(\S+)", alias_block))
     assert normalize and alias_map, "rules.yaml: cleansing pipeline not parsed"
 
+    measures = [m.strip() for m in scalar("measures", "variance_trigger").strip("[]").split(",")]
     return {
         "threshold_pct": int(scalar("threshold_pct", "variance_trigger")),
         "direction": scalar("direction", "variance_trigger"),
         "min_prior_year_amount": int(scalar("min_prior_year_amount", "variance_trigger")),
+        "min_prior_year_count": int(scalar("min_prior_year_count", "variance_trigger")),
         "measure": scalar("measure", "variance_trigger"),
+        "measures": measures,                                   # REQ-031 dual-measure trigger
+        "combine": scalar("combine", "variance_trigger"),
         "compare": scalar("compare", "variance_trigger"),
         "prefill_threshold": float(scalar("prefill_threshold", "confidence_routing")),
         "normalize": normalize,
@@ -119,6 +123,11 @@ ASSUMPTIONS = [
     ("ASSUMP-17", "Mandatory human review/sign-off before any PRA is finalized; overrides capture a reason.", "design pass (files 05/06/09)", "SME-16"),
     ("ASSUMP-18", "AI explanation grounding uses public guidance only for the demo (SRC-06/07/10); internal SOP text is excluded, never fabricated.", "design pass (files 06/09)", "SME-17"),
     ("ASSUMP-19", "Illustrative role model (analyst / reviewer / admin) stands in for the real, unconfirmed RBAC.", "design pass (file 06)", "SME-16"),
+    ("ASSUMP-20", "WebFMIS is the source system carrying TAFS/fund-code and disbursement-type fields; realistically-formatted stand-ins appear until the real extract is seen.", "feedback review 2026-07-11 (REQ-028/029)", "SME-27"),
+    ("ASSUMP-21", "The transaction-count trigger mirrors the dollar trigger's parameters (same ~20%, same directions) and a breach on either measure flags the program (team's 2024 change).", "feedback review 2026-07-11 (REQ-031)", "SME-28"),
+    ("ASSUMP-22", "The financial system of record (source of the program-ID data pool) goes live ~October 1 this year; portability (file-in/file-out) hedges the migration timeline risk.", "feedback review 2026-07-11 (REQ-019)", "SME-10"),
+    ("ASSUMP-23", "The five real public program names stand in for the client team's fuller 8-10 example list; sub-structures and the disaster/non-disaster designations follow the taxonomy provided after the feedback meeting.", "feedback review 2026-07-11 (REQ-027/030)", "SME-30"),
+    ("ASSUMP-24", "Historical risk-assessment records (2018-19 onward) are client-owned and enter only at a pilot phase, powering trend views and pre-answered history questions.", "feedback review 2026-07-11 (REQ-033)", "SME-29"),
 ]
 
 SME_QUESTIONS = [
@@ -140,6 +149,10 @@ SME_QUESTIONS = [
     ("SME-16", "high", "Actual users and roles; what RBAC and sign-off authority govern finalizing a PRA?", "ASSUMP-17 · ASSUMP-19"),
     ("SME-17", "roadmap", "Which SOP/policy/guidance documents can be provided for retrieval-grounded explanation, and are they releasable?", "ASSUMP-18 · SME-02"),
     ("SME-18", "roadmap", "What audit-trail, record-retention and immutability requirements apply to generated assessments?", "SME-16"),
+    ("SME-27", "high", "In the WebFMIS extract: actual field names/formats for TAFS / fund code and disbursement type, the disbursement-type value set, and where the disaster vs non-disaster distinction is carried?", "REQ-028 · REQ-029 · REQ-030 · ASSUMP-20"),
+    ("SME-28", "high", "Exact post-2024 trigger rule: does ~20% apply to transaction count with the same directions as dollars, does either measure alone trigger, and what floors apply? Policy citation?", "REQ-031 · ASSUMP-21"),
+    ("SME-29", "roadmap", "Confirm the 3-year comprehensive-assessment cycle rule, where the date of last comprehensive assessment is recorded, and the terms for the 2018-19+ historical risk-assessment records.", "REQ-033 · REQ-034"),
+    ("SME-30", "high", "Confirm the program taxonomy: the team's 8-10 example public programs, each one's sub-structure (or by-disaster-number grouping), and disaster vs non-disaster designations.", "REQ-027 · ASSUMP-23"),
 ]
 
 
@@ -156,7 +169,8 @@ def build_payload() -> dict:
         for r in read_table("disaster_event.csv")
     ]
     programs = [
-        {"id": r["program_id"], "name": r["program_name"], "listing": r["assistance_listing"]}
+        {"id": r["program_id"], "name": r["program_name"], "listing": r["assistance_listing"],
+         "isDisaster": r["is_disaster"] == "true", "tafs": r["tafs"]}
         for r in read_table("program.csv")
     ]
     sub_programs = [
@@ -165,7 +179,10 @@ def build_payload() -> dict:
     ]
     codes = [
         {"code": r["code"], "subId": r["sub_program_id"], "fund": r["fund_segment"],
-         "seg": r["program_segment"], "event": int(r["event_segment"])}
+         # non-disaster codes carry the ND event segment (REQ-030) -> null event
+         "seg": r["program_segment"],
+         "event": int(r["event_segment"]) if r["event_segment"].isdigit() else None,
+         "tafs": r["tafs"]}
         for r in read_table("financial_code.csv")
     ]
     rules = [
@@ -179,12 +196,14 @@ def build_payload() -> dict:
         for r in read_table("program_mapping.csv")
     ]
     txns = [
-        [r["txn_id"], r["raw_code"], r["code"], int(r["disaster_number"]),
-         int(r["fiscal_year"]), float(r["disbursement_amount"]), r["disbursement_date"]]
+        # disaster_number is empty for non-disaster spend (REQ-030) -> null
+        [r["txn_id"], r["raw_code"], r["code"], num(r["disaster_number"], int),
+         int(r["fiscal_year"]), float(r["disbursement_amount"]), r["disbursement_date"],
+         r["disbursement_type"]]
         for r in read_table("transaction.csv")
     ]
     spend_summary = [
-        [r["program_id"], int(r["fiscal_year"]), int(r["disaster_number"]),
+        [r["program_id"], int(r["fiscal_year"]), num(r["disaster_number"], int),
          float(r["total_disbursement"])]
         for r in read_table("spend_summary.csv")
     ]
@@ -193,7 +212,11 @@ def build_payload() -> dict:
          num(r["prior_year_disbursement"]), num(r["yoy_pct_change"]),
          r["trigger_flag"] == "true", int(r["sub_program_count"]),
          int(r["financial_code_count"]), int(r["event_count"]),
-         float(r["top_event_share_pct"]), int(r["exception_queue_count"])]
+         float(r["top_event_share_pct"]), int(r["exception_queue_count"]),
+         # REQ-031 count dimension (indices 11..15)
+         int(r["transaction_count"]), num(r["prior_year_transaction_count"], int),
+         num(r["count_yoy_pct_change"]),
+         r["dollar_trigger_flag"] == "true", r["count_trigger_flag"] == "true"]
         for r in read_table("fiscal_year_spend_summary.csv")
     ]
     questions = [
