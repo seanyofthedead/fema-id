@@ -2,7 +2,7 @@
 
 **Package:** FEMA Program ID & PRA Automation (demo)
 **Document date:** 2026-07-11
-**Source of truth:** Otter.ai auto-transcript of the team feedback walkthrough of `leavebehind/fema-demo.html` (`source/Data_Dashboard_Presentation_otter.ai.txt` — held **locally, uncommitted**: it is an internal meeting record naming real stakeholders; committing it for provenance is recommended only after Sean's sensitivity review of the remote's visibility), plus the **authoritative FEMA program taxonomy** provided by Sean after the meeting (public program names; spend remains synthetic). The transcript is partial/auto-generated: speaker labels are generic (`Speaker N`), phrasing is approximate, and garbled passages (e.g., "701 507 02 … dose of blading") are treated as unreliable — nothing is over-read from them.
+**Source of truth:** Otter.ai auto-transcript of the team feedback walkthrough of `leavebehind/fema-demo.html` (`source/Data_Dashboard_Presentation_otter.ai.REDACTED.txt` — committed as a **role-redacted** copy: personal names replaced with bracketed role labels, wording otherwise verbatim; the unredacted original stays outside the repo), plus the **authoritative FEMA program taxonomy** provided by Sean after the meeting (public program names; spend remains synthetic). The transcript is partial/auto-generated: speaker labels are generic (`Speaker N`), phrasing is approximate, and garbled passages (e.g., "701 507 02 … dose of blading") are treated as unreliable — nothing is over-read from them.
 **Companion:** the waved implementation plan is `FEEDBACK_UPDATE_PLAN.md` (same folder).
 
 ## Plain-English summary

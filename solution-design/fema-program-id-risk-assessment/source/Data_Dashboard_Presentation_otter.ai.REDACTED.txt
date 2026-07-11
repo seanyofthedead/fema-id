@@ -1,0 +1,211 @@
+[REDACTION NOTE - 2026-07-11: Personal names in this Otter.ai auto-transcript have been
+replaced with bracketed role labels so the feedback source can be kept in-repo for
+provenance; the wording is otherwise verbatim from the export, including its generic
+"Speaker N" labels and transcription errors. The tentative speaker-to-role reading is
+documented in updates/FEEDBACK_UPDATE_ANALYSIS.md section 0.]
+
+Speaker 1 0:10
+Hello.
+
+Speaker 2 0:12
+Hey, how's it going, [presenter]?
+
+Speaker 1 0:13
+Pretty good. Just another day in paradise. How about you?
+
+Speaker 2 0:20
+Good. Thanks for working on this so quickly. I saw you set over a draft.
+
+Speaker 1 0:27
+Yeah, of course. I um don't thank me. Thank my insomnia. I couldn't really sleep, so just started messing around. But yeah, no big deal at all. I love this stuff. So, all right. I should probably plug in my charger.
+
+Speaker 2 0:57
+Wow, this is cool. Like the dashboard.
+
+Speaker 1 1:00
+Awesome. I made some additional updates since yesterday, and then I don't know if it's been added yet. But if they want to see, oh yeah, once we have it or get something, we're able to upload a CSV file to maybe show it in real time. I still got to test it out, though. Hey, [delivery colleague 2]. Hey, [SME colleague 1].
+
+Speaker 3 1:32
+Hey there. How's it going?
+
+Speaker 2 1:34
+Pretty good. Yeah, this is great. Yeah, I was wondering too, like on that. Well, I'm sure we'll probably get to the demo later, but there there may be some other data points, and maybe we, yes, probably should have mentioned this earlier. But like when you have the programs in the table, yeah, you have like the program listing disbursements, prior fiscal year disbursements, and the year-over-year change, yeah. And then I love how the assessment says like whether it's preliminary only or a comprehensive is required. Yeah. Yeah. We we might be able to change that to. Yeah, I think this is good. I I think this is good. Whenever it says preliminary only, you have to do a preliminary and then determine if you need to do a comprehensive after that, so it's really like, what do you begin with? Do you like, do you start with the preliminary, or do you do you already know you have to do a comprehensive? But I think that's really good. A couple other data fields that I think would be relevant to include in that would be, and I was looking through the program ID detail on my FEMA computer. They have the Treasury accounting fund symbol, like the TAFS, like that shows what the program name is. And I would think that like we haven't seen the actual data, like where they pull from in WebFMIS, but like I would think that that's where it starts. Like they probably have some data fields in WebFMIS where they're looking at the TAFs, like the 701 507 02 That would tell you it's dose of blading. That tells you what the disbursement type is. So I think if we can add like those columns at least for the fund code, like that might be helpful. Yeah, but yeah, yeah. I think this is a great start and has lots of good details in it. And also, like, if it's whether a disaster or non-disaster, they often differentiate between those.
+
+Speaker 1 3:35
+Awesome.
+
+Speaker 3 3:35
+Yeah. So, no, this is great. One of the things that we're going to want to drive home is that this is a representation of how we can break the different pieces down, because all this information really boils up to this is public assistance fundings. It's how the public is how some of like the sub funding and allotment is done within there. Like some of these debris removal operations is a subset of public assistance, as think of what you and I were, what we talked about a couple days ago. Of like, hey, there might be sub programs embedded within here that we might need to see them pull that on their own, but other pieces. So, again, this is open source data that you use to kind of be able to drill down to it. But I think it's a good representation of like, hey, this is what the art of the possible is. Once we actually know what the program IDs are, that we can go and build down to.
+
+Speaker 1 4:27
+Yeah, yeah. Hey, [engagement lead], [delivery colleague 1], you guys want me to share my screen, and we can go through the. I made a couple updates since yesterday. I can just walk y'all through
+
+Speaker 4 4:42
+it. That would be great. Thank you. Yeah. And nice job. It was so much information.
+
+Speaker 1 4:50
+Absolutely. Thank.
+
+Speaker 4 4:52
+In such a quick turn.
+
+Speaker 1 4:54
+Oh yes, I used all my credits on VS Code. So. All right, so we have our executive dashboard here, which then just the idea here is to add a lot. It may seem repetitive, but I added essentially the talk track and instructions here, so that if we wanted to use this as a leave behind or just email to someone, they're able to navigate it on their own and understand what we're getting at. So, idea is it automates the fiscal year-end program integrity flow, and we the we map whatever has been ingested to historical records to see similarities, and then work to that. Then will trigger that variance we talked about of whether it is just a preliminary assessment or a comprehensive review is required, as well as then the sign-offs for for the whatever it was called that checklist. but also added in this tour here, where it just gives you this. So the executive dashboard, the answer that takes weeks today in one view, totals year over year change, programs, breaching the trigger, and what is stuck unmapped, all computed in this file. We have our data ingestion, so I'm. working on the ability. So if we want to show it live, we would upload a dataset to show how it works, and then you would see down here what was extracted and landed, the schema mapping field of everything that's in there, and as data is uploaded in here, this gets updated, and then you can see an extract of hey, how does this map? And then are we able to trace it? And if you click trace, you can see it land and where it rolls up, and how then it is split and its destination. It also tells you whether it's confidence interval and whether I have here SME confirmed, assuming we'd be able to go through and we'd work with people to say, hey, yes, this is correct, and then also as users within FEMA use it, they're putting their own feedback into the tool, which then improves its accuracy and references, but this is just one example. Let's go to the next one here. So the program mapping workspace is this the yes? So this is where the magic we'll say happens. We have you can follow the dollar end to end, which means you can take a given transaction and see, hey, was this retired from a previous year, and how does this relate to new ones? So we can use our inference test here, which this is a classification model that looks to see at hey, the current year codes, where we don't know where they go, how similar are they to previous year codes? So it then spits this out and says proposed grouping, the code it is, the support, its confidence interval. I set the threshold at 85% confidence, so it says, hey, if it's not above 80-5% it's not. It a human needs input there, and then as you, I'll just click enter down here. You see what it accepted because it's above 80-5% but you then have the ability to change it if it's you don't think it's accurate, and of course, how do we know it's right? We can compare it against the holdout and check its accuracy, and we see all right. So this is the correct routing, even though it was pretty low. This it was wrong, but hey, it was caught by the review, and then everything over 85 percent it was able to catch. So this is also a very right picture perfect world in reality will need to do some significant feature engineering, but this is really the secret sauce that would line everything up if they need a quick way, quick in quotation marks, because it would take us time to right build the data set to do this. But this is how it would be matching, and you can see that confidence interval there, and you would just be able to scroll down. Also, then a flow map. So, if I wanted to click at a given transaction or a code here, I'd be able to. Let's see, we'll say a legacy alias. I can see here, and I want to show open in the flow map. I now can see where those dollars flow through across the financial codes to subprograms, reporting program, and a given disaster event.
+
+Speaker 1 9:55
+I'm not in love with this, but I was just I wanted something that was more than just a chart to show. I'm not the biggest fan of Slankies or whatever these are called, but open to any suggestions here on alternatives. But the idea was to show, hey, how's the money flowing through here? We then have the event grouping where you can see how we talked. I think earlier or the other day about how there was multiple different hurricanes in a year, and they were all grouped together. But you'll have they needed to be separated out, and so that's what this does. So it splits up those events, and you can then filter it by the different programs, whatever that may be, I know this obviously isn't accurate. Given I'm not, I don't know anything about FEMA, but this is how the data could be displayed, and then also showing across fiscal years. I suspect in reality this would probably follow more of like a bell curve, as costs go up and then gradually die off, but this is just to show that hey, we can capture those changes year over year, and again open to any any feedback there on changes. We spend aggregation, so you can see the rollup view by program, a number of transactions, the disbursements, as well as then you can go see the sub program for a given. So you can see what did I put in here? Emergency work, permanent work, and you can see then. All right, how does this then relate to some of these others? And the idea is to be able to slice and dice everything, because there's given our previous meeting there was almost a Russian doll of how everything comes together, and this layout was what I had in my head of how they can slice through all of that.
+
+Speaker 3 11:58
+Yep, and and [presenter], I think that's really great, and one of the things that I think we'll just want to drive home at the front end, where I can do some of the voiceover here, is this idea of like, hey, these aren't actual programs that so codes, standards, and technical assistance is not a program, but it is a sub grouping that is occurring within the data set that we can get down to this level. That once we have programs that do roll up, have parent programs, and then the subprograms under. Once we have a real data set that we're working with, we can go and make these different subfields and drill down as much as they need.
+
+Speaker 2 12:32
+Yeah, I agree with that too. I was wondering too, like this is something that if it's a really easy fix, like [presenter], I think this is great, and we can definitely make that voiceover. But if it is something that only takes like five minutes or less to do, like [SME colleague 1] and I could give you some examples of FEMA programs,
+
+Speaker 1 12:53
+yes,
+
+Speaker 2 12:54
+eight or 10. If if that's like a real quick fix, and you can just edit the name, that might be helpful to do, and all of them are like publicly available. Like there's no like sensitive data. We can give the caveats. This is this is dummy spend information data, but the the program names are all public information, right? So that yeah, because like [SME colleague 1] said, those are components, and yeah, we can definitely do the voiceover, but it might be easier if we could just if we we had some program names in there, and then we can say I like the example that you gave about how we can do lots of drill downs and like the the disaster type, the the the hurricane, the the year, the region that it maps into. Those are all examples. Like they won't need to do that for everything. And if we're just looking at it from how much money was spent, that's going to require a comprehensive risk assessment. Maybe all we need is the aggregate data. But where it's really helpful is if we have to drill down and, like for example, some of the programs, and we had to test hazard mitigation or disaster case management. They do things differently in a lot of different regions.
+
+Speaker 1 14:10
+Yeah,
+
+Speaker 2 14:10
+and being able to drill down where the spend was for each region helps us to identify what region should be targeted for testing. So I think that's a really good example how we can showcase where like we can really get into the details. It's more than just how much money was spent per program, but we can really slice and dice it to to to get the the right information and identify risk areas.
+
+Speaker 1 14:37
+Awesome! Yeah, that's a five minute max fix. So if you send me that over, I can just dump it in.
+
+Speaker 2 14:44
+Good, great.
+
+Speaker 1 14:45
+And then here, this is the year-over-year variance. I recall we said 20 like ish percent. So they have the ability here to change it if they want to, as well as also did the ability to say, "Hey, did it increase only, decrease only, or maybe you want to set a floor for like, yeah, it may have been a 20% increase, but it was only $100 and so you want to set maybe a fixed like dollar amount. The idea there was just to give them the full control over the tool, and then just a visual showing that breakdown of hey, even whether it's more or less where are your bounds of what's above or below that threshold, and then a bit more detail on what that is, and then a little AI suggestion for what. what to do next, then the preliminary risk assessment auto generator. So you go through here, and it shows you each of the question one, the total program disbursements, and again I can edit these if these aren't exact, but the year-over-year change in program spend percent does the year-over-year change breach the comprehensive assessment threshold, all that good stuff. And then this actually now I'm thinking about it. This is a bit redundant because the next page is the actual where you input everything. So this is where then a user would approve or override. So let's go ahead and I'll just approve, approve, approve, approve, approve, approve, approve. Yeah, test. Save answer, and I'll approve it. Another test, save answer approve. All right, and then at the top we have the. It shows everything there was approved, and so it's now I click finalize, and it gets sent to finalized, and then down here I see my audit log of everything that was changed, so as they go through, if somebody clips something or you want to see like the how stuff has changed over time, we have our immutable audit trail here that just logs all clicks and changes. Of course, then our governance we have then a. parity check that just makes sure that everything that's being computed here is correct, and this is its own reconciliation, as well as then some assumptions. So this is more for the demo, but essentially, right? The financial system can export flat record-level files with program-relevant codes and amount dates, as well as then other validations. But if I run my parity check here, it just says, "Hey, all of your values match from every program, the year-over-year trigger delta, and everything in this file or data we've uploaded, it all computes. So all those subprograms, when you sum them all up, they equal everything equals the sum of its parts. Because when I, at least at ICE, when we were doing like work breakdown structures. I I goofed on one of them, and the sum didn't add up, and it took forever to correct it. So it's to me this was something that would just be a safety check to make sure that all your numbers are adding up, and then of course, your export and reporting. So, your the risk assessment that was just done. They have the ability to download it as a HTML file, or if you want a spend summary of the CSV, or a whole package, or as a JSON. So, you can, if we want to connect it to another system that just sends it. They have the ability, and then this is what the printout would look like. I have my have our disclosure there, so nobody gets too excited if this gets into the wrong hands. It's clear this is not real, and we can work on this formatting. But it just shows the questions, AI suggestion, and then the audit of what was clicked, but that's that's what I got.
+
+Speaker 2 19:31
+Yeah, I think this is yeah, I think this is really good. I'm I'm impressed you put this together this quickly.
+
+Speaker 4 19:39
+One
+
+Speaker 2 19:41
+question. question on the the 20% threshold. I was looking at the last PRA that we have. Like, yeah, we have the 20% threshold is for the volume of transactions as well as the like actual dollar value that triggers it. I believe is that the case here. If not, that's fine. We could just like showcase that we have the the capability for to do the 20% based on transactions as well as dollars.
+
+Speaker 1 20:13
+This is just dollars. I don't think it is. It accounts for. It does not account for the count of transactions. Am I understanding that right?
+
+Speaker 2 20:31
+Yeah, I I think that's that's fine. I think we, I think [SME colleague 1], this is one of the changes we we proposed in 2024 was to apply that because of the was to increase or decrease.
+
+Speaker 2 20:45
+Yeah,
+
+Speaker 3 20:45
+yeah. [FEMA sponsor] was concerned about the decrease. Was also concerned about the decrease, so we added that as an adjustment.
+
+Speaker 2 20:53
+Yeah, increase or decrease, and looking at the the number of disbursements as well as the dollar value of those disbursements, but yeah, it's something that could be easily tailored to to the group. I was just checking too, and I think too, like for for the demo, like this is great from like extracting what we can from the system.
+
+Speaker 1 21:14
+Yeah,
+
+Speaker 2 21:15
+and then there's like other data points too that we could probably include in the dashboard. Yeah, other data points that we know, like we have, like [SME colleague 1] and I, like we have historical data on the risk assessments going back to like 2018 or 2019. So I'm assuming there's a way we could upload that information, so that way you'd be able to identify trends over time. You'd be able to have like dashboarding that shows everything.
+
+Speaker 1 21:41
+Oh yeah, that's you buried the lead. That's that's a goldmine. That's awesome. If you guys got that, I mean,
+
+Speaker 3 21:49
+it's a goldmine we're not giving away for free. Yeah,
+
+Speaker 1 21:52
+good call.
+
+Speaker 2 21:55
+Yeah, not the FEMA for free. Yeah, but yeah, yeah, like, and even looking at the questions of the risk assessment, we want to like some of the questions are like when was the last comprehensive risk assessment tested because you need to do the comprehensive assessment at least once every three years. So like we have that data that we can probably upload into this like whatever we're looking at like I don't know all the right terms, like, but and then like you would be able to include this, and would probably be able to answer a lot of the questions and have a lot of the key data points just by being able to upload other information that doesn't necessarily come from the financial system of FIBA, but from our records, we could include
+
+Speaker 1 22:40
+absolutely. awesome.
+
+Speaker 2 22:46
+Yeah, this is impressive. I'm I'm very I'm impressed that you were able to take like the limited information we gave you to come up with something like this.
+
+Speaker 1 22:59
+Well, I appreciate. I agree.
+
+Speaker 4 23:01
+I agree. This is awesome. I was gonna ask a couple questions for Tuesday. Just thinking, are you able to put a slide or two together on? Okay. I know this will be more so through the, you know, demo, but that would be perfect. I also added you to the demo, [presenter]. [delivery colleague 1], I didn't add you. I wasn't sure if you know, [presenter], what you would prefer, and if we need to add [delivery colleague 1], we can. But the thought was it is in person too. Oh, go ahead, [colleague].
+
+Speaker 3 23:43
+I was just gonna say I don't think unless you all want me there, I don't think you. I need to be on the meeting.
+
+Speaker 4 23:49
+That is what I was gathering too, but just from like the coordination for in person. So just wanted to confirm and make sure that was good with with you both because we can make adjustments if needed.
+
+Speaker 1 24:03
+Yeah, I would just be demoing this, or what was the other tool? We
+
+Speaker 4 24:08
+so the other tool was the like document redaction tool. So that would you know redact PII. Got it. So the other presenter is going to go after you. The other presenter is not local, and so he would be remote. So it's technically two technology demos, and then are you still able to go in person? And we can give you all of the like directions on how to get there. We can meet to sign you in.
+
+Speaker 3 24:39
+Absolutely.
+
+Speaker 4 24:41
+Okay.
+
+Speaker 1 24:41
+Yeah. Just wanted to make sure I I wasn't slated to present something else. I'm like, oh, there's another tool. But cool,
+
+Speaker 4 24:51
+awesome, awesome. And then [SME colleague 1], do you mind sharing with [presenter] like all the information to get there, and then, [SME colleague 2] or I would be able to sign him in. I don't know if [SME colleague 2] can be able to sign in. I think I was gonna try to log in earlier. It'll just we'll figure it out. But at least you can have like the address and everything, and we should be able to sign you in at the front.
+
+Speaker 5 25:19
+Awesome.
+
+Speaker 4 25:23
+Perfect. Any? Oh, I'm just gonna reemphasize one thing I emphasized in the beginning, so you'll probably remember this, [presenter]. But you know the the folks that we're presenting to you met before, so [FEMA sponsor], [FEMA stakeholder A], and [FEMA stakeholder B]. So [FEMA sponsor] was the one kind of in in the conference room in person before. [FEMA stakeholder B] was virtual. He is actually going to be acting as the DCFO now. He is really like interested in AI overall. This demo was really for [FEMA sponsor], but [FEMA stakeholder B] wants to be in all the demos. He told me so, and he's actually there in person from Winchester this coming week. So that'll be great to get the reactions in person. But all three are not technology clients, so just kind of keeping that in mind as you're presenting with regards to terminology, and then I do want to somehow weave in when when you think about it and as the discussion goes, like because it's not a plug and play. [FEMA sponsor]'s gonna be like, "Oh, you did all of this, so we can just bring you on, and you can just like guaranteed. They've, you know, brought it up before, even on the last demo last week. They're like, "You already did all the hard work on like for Vego, and it's like, "No, there's a lot of other parts that are involved. Yeah. So I think just keeping that in the back of your mind, and maybe as you're working through this, you can even like say you know examples of other places or you know however the discussion flows. I just want to make sure that's in the back of your mind because we are providing a ROM next week on on the IDP tool that you saw from Boston team, but tailoring it to the Vego program, as as we had mentioned, so we're working through that ROM as we speak, and we'll be able to give it to them next week. So they're very interested in technology, just not want to make sure that they're clear on. We just have to kind of, you know, repeat ourselves over and over again because they, you know, they even said it last week. Oh yeah, you guys have already done all the hard work, and now you can just put it in. And this other group is already implemented in FEMA deck, so this should be easy. I was like, well, the source of the information is different. All of these other things are different. So just, I know I sound like a broken record, but just want to make sure.
+
+Speaker 2 27:59
+Like with the rum, and you might already be covering this, [engagement lead], but like including a list of tasks that like will need to be done and modified and customized for FEMA, like like you said, they'll they'll need the governance. But like for this PIA thing, the the big lift would be actually going into the financial system and creating that, like figuring out what that is, and then even like developing SOPs, job aids, desk guides, all of those things that would go into it. It's not just like we have a solution. We're just going to give it to you for
+
+Speaker 1 28:33
+yeah
+
+Speaker 2 28:34
+for free, and it's going to be working in a week.
+
+Speaker 1 28:36
+Yeah, honestly, and I, [delivery colleague 1], I'm sure you'll you can chime in here. I, from what I've seen, the the hardest part is getting the keys to use the tech needed. So talking to them about, hey, do you have a connection or some sort of agreement with your OCIO office on cloud tools, do you have what do you have access to? How does that cost sharing work? How do you navigate that? What's the timeline? Because that's been the biggest hurdle I've found is we'll show them these and then they'll be ready to stand it up, only to find out it'll be a year plus of negotiating with OCIO just to get a hammer and nail to get started.
+
+Speaker 4 29:29
+Yeah, no, I agree. I agree and echo you know [SME colleague 2]'s points. We're factoring in all of that. And one other caveat here is the program ID data pool should be coming from their financial system or record, which is getting going through modernization efforts and go live as october 1 of this year. So there's definitely you know some factors there. We don't have the system yet. Can't really you know develop certain things until the system is in place, so and then figuring out if any. Hopefully, none of that has changed, but the the modernization efforts aren't going as smoothly so far. So,
+
+Speaker 1 30:12
+okay, good to know.
+
+Speaker 4 30:15
+Yeah. All
+
+Speaker 1 30:16
+right.
+
+Speaker 4 30:17
+Awesome.
+
+Speaker 1 30:18
+I'll make these updates and then can send a note out Monday with the updated version, and then some talking points. Would appreciate it if y'all could take a look specifically at what I'll be regurgitating, as I don't want to put my foot in my mouth.
+
+Speaker 4 30:34
+Well, absolutely appreciate it so much. This is great. They're very excited about this. These two were, one was [FEMA sponsor]'s specific request, and the other one was [FEMA stakeholder B] for [FEMA sponsor] specific request three times. So,
+
+Speaker 1 30:52
+awesome.
+
+Speaker 4 30:54
+This is this is great. Awesome. Have a great weekend. Thank you all.
+
+Speaker 1 30:59
+Y'all too. Take care. Bye.
+
+Transcribed by https://otter.ai
