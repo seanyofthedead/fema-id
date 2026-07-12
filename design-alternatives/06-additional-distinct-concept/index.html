@@ -301,6 +301,9 @@ footer h4{font-size:12.5px;color:var(--seal);margin-bottom:4px}
   </div>
 </div>
 
+<!-- Polite live region: announces trust-posture updates and action results to assistive tech -->
+<div id="live-region" class="sr-only" role="status" aria-live="polite"></div>
+
 <!-- ==================== WORKSPACE TABS ==================== -->
 <nav class="tabs" aria-label="Workspaces">
   <button type="button" data-action="switch-view" data-arg="registry" id="tab-registry" aria-current="true">Registry <span class="small muted">— the rule ledger</span></button>
@@ -524,6 +527,19 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
   ];
 
   /* ---------------- Section 2: state ---------------- */
+  /* Seeded staged change (ILLUSTRATIVE): lets the Review workspace demonstrate the dollar
+     blast-radius diff in one click. It is pending only - it alters NO reportable number
+     until an approver signs - and it can be discarded freely. Clearly labeled in the UI. */
+  function SEED_CHANGE() {
+    return {
+      id: "CH-000", seed: true, status: "pending", kind: "reassign_code",
+      ruleId: "BR-023", code: "HS-55501-ND", toSub: "SUB-IA-DCM",
+      title: "Proposed re-scope: HS-55501-ND \u2192 Individual Assistance / Disaster Case Management (illustrative seed)",
+      reason: "Program segment 55501 exists under BOTH the IA and HS fund segments - the fund, not the segment, decides the mapping (rules BR-019 vs BR-023). Staged so the dollar blast radius of the wrong reading is visible before the SME answers the open 55501 question. Illustrative seed, staged automatically for demonstration.",
+      author: "D. Okafor", authorRole: "Finance-center Data Steward",
+      when: "Session start \u00b7 seeded for demonstration (illustrative)",
+    };
+  }
   function initialState() {
     var ruleStatus = {};
     D.mapping_rules.forEach(function (r) {
@@ -535,7 +551,7 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
       exceptions: {},          // code -> {action:'accepted'|'assigned'|'not_mappable', target, reason, by, when}
       appliedTargets: {},      // code -> subId | 'UNMAPPED'  (result of applied staged changes)
       trigger: JSON.parse(JSON.stringify(D.meta.trigger_default)),
-      staged: [], changeSeq: 1,
+      staged: [SEED_CHANGE()], changeSeq: 1,
       questions: {},           // qid -> {note, by, when}
       praOverrides: {},        // progId|qid -> {value, reason, by, when}
       praHuman: {},            // progId|qid -> {value, by, when} for Q9/Q10
@@ -771,6 +787,17 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
   /* ---------------- Section 4: renderers ---------------- */
   function $(id) { return document.getElementById(id); }
 
+  /* Polite screen-reader announcements: queued during a render pass, flushed once at its end. */
+  var announceQueue = [];
+  var _lastPostureKey = null;
+  function queueAnnounce(msg) { announceQueue.push(msg); }
+  function flushAnnouncements() {
+    if (!announceQueue.length) return;
+    var el = $("live-region");
+    if (el) el.textContent = announceQueue.join(" ");
+    announceQueue = [];
+  }
+
   function sparkBars(vals, w, h) { // tiny SVG bar series, explicit math (no layout APIs)
     w = w || 150; h = h || 38;
     var max = Math.max.apply(null, vals.map(Math.abs).concat([1]));
@@ -799,6 +826,13 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
     $("tp-bar").setAttribute("aria-label", "FY2026 disbursements: " + money(tp.confirmed) + " under confirmed rules, " + money(tp.inferred) + " under unconfirmed inferred rules, " + money(tp.unmapped) + " unmapped in the exception queue" + (tp.excluded ? ", " + money(tp.excluded) + " signed out as not mappable" : ""));
     var bi = $("badge-inbox"); bi.textContent = tp.inboxCount; bi.className = "tab-badge" + (tp.inboxCount === 0 ? " zero" : "");
     var br = $("badge-review"); br.textContent = tp.pendingCh; br.className = "tab-badge" + (tp.pendingCh === 0 ? " zero" : "");
+    // announce live recomputation of the trust posture (polite, only when values change)
+    var pkey = tp.governedPct.toFixed(1) + "|" + tp.awaiting + "|" + tp.pendingCh;
+    if (_lastPostureKey !== null && pkey !== _lastPostureKey) {
+      queueAnnounce("Dollars under confirmed rules now " + tp.governedPct.toFixed(1) + " percent. " +
+        tp.awaiting + " item" + (tp.awaiting === 1 ? "" : "s") + " awaiting validation.");
+    }
+    _lastPostureKey = pkey;
   }
 
   function renderTabs() {
@@ -1253,6 +1287,7 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
         '<span class="small muted" style="margin-left:auto">staged by <span class="sig">' + esc(ch.author) + "</span> (" + esc(ch.authorRole) + ") · " + esc(ch.when) + "</span></div>" +
         '<div class="card-b">';
       h += '<p class="small" style="margin:0 0 4px"><strong>Reason:</strong> ' + esc(ch.reason) + "</p>";
+      if (ch.seed && isPending) h += '<div class="notice info">Illustrative seed - staged automatically so the Review workspace demonstrates a diff in one click. It changes nothing until an approver signs; discard freely.</div>';
       if (isPending) h += diffHtml(computeDiff(changePayloadTargets(ch), changeTrigger(ch)), ch);
       else if (ch.frozenSummary) h += '<p class="small muted">' + esc(ch.frozenSummary) + "</p>";
       if (ch.reviewNote) h += '<div class="notice info">Reviewer note: ' + esc(ch.reviewNote) + "</div>";
@@ -1461,7 +1496,10 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
 
 
   /* ---------------- Section 5: actions & event delegation ---------------- */
-  function setNotice(key, msg, kind) { state.notices = {}; state.notices[key] = { msg: msg, kind: kind || "err" }; }
+  function setNotice(key, msg, kind) {
+    state.notices = {}; state.notices[key] = { msg: msg, kind: kind || "err" };
+    queueAnnounce(msg); // mirrored to the polite aria-live region
+  }
   function clearNotices() { state.notices = {}; }
   function sig(text, ruleId) {
     var m = me();
@@ -1756,6 +1794,7 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
   /* ----- master render ----- */
   function render() {
     renderHeader(); renderTabs(); renderRegistry(); renderInbox(); renderReview(); renderOverlay();
+    flushAnnouncements();
   }
 
 
@@ -1833,7 +1872,7 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
       doAction("open-editor", "BR-018");
       state.editor.code = "IA-61103-4332"; state.editor.toSub = "SUB-IA-IHP"; state.editor.reason = "";
       doAction("stage-change");
-      var reasonGate = state.staged.length === 0 && state.editor !== null;
+      var reasonGate = state.staged.length === 1 && state.staged[0].seed === true && state.editor !== null; // only the illustrative seed exists
       state.editor.reason = "Historic Mass Care coding was corrected in the 2024 SOP.";
       doAction("stage-change");
       var ch = state.staged[0];
@@ -1895,6 +1934,26 @@ window.FEMA_DATA = {"meta":{"watermark":"SYNTHETIC-DEMO","note":"All spend data 
       render();
       var headerOk = $("tp-rules").textContent === "26" && /%$/.test($("tp-governed").textContent);
       T("trust-posture header renders live values", headerOk, $("tp-governed").textContent);
+
+      // 13. seeded illustrative change: pending at load, moves no dollars until approved, discardable
+      var seed = findChange("CH-000");
+      var seedOk = !!seed && seed.status === "pending" && seed.seed === true;
+      var badge1 = $("badge-review").textContent === "1"; // only the seed is pending at this point
+      var mSeed = computeModel(effectiveTargets(), state.trigger);
+      var seedNoEffect = approx(mSeed.progFy["PROG-HS|2026"].total, CHECK.HS); // HS untouched while seed is pending
+      var seedDiff = seed ? computeDiff(changePayloadTargets(seed), null) : null;
+      var seedDiffOk = !!seedDiff && seedDiff.remap.length > 0 && seedDiff.progDelta.length > 0;
+      doAction("discard-change", "CH-000");
+      var seedDiscarded = seed.status === "discarded" && $("badge-review").textContent === "0";
+      T("seeded illustrative change is pending at load (badge 1), shows a real diff, alters no totals, and is discardable",
+        seedOk && badge1 && seedNoEffect && seedDiffOk && seedDiscarded,
+        seedDiff ? "remap=" + seedDiff.remap.length : "no seed");
+
+      // 14. polite aria-live region announces trust-posture updates
+      var lr = document.getElementById("live-region");
+      T("polite aria-live region announces trust-posture updates",
+        !!lr && lr.getAttribute("aria-live") === "polite" && /awaiting validation|confirmed rules/i.test(lr.textContent),
+        lr ? lr.textContent.slice(0, 90) : "region missing");
     } catch (e) {
       T("self-test suite completes without exception", false, String(e && e.stack || e).slice(0, 300));
     }

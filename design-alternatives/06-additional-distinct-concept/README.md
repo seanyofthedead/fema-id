@@ -52,7 +52,11 @@ Three fixed workspaces under the always-visible trust-posture strip:
   resolvable in place with signature capture and reopen/undo.
 - **Review** — pending staged changes with full dollar blast-radius diffs (transactions re-mapped
   with lineage, program/sub totals before→after, trigger flags that flip, unmapped-dollar delta),
-  approve/request-changes/discard, applied log with revert.
+  approve/request-changes/discard, applied log with revert. One **illustrative seeded change**
+  (CH-000: a proposed re-scope of HS-55501-ND, the 55501 two-fund trap code) is pending at load so
+  the Review workspace demonstrates a real diff in one click — clearly labeled as an illustrative
+  seed, it alters no reportable number until an approver signs, and it can be discarded freely.
+  The Review tab badge therefore shows 1 at load.
 
 Overlays (Escape closes): export simulation, "Why trust the mining?" accuracy record, the
 simulated bulk-change preview for FEMA's fuller 8–10-program list, and per-program **PRA records**.
@@ -78,6 +82,10 @@ simulated bulk-change preview for FEMA's fuller 8–10-program list, and per-pro
 - Bulk-change preview exhibit: how the registry absorbs taxonomy growth as inbox work, clearly
   simulated and non-applying.
 - Watermarked export simulation (rule ledger + validation record).
+- Accessibility: semantic tables, labeled controls, keyboard operability (Enter/Space on row
+  buttons, Escape closes overlays and editors), visible focus states, and a **polite `aria-live`
+  region** that announces trust-posture recomputations ("Dollars under confirmed rules now
+  92.1 percent…") and action results to assistive technology.
 
 ## Repository requirements addressed
 
@@ -147,15 +155,19 @@ simulated bulk-change preview for FEMA's fuller 8–10-program list, and per-pro
 - Bulk-change preview for the fuller program list — simulated, cannot be applied.
 - Historical assessment-cycle note in the PRA record — labeled illustrative.
 - The dataset itself — synthetic, disclosed in the masthead tag, footer, and every export.
+- The seeded pending change CH-000 — staged automatically at load for demonstration, labeled
+  illustrative on its change card.
 
 ## Build & test note
 
 - Author `index.template.html` (this directory). Never edit `index.html` directly.
 - Build: `python "C:\dev\fema-id\design-alternatives\_qa\inject.py" index.template.html index.html`
 - Test: `node "C:\dev\fema-id\design-alternatives\_qa\test_harness.mjs" index.html`
-- Current status: **22/22 harness checks pass**, including 12 embedded self-tests
+- Current status: **24/24 harness checks pass**, including 14 embedded self-tests
   (`window.__SELFTEST__`) that verify planted FY2026 totals (±$1), the dual-measure trigger and
   count-only catch, navigation, transaction drill-down, signed confirmation raising the governed
   percentage, staged-diff correctness with role-gated approval and revert, exception reason
   gates and exact dollar movement, PRA override reason capture, live trigger configurability,
-  and watermarked export. Self-tests snapshot and restore state (side-effect-safe).
+  watermarked export, the seeded illustrative change (pending at load, badge 1, no effect on
+  totals until approved, discardable), and the polite aria-live announcements. Self-tests
+  snapshot and restore state (side-effect-safe).
