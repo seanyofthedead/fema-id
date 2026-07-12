@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Examiner — FEMA Program Integrity (Synthetic Demo)</title>
+<style>
+/* ============================================================
+   THE EXAMINER — investigative dossier design language
+   Palette: federal navy / slate / paper, evidence-card system
+   ============================================================ */
+:root{
+  --navy:#1a2a44; --navy-2:#243b5e; --ink:#212a35; --ink-soft:#4a5768;
+  --paper:#f7f6f2; --card:#ffffff; --line:#d8d5cc; --line-soft:#e7e4dc;
+  --accent:#8a6d1f; --accent-soft:#f3ecd8;
+  --good:#2f6b46; --good-soft:#e4efe8;
+  --warn:#8f5b13; --warn-soft:#f8eeda;
+  --bad:#8e3b2f; --bad-soft:#f6e7e3;
+  --ai:#3d5a80; --ai-soft:#e8eef5;
+  --mono:"Consolas","SF Mono",Menlo,monospace;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+button{font:inherit;cursor:pointer}
+h1,h2,h3{font-weight:600}
+code,.mono{font-family:var(--mono);font-size:.92em}
+a{color:var(--navy-2)}
+:focus-visible{outline:3px solid #b58917;outline-offset:2px}
+button:focus-visible{outline:3px solid #b58917;outline-offset:2px}
+
+/* ---------- top chrome ---------- */
+.gov-banner{background:var(--navy);color:#e8e4d8;font-size:.78rem;padding:.35rem 1rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+.gov-banner .flag{width:16px;height:11px;background:linear-gradient(#b22234 33%,#fff 33%,#fff 66%,#b22234 66%);border:1px solid #999;display:inline-block;position:relative;flex:none}
+.gov-banner .flag::before{content:"";position:absolute;left:0;top:0;width:7px;height:6px;background:#3c3b6e}
+.synth-chip{background:#b58917;color:#1a1400;font-weight:700;border-radius:3px;padding:0 .45rem;letter-spacing:.04em}
+header.app{background:var(--card);border-bottom:2px solid var(--navy);padding:.7rem 1.25rem;display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap}
+header.app h1{font-family:var(--serif);font-size:1.35rem;color:var(--navy);letter-spacing:.01em}
+header.app .sub{color:var(--ink-soft);font-size:.85rem}
+header.app .spacer{flex:1}
+.hdr-btn{background:var(--navy);color:#fff;border:1px solid var(--navy);border-radius:4px;padding:.4rem .85rem;font-size:.85rem}
+.hdr-btn.secondary{background:#fff;color:var(--navy)}
+.hdr-btn:hover{background:var(--navy-2);color:#fff}
+
+/* ---------- workspace grid ---------- */
+.workspace{display:grid;grid-template-columns:300px minmax(0,1fr) 320px;gap:0;min-height:calc(100vh - 130px)}
+.rail{background:#f0eee8;border-right:1px solid var(--line);padding:1rem .9rem;overflow-y:auto}
+.rail-right{background:#f0eee8;border-left:1px solid var(--line);border-right:none;overflow-y:auto;padding:1rem .9rem}
+.rail h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);margin:.9rem 0 .5rem}
+.rail h2:first-child{margin-top:0}
+main.thread-pane{padding:1.25rem 1.6rem 7rem;overflow-y:auto;min-width:0}
+
+/* ---------- inquiry list ---------- */
+.inq-item{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ink-soft);border-radius:4px;padding:.55rem .7rem;margin-bottom:.5rem;font-size:.85rem;color:var(--ink)}
+.inq-item:hover{border-color:var(--navy);border-left-color:var(--navy)}
+.inq-item.active{border-color:var(--navy);border-left-color:var(--accent);box-shadow:0 1px 4px rgba(26,42,68,.18);background:#fffdf6}
+.inq-item .t{font-weight:600;display:block;margin-bottom:.15rem}
+.inq-item .m{color:var(--ink-soft);font-size:.76rem;display:flex;gap:.5rem;flex-wrap:wrap}
+.inq-item.headline{border-left-color:var(--bad)}
+.inq-item.dismissed{opacity:.55}
+.badge{display:inline-block;border-radius:3px;padding:0 .4rem;font-size:.7rem;font-weight:700;letter-spacing:.03em}
+.badge.sys{background:var(--ai-soft);color:var(--ai)}
+.badge.user{background:#e8e8e8;color:#444}
+.badge.open{background:var(--warn-soft);color:var(--warn)}
+.badge.resolved{background:var(--good-soft);color:var(--good)}
+.badge.dismissed{background:#e4e4e4;color:#666}
+.badge.flag{background:var(--bad-soft);color:var(--bad)}
+.badge.conf{background:var(--ai-soft);color:var(--ai);font-family:var(--mono)}
+.badge.needs{background:var(--warn-soft);color:var(--warn)}
+
+/* ---------- thread cards ---------- */
+.thread-head{margin-bottom:1rem}
+.thread-head .q{font-family:var(--serif);font-size:1.45rem;color:var(--navy);line-height:1.3}
+.thread-head .meta{color:var(--ink-soft);font-size:.82rem;margin-top:.3rem;display:flex;gap:.9rem;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;margin-bottom:1rem;overflow:hidden}
+.card .card-h{padding:.55rem .95rem;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.card .card-b{padding:.9rem .95rem}
+.card.plan{border-left:4px solid var(--ai)}
+.card.plan .card-h{background:var(--ai-soft);color:var(--ai)}
+.card.evidence{border-left:4px solid var(--navy)}
+.card.caveat{border-left:4px solid var(--warn)}
+.card.caveat .card-h{background:var(--warn-soft);color:var(--warn)}
+.card.answer{border-left:4px solid var(--good)}
+.card .src{font-size:.75rem;color:var(--ink-soft);font-family:var(--mono)}
+.plan-steps{list-style:none;counter-reset:st}
+.plan-steps li{counter-increment:st;padding:.3rem 0 .3rem 2.1rem;position:relative;font-size:.9rem}
+.plan-steps li::before{content:counter(st);position:absolute;left:0;top:.32rem;width:1.45rem;height:1.45rem;border-radius:50%;background:var(--ai);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.plan-refs{margin-top:.5rem;font-size:.76rem;color:var(--ink-soft)}
+.plan-refs code{background:var(--paper);padding:0 .3rem;border-radius:3px}
+
+/* ---------- tables & numbers ---------- */
+table.data{border-collapse:collapse;width:100%;font-size:.85rem}
+table.data th{ text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);border-bottom:2px solid var(--line);padding:.35rem .5rem}
+table.data td{border-bottom:1px solid var(--line-soft);padding:.4rem .5rem;vertical-align:top}
+table.data td.num,table.data th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
+table.data tr.hl{background:var(--accent-soft)}
+.delta-up{color:var(--bad);font-weight:700}
+.delta-dn{color:var(--good);font-weight:700}
+.delta-flag{color:var(--bad);font-weight:700}
+.big-num{font-family:var(--mono);font-size:1.5rem;color:var(--navy);font-weight:600}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.2rem .9rem;font-size:.86rem}
+.kv dt{color:var(--ink-soft)}
+.kv dd{font-family:var(--mono)}
+.scroll-x{overflow-x:auto}
+
+/* ---------- adjudication ---------- */
+.adj-bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.6rem .95rem;border-top:1px dashed var(--line);background:#fbfaf7}
+.adj-bar .lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;margin-right:.3rem}
+.adj-btn{border-radius:4px;border:1px solid var(--line);background:#fff;padding:.3rem .75rem;font-size:.82rem}
+.adj-btn.accept{border-color:var(--good);color:var(--good)}
+.adj-btn.accept:hover{background:var(--good-soft)}
+.adj-btn.correct{border-color:var(--warn);color:var(--warn)}
+.adj-btn.correct:hover{background:var(--warn-soft)}
+.adj-btn.flagbtn{border-color:var(--bad);color:var(--bad)}
+.adj-btn.flagbtn:hover{background:var(--bad-soft)}
+.adj-state{font-size:.8rem;font-weight:700}
+.adj-state.accepted{color:var(--good)}
+.adj-state.corrected{color:var(--warn)}
+.adj-state.flagged{color:var(--bad)}
+.correct-form{width:100%;margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-start}
+.correct-form textarea,.correct-form input[type=text]{flex:1;min-width:220px;border:1px solid var(--line);border-radius:4px;padding:.45rem;font:inherit;font-size:.85rem}
+.form-err{color:var(--bad);font-size:.78rem;font-weight:600;width:100%}
+
+/* ---------- ask bar ---------- */
+.ask-dock{position:fixed;bottom:0;left:300px;right:320px;background:var(--card);border-top:2px solid var(--navy);padding:.7rem 1.6rem .8rem;z-index:30}
+.ask-row{display:flex;gap:.6rem}
+.ask-row input{flex:1;border:1px solid var(--line);border-radius:5px;padding:.55rem .8rem;font:inherit;font-size:.95rem}
+.ask-row button{background:var(--navy);color:#fff;border:1px solid var(--navy);border-radius:5px;padding:.5rem 1.1rem;font-weight:600}
+.ask-row button:hover{background:var(--navy-2)}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
+.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:.18rem .7rem;font-size:.78rem;color:var(--ink)}
+.chip:hover{border-color:var(--navy);background:#fff}
+.ask-note{font-size:.72rem;color:var(--ink-soft);margin-top:.4rem}
+.dym{background:var(--warn-soft);border:1px solid var(--warn);border-radius:5px;padding:.6rem .8rem;margin-bottom:1rem;font-size:.88rem}
+.dym button{display:block;background:none;border:none;color:var(--navy-2);text-decoration:underline;padding:.15rem 0;font-size:.86rem;text-align:left}
+
+/* ---------- decision log rail ---------- */
+.log-entry{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:.45rem .6rem;margin-bottom:.45rem;font-size:.78rem}
+.log-entry .when{color:var(--ink-soft);font-size:.7rem}
+.log-entry .act{font-weight:700}
+.log-entry .act.accepted{color:var(--good)}
+.log-entry .act.corrected{color:var(--warn)}
+.log-entry .act.flagged{color:var(--bad)}
+.log-entry .act.asked{color:var(--ai)}
+.log-entry .act.dismissed{color:#666}
+.log-entry .act.answered{color:var(--navy)}
+.assump{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:4px;padding:.45rem .6rem;margin-bottom:.45rem;font-size:.78rem}
+.assump .st{font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
+.assump .st.open{color:var(--warn)} .assump .st.confirmed{color:var(--good)}
+.rail-count{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
+
+/* ---------- confidence meter ---------- */
+.conf-meter{display:inline-flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-soft)}
+.conf-meter .bar{width:64px;height:7px;background:#e2dfd6;border-radius:4px;overflow:hidden;display:inline-block}
+.conf-meter .bar span{display:block;height:100%;background:var(--ai)}
+.conf-meter.low .bar span{background:var(--bad)}
+
+/* ---------- drill ---------- */
+details.drill{margin-top:.6rem;border:1px solid var(--line-soft);border-radius:4px}
+details.drill>summary{cursor:pointer;padding:.4rem .7rem;font-size:.8rem;font-weight:600;color:var(--navy-2);background:var(--paper);list-style:none}
+details.drill>summary::before{content:"▸ "}
+details.drill[open]>summary::before{content:"▾ "}
+details.drill .drill-body{padding:.5rem .7rem;max-height:340px;overflow:auto}
+
+/* ---------- PRA thread ---------- */
+.pra-q{border:1px solid var(--line);border-radius:6px;background:var(--card);margin-bottom:.8rem;overflow:hidden}
+.pra-q .pq-h{display:flex;gap:.6rem;align-items:baseline;padding:.55rem .9rem;background:#fbfaf7;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.pra-q .pq-id{font-family:var(--mono);font-weight:700;color:var(--navy)}
+.pra-q .pq-text{font-size:.88rem;flex:1;min-width:200px}
+.pra-q .pq-b{padding:.7rem .9rem}
+.pra-ans{font-family:var(--mono);font-size:1.02rem;color:var(--navy);font-weight:600}
+.pra-human input[type=text]{width:100%;border:1px solid var(--line);border-radius:4px;padding:.45rem;font:inherit;font-size:.86rem}
+.gate{border:2px solid var(--navy);border-radius:6px;background:var(--card);padding:.9rem;margin-top:1rem}
+.gate .gate-state{font-weight:700}
+.progress-pills{display:flex;gap:.25rem;margin:.4rem 0;flex-wrap:wrap}
+.pill{width:26px;height:10px;border-radius:5px;background:#e2dfd6;border:1px solid var(--line)}
+.pill.done{background:var(--good);border-color:var(--good)}
+.pill.flag{background:var(--bad);border-color:var(--bad)}
+.pill.corr{background:var(--warn);border-color:var(--warn)}
+
+/* ---------- modal ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(20,26,36,.55);display:none;z-index:60;align-items:flex-start;justify-content:center;padding:3rem 1rem}
+.modal-back.show{display:flex}
+.modal{background:var(--card);border-radius:8px;max-width:860px;width:100%;max-height:82vh;display:flex;flex-direction:column;border-top:6px solid var(--navy)}
+.modal .m-h{display:flex;align-items:center;gap:1rem;padding:.8rem 1.1rem;border-bottom:1px solid var(--line)}
+.modal .m-h h2{font-family:var(--serif);font-size:1.15rem;color:var(--navy);flex:1}
+.modal .m-b{padding:1rem 1.1rem;overflow-y:auto}
+.close-x{background:none;border:1px solid var(--line);border-radius:4px;width:2rem;height:2rem;font-size:1rem;color:var(--ink-soft)}
+.export-pre{font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;background:#0f1722;color:#cfe0d8;padding:1rem;border-radius:6px;position:relative}
+.wm{position:absolute;top:8px;right:10px;color:#b58917;font-weight:700;letter-spacing:.15em;font-size:.7rem}
+.catalog-group h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);margin:.9rem 0 .4rem}
+.catalog-group button.cat-q{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:.45rem .7rem;margin-bottom:.35rem;font-size:.86rem}
+.catalog-group button.cat-q:hover{border-color:var(--navy);background:#fff}
+.cat-note{font-size:.78rem;color:var(--ink-soft)}
+
+/* ---------- misc ---------- */
+.sim-tag{display:inline-block;background:var(--ai-soft);color:var(--ai);border:1px solid #c3d0e0;border-radius:3px;font-size:.68rem;font-weight:700;letter-spacing:.05em;padding:0 .35rem;text-transform:uppercase}
+.svg-chart{width:100%;height:auto;display:block}
+.note-box{background:var(--paper);border:1px dashed var(--line);border-radius:4px;padding:.5rem .7rem;font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
+footer.app{border-top:1px solid var(--line);background:var(--card);padding:.7rem 1.25rem;font-size:.75rem;color:var(--ink-soft)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.toast{position:fixed;bottom:5.6rem;right:340px;background:var(--navy);color:#fff;border-radius:5px;padding:.5rem .9rem;font-size:.83rem;z-index:70;display:none}
+.toast.show{display:block}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .workspace{grid-template-columns:250px minmax(0,1fr) 270px}
+  .ask-dock{left:250px;right:270px}
+  .toast{right:290px}
+}
+@media (max-width:1024px){
+  .workspace{grid-template-columns:230px minmax(0,1fr)}
+  .rail-right{display:none}
+  .rail-right.drawer-open{display:block;position:fixed;right:0;top:0;bottom:0;width:320px;z-index:50;box-shadow:-4px 0 18px rgba(0,0,0,.25)}
+  .ask-dock{left:230px;right:0}
+  .toast{right:20px}
+}
+@media (max-width:768px){
+  .workspace{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  .rail.drawer-open{display:block;position:fixed;left:0;top:0;bottom:0;width:300px;z-index:50;box-shadow:4px 0 18px rgba(0,0,0,.25)}
+  .ask-dock{left:0;right:0}
+  header.app h1{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+<!-- ================= GOV / SYNTHETIC BANNER ================= -->
+<div class="gov-banner">
+  <span class="flag" aria-hidden="true"></span>
+  <span>Demonstration environment — <strong>not</strong> an official U.S. government system.</span>
+  <span class="synth-chip">SYNTHETIC-DEMO</span>
+  <span>All data is synthetic; the analyst is simulated (deterministic, offline — no live AI model).</span>
+</div>
+
+<!-- ================= HEADER ================= -->
+<header class="app">
+  <h1>The Examiner</h1>
+  <span class="sub">FEMA OCFO Program Integrity — FY2026 Payment-Integrity Examination (PIIA — Payment Integrity Information Act)</span>
+  <span class="spacer"></span>
+  <button class="hdr-btn secondary" id="btnRailToggle" aria-label="Toggle inquiry list">☰ Inquiries</button>
+  <button class="hdr-btn secondary" id="btnLogToggle" aria-label="Toggle decision log">Decision log</button>
+  <button class="hdr-btn secondary" id="btnCatalog">Question catalog</button>
+  <button class="hdr-btn" id="btnExport">Export audit trail</button>
+</header>
+
+<!-- ================= WORKSPACE ================= -->
+<div class="workspace">
+  <!-- Left rail: inquiries -->
+  <nav class="rail" id="railLeft" aria-label="Inquiries">
+    <h2>Examiner-initiated <span class="rail-count" id="cntSys"></span></h2>
+    <div id="listSys"></div>
+    <h2>PRA drafting <span class="rail-count" id="cntPra"></span></h2>
+    <div id="listPra"></div>
+    <h2>Your inquiries <span class="rail-count" id="cntUser"></span></h2>
+    <div id="listUser"><p class="cat-note" id="noUserInq">None yet — ask below, or open the question catalog.</p></div>
+  </nav>
+
+  <!-- Main pane: active inquiry thread -->
+  <main class="thread-pane" id="threadPane" aria-live="polite"></main>
+
+  <!-- Right rail: decision log + assumption register -->
+  <aside class="rail rail-right" id="railRight" aria-label="Decision log and assumption register">
+    <h2>Decision log <span class="rail-count" id="cntLog"></span></h2>
+    <p class="cat-note">Every question, answer, and adjudication in this session. This log is the audit trail and the export.</p>
+    <div id="logList"></div>
+    <h2>Assumption register <span class="rail-count" id="cntAssump"></span></h2>
+    <div id="assumpList"></div>
+  </aside>
+</div>
+
+<!-- ================= ASK DOCK ================= -->
+<div class="ask-dock" role="search">
+  <div class="ask-row">
+    <input type="text" id="askInput" aria-label="Ask the examiner a question"
+           placeholder='Ask the examiner — e.g. "why did Individual Assistance flag?"'>
+    <button id="btnAsk">Ask</button>
+  </div>
+  <div class="chips" id="chipRow" aria-label="Suggested questions"></div>
+  <p class="ask-note">Simulated analyst — free-text questions are matched to a catalog of deterministic computations over the embedded synthetic dataset. No live AI model; nothing leaves this file.</p>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="modal-back" id="modalCatalog" role="dialog" aria-modal="true" aria-labelledby="catTitle">
+  <div class="modal">
+    <div class="m-h"><h2 id="catTitle">Question catalog — everything the examiner can answer</h2>
+      <button class="close-x" data-close="modalCatalog" aria-label="Close question catalog">✕</button></div>
+    <div class="m-b" id="catalogBody"></div>
+  </div>
+</div>
+
+<div class="modal-back" id="modalExport" role="dialog" aria-modal="true" aria-labelledby="expTitle">
+  <div class="modal">
+    <div class="m-h"><h2 id="expTitle">Export — decision log &amp; reportable outputs (simulated)</h2>
+      <button class="close-x" data-close="modalExport" aria-label="Close export">✕</button></div>
+    <div class="m-b">
+      <p class="cat-note" style="margin-bottom:.6rem">Simulated export — no file leaves this page. In production this would produce the reportable PIIA outputs. Every export is watermarked <strong>SYNTHETIC-DEMO</strong>.</p>
+      <div class="export-pre" id="exportBody"><span class="wm">SYNTHETIC-DEMO</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<!-- ================= FOOTER / PROVENANCE ================= -->
+<footer class="app">
+  <strong>Provenance:</strong> dataset <span class="mono">SYNTHETIC-DEMO</span> — all disbursement data is synthetic, calibrated to public obligation envelopes; program names and disaster-declaration (DR) numbers are real public identifiers. Simulated FY-extract ingestion from WebFMIS (the financial system of record); file-in / file-out contract. The examiner’s reasoning is deterministic and offline — it proposes and explains, humans decide. PRA = Preliminary Risk Assessment; TAFS = Treasury Appropriation Fund Symbol; YoY = year over year; fiscal year runs Oct 1 – Sep 30.
+</footer>
+
+<script>
+/* ================= EMBEDDED DATA PAYLOAD (injected by inject.py) ================= */
+window.FEMA_DATA = /*__FEMA_DATA__*/null;
+</script>
+<script>
+/* ============================================================================
+   CHUNK A — DETERMINISTIC DATA ENGINE + QUESTION GRAMMAR
+   Every reportable number is computed live from window.FEMA_DATA here.
+   The "AI" is a simulated analyst: a deterministic question grammar resolving
+   to computations over the embedded synthetic dataset. No live model.
+   ============================================================================ */
+window.EX = (function(){
+'use strict';
+const D = window.FEMA_DATA;
+const FY = 2026, PRIOR = 2025;
+
+/* ---------- indexes ---------- */
+const col = {}; D.transaction_columns.forEach((c,i)=>{ col[c]=i; });
+const progById = {}; D.programs.forEach(p=>{ progById[p.id]=p; });
+const subById  = {}; D.sub_programs.forEach(s=>{ subById[s.id]=s; });
+const eventByDr= {}; D.disaster_events.forEach(e=>{ eventByDr[e.dr]=e; });
+const codeInfo = {}; D.financial_codes.forEach(c=>{ codeInfo[c.code]=c; });
+const ruleById = {}; D.mapping_rules.forEach(r=>{ ruleById[r.rule_id]=r; });
+
+/* mapping index (fy|code -> mapping row), exception queue kept separate */
+const mapIdx = {}; const exceptions = [];
+D.program_mapping.forEach(m=>{
+  if (m.status === 'exception_queue') exceptions.push(m);
+  else mapIdx[m.fy + '|' + m.code] = m;
+});
+
+/* ---------- one pass over all 1,459 transactions ---------- */
+const agg = {};      // fy|prog        -> {total, count}
+const subAgg = {};   // fy|prog|sub    -> {total, count}
+const evAgg = {};    // fy|prog|dr     -> {total, count}   (dr='ND' for non-disaster)
+const txnByProgFy = {}; // fy|prog -> [txn arrays]
+const unmappedByFy = {}; // fy -> {total, txns:[]}
+const fyTotals = {};     // fy -> total of ALL transactions (mapped + unmapped)
+let dirtyCount = 0, legacyCount = 0;
+const bump = (obj,k,amt)=>{ const o = obj[k] || (obj[k]={total:0,count:0}); o.total+=amt; o.count++; };
+for (const t of D.transactions){
+  const fy = t[col.fiscal_year], code = t[col.code], amt = t[col.amount];
+  fyTotals[fy] = (fyTotals[fy]||0) + amt;
+  if (t[col.raw_code] !== code) dirtyCount++;
+  if (String(t[col.raw_code]).indexOf('LEG-') === 0) legacyCount++;
+  const m = mapIdx[fy + '|' + code];
+  if (m){
+    bump(agg, fy+'|'+m.program_id, amt);
+    bump(subAgg, fy+'|'+m.program_id+'|'+m.sub_program_id, amt);
+    const dr = t[col.disaster_number]==null ? 'ND' : t[col.disaster_number];
+    bump(evAgg, fy+'|'+m.program_id+'|'+dr, amt);
+    (txnByProgFy[fy+'|'+m.program_id] || (txnByProgFy[fy+'|'+m.program_id]=[])).push(t);
+  } else {
+    const u = unmappedByFy[fy] || (unmappedByFy[fy]={total:0,txns:[]});
+    u.total += amt; u.txns.push(t);
+  }
+}
+
+/* ---------- engine queries ---------- */
+function progAgg(pid, fy){ return agg[fy+'|'+pid] || {total:0,count:0}; }
+function pct(cur, prior){ return prior ? ((cur-prior)/prior)*100 : null; }
+function yoy(pid, fy){
+  const c = progAgg(pid,fy), p = progAgg(pid,fy-1);
+  return { total:c.total, count:c.count, prior:p.total, priorCount:p.count,
+           dollarPct:pct(c.total,p.total), countPct:pct(c.count,p.count) };
+}
+/* Dual-measure YoY trigger: threshold on dollars OR transaction count, either direction */
+function evalTrigger(pid, fy, thresholdPct){
+  const th = (thresholdPct==null ? D.meta.trigger_default.threshold_pct : thresholdPct);
+  const y = yoy(pid, fy);
+  const dollarFlag = y.dollarPct!=null && Math.abs(y.dollarPct) >= th;
+  const countFlag  = y.countPct !=null && Math.abs(y.countPct)  >= th;
+  return { th:th, y:y, dollarFlag:dollarFlag, countFlag:countFlag,
+           flag: dollarFlag || countFlag, countOnly: countFlag && !dollarFlag };
+}
+function subBreakdown(pid, fy){
+  return D.sub_programs.filter(s=>s.program_id===pid).map(s=>{
+    const cur = subAgg[fy+'|'+pid+'|'+s.id] || {total:0,count:0};
+    const pri = subAgg[(fy-1)+'|'+pid+'|'+s.id] || {total:0,count:0};
+    return { sub:s, total:cur.total, count:cur.count, prior:pri.total, pct:pct(cur.total,pri.total) };
+  }).filter(r=>r.total>0 || r.prior>0);
+}
+function eventBreakdown(pid, fy){
+  const rows = [];
+  for (const k in evAgg){
+    const parts = k.split('|');
+    if (+parts[0]===fy && parts[1]===pid){
+      const dr = parts[2];
+      const pri = evAgg[(fy-1)+'|'+pid+'|'+dr] || {total:0,count:0};
+      rows.push({ dr:dr, ev:(dr==='ND'?null:eventByDr[dr]), total:evAgg[k].total, count:evAgg[k].count,
+                  prior:pri.total, pct:pct(evAgg[k].total,pri.total) });
+    }
+  }
+  rows.sort((a,b)=>b.total-a.total);
+  return rows;
+}
+function txnsFor(pid, fy, filterFn){
+  const list = txnByProgFy[fy+'|'+pid] || [];
+  return filterFn ? list.filter(filterFn) : list;
+}
+function codesForProgram(pid){
+  const seen = {}; const out = [];
+  D.program_mapping.forEach(m=>{
+    if (m.program_id===pid && m.status!=='exception_queue' && !seen[m.code]){
+      seen[m.code]=1;
+      out.push({ code:m.code, sub:subById[m.sub_program_id], rule:m.rule_id?ruleById[m.rule_id]:null, confidence:m.confidence });
+    }
+  });
+  out.sort((a,b)=>a.code<b.code?-1:1);
+  return out;
+}
+function exceptionDetail(){
+  return exceptions.map(m=>{
+    const txns = (unmappedByFy[m.fy]?unmappedByFy[m.fy].txns:[]).filter(t=>t[col.code]===m.code);
+    const total = txns.reduce((s,t)=>s+t[col.amount],0);
+    return { m:m, code:codeInfo[m.code], txns:txns, total:total,
+             suggestProg:progById[m.program_id], suggestSub:subById[m.sub_program_id] };
+  });
+}
+/* PRA answers computed live (source bindings mirror risk_questions.source_binding) */
+function praComputed(pid){
+  const trig = evalTrigger(pid, FY, null);
+  const prior = evalTrigger(pid, PRIOR, null);
+  const subs = subBreakdown(pid, FY);
+  const codes = codesForProgram(pid);
+  const evs = eventBreakdown(pid, FY).filter(r=>r.dr!=='ND');
+  const top = evs.length ? (evs[0].total / (progAgg(pid,FY).total||1))*100 : 0;
+  const exc = exceptions.filter(m=>m.program_id===pid).length;
+  return {
+    Q1:{ value:fmtMoney(trig.y.total), how:'Sum of FY'+FY+' disbursement transactions mapped to this program ('+trig.y.count+' rows).', conf:1 },
+    Q2:{ value:fmtPct(trig.y.dollarPct), how:'FY'+FY+' vs FY'+PRIOR+' total disbursements; transaction-count change '+fmtPct(trig.y.countPct)+' is assessed alongside.', conf:1 },
+    Q3:{ value: trig.flag ? 'Yes — '+triggerPhrase(trig) : 'No — within ±'+trig.th+'% on both measures',
+         how:'Dual-measure trigger at ±'+trig.th+'% (dollars OR transaction count, either direction).', conf:1 },
+    Q4:{ value: subs.length+' sub-programs; '+codes.length+' financial codes', how:'Distinct sub-programs and mapped financial codes with FY'+FY+' or FY'+PRIOR+' activity.', conf:.97 },
+    Q5:{ value: String(evs.length), how:'Distinct disaster declarations (DR numbers) contributing FY'+FY+' disbursements.', conf:1 },
+    Q6:{ value: evs.length? top.toFixed(1)+'% ('+(evs[0].ev?'DR-'+evs[0].dr:'')+')' : '0% — no disaster events (non-disaster program)',
+         how:'Largest single event’s share of the program’s FY'+FY+' total.', conf:1 },
+    Q7:{ value: String(exc), how:'Exception-queue codes whose similarity suggestion points at this program (suggestion ≠ mapping; excluded from totals).', conf:.9 },
+    Q8:{ value: prior.flag ? 'FY'+PRIOR+': trigger breached — comprehensive assessment indicated'
+                            : 'FY'+PRIOR+': began and closed with the preliminary, no trigger',
+         how:'Prior-year dual-measure trigger recomputed from FY'+PRIOR+' vs FY'+(PRIOR-1)+' data. 3-year comprehensive-assessment cycle records are NOT in this dataset (illustrative gap).', conf:.9 }
+  };
+}
+function triggerPhrase(trig){
+  if (trig.countOnly) return 'transaction count '+fmtPct(trig.y.countPct)+' breached; dollars '+fmtPct(trig.y.dollarPct)+' did not';
+  if (trig.dollarFlag && trig.countFlag) return 'both dollars ('+fmtPct(trig.y.dollarPct)+') and transaction count ('+fmtPct(trig.y.countPct)+') breached';
+  if (trig.dollarFlag) return 'dollars '+fmtPct(trig.y.dollarPct)+' breached';
+  return 'no breach';
+}
+
+/* ---------- formatting ---------- */
+function fmtMoney(n){ if(n==null) return '—';
+  const neg = n<0; n = Math.abs(n);
+  const s = n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (neg?'−$':'$')+s; }
+function fmtMoney0(n){ if(n==null) return '—';
+  const neg = n<0; n=Math.abs(n);
+  const s = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (neg?'−$':'$')+s; }
+function fmtPct(p){ return p==null ? '—' : (p>0?'+':(p<0?'−':''))+Math.abs(p).toFixed(1)+'%'; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ============================================================================
+   QUESTION GRAMMAR — a visible, deterministic catalog of parameterized
+   question templates. Free text is keyword-matched; near misses fall back to
+   a did-you-mean list (never a dead end). This is the "simulated analyst".
+   ============================================================================ */
+const PROG_ALIASES = [
+  {pid:'PROG-PA', re:/\b(public assistance|prog-pa|\bpa\b)/i},
+  {pid:'PROG-HM', re:/\b(hazard mitigation|hmgp|prog-hm|\bhm\b)/i},
+  {pid:'PROG-IA', re:/\b(individual assistance|prog-ia|\bia\b)/i},
+  {pid:'PROG-HS', re:/\b(homeland security|hsgp|prog-hs|\bhs\b)/i},
+  {pid:'PROG-UR', re:/\b(urban search|us&r|us and r|usar|prog-ur|\bur\b)/i}
+];
+function extractParams(text){
+  const p = {};
+  for (const a of PROG_ALIASES){ if (a.re.test(text)){ p.program = a.pid; break; } }
+  const fys = (text.match(/20\d\d/g)||[]).map(Number).filter(y=>D.meta.fiscal_years.indexOf(y)>=0);
+  if (fys.length) p.fy1 = fys[0];
+  if (fys.length>1) p.fy2 = fys[1];
+  const qm = text.match(/\bq[\s-]?(10|[1-9])\b/i); if (qm) p.qn = 'Q'+qm[1];
+  const th = text.match(/(\d{1,2})\s*(?:%|percent)/i); if (th) p.threshold = +th[1];
+  return p;
+}
+/* Each template: id, label (catalog), group, keywords for scoring, needs(params) */
+const TEMPLATES = [
+  { id:'why-flag',   group:'Trigger & flags', label:'Why did {program} flag (or not flag)?',
+    kw:['why','flag','flagged','trigger','breach','breached','comprehensive'], needProgram:true,
+    example:'Why did Individual Assistance flag?' },
+  { id:'compare',    group:'Spend & change', label:'Compare {program} {FY} vs {FY}',
+    kw:['compare','versus','vs','against','difference','between'], needProgram:true,
+    example:'Compare Public Assistance 2026 vs 2025' },
+  { id:'changed-most', group:'Spend & change', label:'What changed most this fiscal year?',
+    kw:['changed','change','most','biggest','largest','movers','moved'],
+    example:'What changed most this year?' },
+  { id:'exceptions', group:'Mapping & governance', label:'What is in the exception queue?',
+    kw:['exception','queue','unmapped','cannot map',"can't map",'unknown codes'],
+    example:'What is in the exception queue?' },
+  { id:'cannot-verify', group:'Honesty ledger', label:'What can’t you verify?',
+    kw:['verify','cannot','trust','sure','certain','unverified','gaps','assumption','assumptions'],
+    example:'What can’t you verify?' },
+  { id:'how-q',      group:'PRA drafting', label:'How was {program}’s Q{n} answer computed?',
+    kw:['how','computed','q1','q2','q3','q4','q5','q6','q7','q8','answer','calculated'], needProgram:true, needQn:true,
+    example:'How was Individual Assistance’s Q6 answer computed?' },
+  { id:'what-if',    group:'Trigger & flags', label:'What would happen at a {n}% threshold?',
+    kw:['what if','happen','threshold','tune','sensitivity','would'],
+    example:'What would happen at a 30% threshold?' },
+  { id:'codes',      group:'Mapping & governance', label:'Which codes map to {program}, and how confident are you?',
+    kw:['codes','map','maps','mapping','rules','confident','confidence','crosswalk'], needProgram:true,
+    example:'Which codes map to Homeland Security Grant Program?' },
+  { id:'by-sub',     group:'Spend & change', label:'Show {program}’s spend by sub-program',
+    kw:['sub-program','subprogram','sub','breakdown','composition','split'], needProgram:true,
+    example:'Show Individual Assistance spend by sub-program' },
+  { id:'by-event',   group:'Spend & change', label:'Show {program}’s spend by disaster',
+    kw:['disaster','event','declaration','dr number','by disaster','hurricane'], needProgram:true,
+    example:'Show Public Assistance spend by disaster' },
+  { id:'draft-pra',  group:'PRA drafting', label:'Draft the PRA for {program}',
+    kw:['draft','pra','preliminary','risk assessment','assessment'], needProgram:true,
+    example:'Draft the PRA for Urban Search & Rescue' },
+  { id:'provenance', group:'Honesty ledger', label:'Where did this data come from?',
+    kw:['where','data','come','from','source','extract','ingest','ingestion','webfmis','provenance','cleansing'],
+    example:'Where did this data come from?' }
+];
+function matchQuestion(text){
+  let t = ' '+String(text||'').toLowerCase().trim()+' ';
+  t = t.replace(/[‘’]/g, "'").replace(/can't/g, 'cannot').replace(/\bcant\b/g, 'cannot').replace(/what's/g, 'what is');
+  const params = extractParams(text||'');
+  const scored = TEMPLATES.map(tpl=>{
+    let score = 0;
+    tpl.kw.forEach(k=>{ if (t.indexOf(k)>=0) score += (k.length>4?2:1); });
+    if (tpl.needProgram && params.program) score += 2;
+    if (tpl.needQn && params.qn) score += 3;
+    if (tpl.id==='what-if' && params.threshold!=null) score += 3;
+    if (tpl.id==='compare' && params.fy1 && params.fy2) score += 3;
+    return { tpl:tpl, score:score };
+  }).sort((a,b)=>b.score-a.score);
+  const best = scored[0];
+  const ok = best.score >= 3 &&
+    (!best.tpl.needProgram || params.program) &&
+    (!best.tpl.needQn || params.qn);
+  return { ok:ok, tpl: ok?best.tpl:null, params:params,
+           suggestions: scored.slice(0,4).map(s=>s.tpl) };
+}
+
+return {
+  D:D, FY:FY, PRIOR:PRIOR, col:col,
+  progById:progById, subById:subById, eventByDr:eventByDr, codeInfo:codeInfo, ruleById:ruleById,
+  exceptions:exceptions, unmappedByFy:unmappedByFy, fyTotals:fyTotals,
+  dirtyCount:dirtyCount, legacyCount:legacyCount,
+  progAgg:progAgg, yoy:yoy, evalTrigger:evalTrigger, subBreakdown:subBreakdown,
+  eventBreakdown:eventBreakdown, txnsFor:txnsFor, codesForProgram:codesForProgram,
+  exceptionDetail:exceptionDetail, praComputed:praComputed, triggerPhrase:triggerPhrase,
+  fmtMoney:fmtMoney, fmtMoney0:fmtMoney0, fmtPct:fmtPct, esc:esc,
+  TEMPLATES:TEMPLATES, matchQuestion:matchQuestion, extractParams:extractParams
+};
+})();
+</script>
+<script>
+/* ============================================================================
+   CHUNK B — INQUIRY WORKSPACE UI
+   Inquiry threads: question → computation plan → evidence cards → caveats →
+   human adjudication. All rendering is data-driven; no layout-dependent JS.
+   ============================================================================ */
+window.UI = (function(){
+'use strict';
+const E = window.EX, D = E.D, esc = E.esc, FY = E.FY, PRIOR = E.PRIOR;
+const $ = s => document.querySelector(s);
+
+/* ---------- session state (in-memory only; no browser storage) ---------- */
+const state = {
+  t0: Date.now(),
+  seq: 0,
+  inquiries: [],          // {id, kind, tplId, params, title, status, headline}
+  activeId: null,
+  adj: {},                // key -> {status:'accepted'|'corrected'|'flagged', note, t}
+  correctOpen: null,      // adjudication key with the correction form open
+  praHuman: {},           // progId -> {Q9:'', Q10:''}
+  praFinal: {},           // progId -> true
+  log: [],                // {t, actor:'You'|'Examiner', action, subject, note}
+  whatIf: {}              // inquiryId -> current threshold value
+};
+function now(){ return Date.now(); }
+function fmtWhen(t){
+  const s = Math.max(0, Math.round((t - state.t0)/1000));
+  if (s < 5) return 'just now';
+  const m = Math.floor(s/60);
+  return '+' + String(m).padStart(2,'0') + ':' + String(s%60).padStart(2,'0') + ' into session';
+}
+function logIt(actor, action, subject, note){
+  state.log.push({ t: now(), actor: actor, action: action, subject: subject, note: note || '' });
+  renderLog();
+}
+function toast(msg){
+  const el = $('#toast'); if(!el) return;
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._h); toast._h = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+/* ---------- assumption register (plain language; SME transparency) ---------- */
+const ASSUMPTIONS = [
+  { id:'A1', st:'open', text:'The trigger rule — ±20% year over year on dollars OR transaction count, either direction — reflects the 2024 rule change but has not been confirmed against current OCFO policy.' },
+  { id:'A2', st:'open', text:'The 10-question Preliminary Risk Assessment (PRA) wording here is an illustrative placeholder, not FEMA’s real instrument.' },
+  { id:'A3', st:'open', text:'3 of 26 crosswalk rules are inferred from historical patterns, not confirmed by a subject-matter expert (SME). They carry 0.88 confidence.' },
+  { id:'A4', st:'open', text:'Comprehensive assessments are required at least every 3 years per program, but historical assessment records (FEMA holds them from 2018–19 onward) are not in this dataset — Q8 is recomputed from spend data only.' },
+  { id:'A5', st:'confirmed', text:'Sub-groupings are never presented as programs (debris removal is a subset of Public Assistance, not a program).' },
+  { id:'A6', st:'confirmed', text:'Disaster vs non-disaster is a daily working distinction: HSGP and US&R are non-disaster programs; PA, HMGP and IA are disaster programs.' },
+  { id:'A7', st:'open', text:'The source financial system (WebFMIS) is being modernized (~Oct 1) and the transition is not going smoothly; the fiscal-year extract contract is the safety net.' }
+];
+
+/* ---------- small builders ---------- */
+function confMeter(conf, label){
+  const pctW = Math.round(conf*100);
+  return '<span class="conf-meter'+(conf<0.85?' low':'')+'"><span class="bar"><span style="width:'+pctW+'%"></span></span> '
+    + pctW + '% ' + esc(label||'confidence') + '</span>';
+}
+function planCard(summary, steps, refs){
+  return '<section class="card plan"><div class="card-h">Computation plan <span class="sim-tag">Simulated analyst — deterministic</span></div>'
+    + '<div class="card-b"><p style="margin-bottom:.5rem">'+summary+'</p><ol class="plan-steps">'
+    + steps.map(s=>'<li>'+s+'</li>').join('')
+    + '</ol>' + (refs && refs.length ? '<p class="plan-refs">Reads: '+refs.map(r=>'<code>'+esc(r)+'</code>').join(' · ')+'</p>' : '')
+    + '</div></section>';
+}
+function evidenceCard(title, bodyHTML, src){
+  return '<section class="card evidence"><div class="card-h">Evidence — '+esc(title)+'</div>'
+    + '<div class="card-b">'+bodyHTML+(src?'<p class="src" style="margin-top:.55rem">Source: '+esc(src)+'</p>':'')+'</div></section>';
+}
+function answerCard(title, bodyHTML){
+  return '<section class="card answer"><div class="card-h">Answer</div><div class="card-b"><h3 style="font-family:var(--serif);color:var(--navy);font-size:1.12rem;margin-bottom:.4rem">'+title+'</h3>'+bodyHTML+'</div></section>';
+}
+function caveatCard(items){
+  if (!items.length) return '';
+  return '<section class="card caveat"><div class="card-h">What I could not verify</div><div class="card-b"><ul style="padding-left:1.1rem">'
+    + items.map(i=>'<li style="margin-bottom:.35rem">'+i+'</li>').join('') + '</ul></div></section>';
+}
+function adjBar(key, subject){
+  const a = state.adj[key];
+  let inner;
+  if (a){
+    inner = '<span class="adj-state '+a.status+'">'+({accepted:'✓ Accepted',corrected:'✎ Corrected',flagged:'⚑ Flagged for SME'})[a.status]+'</span>'
+      + (a.note ? ' <span class="src">— '+esc(a.note)+'</span>' : '')
+      + ' <button class="adj-btn" data-act="adj-reset" data-key="'+esc(key)+'" data-subject="'+esc(subject)+'">Reconsider</button>';
+  } else {
+    inner = '<span class="lbl">Your adjudication</span>'
+      + '<button class="adj-btn accept" data-act="adj-accept" data-key="'+esc(key)+'" data-subject="'+esc(subject)+'">Accept</button>'
+      + '<button class="adj-btn correct" data-act="adj-correct-open" data-key="'+esc(key)+'" data-subject="'+esc(subject)+'">Correct…</button>'
+      + '<button class="adj-btn flagbtn" data-act="adj-flag" data-key="'+esc(key)+'" data-subject="'+esc(subject)+'">Flag for SME</button>';
+    if (state.correctOpen === key){
+      inner += '<div class="correct-form"><label class="sr-only" for="cf-'+esc(key)+'">Correction note (required)</label>'
+        + '<textarea id="cf-'+esc(key)+'" rows="2" placeholder="What is wrong, and what should it be? (required)"></textarea>'
+        + '<button class="adj-btn correct" data-act="adj-correct-submit" data-key="'+esc(key)+'" data-subject="'+esc(subject)+'">Record correction</button>'
+        + '<button class="adj-btn" data-act="adj-correct-cancel" data-key="'+esc(key)+'">Cancel</button>'
+        + '<span class="form-err" id="cferr-'+esc(key)+'" role="alert"></span></div>';
+    }
+  }
+  return '<div class="adj-bar" data-adjkey="'+esc(key)+'">'+inner+'</div>';
+}
+function tbl(headers, rows){
+  return '<div class="scroll-x"><table class="data"><thead><tr>'
+    + headers.map(h=>'<th'+(h.num?' class="num"':'')+'>'+esc(h.t)+'</th>').join('')
+    + '</tr></thead><tbody>'
+    + rows.map(r=>'<tr'+(r.hl?' class="hl"':'')+'>'+r.cells.map(c=>'<td'+(c.num?' class="num"':'')+'>'+c.h+'</td>').join('')+'</tr>').join('')
+    + '</tbody></table></div>';
+}
+function deltaCell(p, breach){
+  if (p==null) return {h:'—',num:true};
+  const cls = breach ? 'delta-flag' : (p>0?'delta-up':'delta-dn');
+  return {h:'<span class="'+cls+'">'+E.fmtPct(p)+'</span>', num:true};
+}
+function drillTxns(id, label, txns, limit){
+  const lim = limit || 60;
+  const rows = txns.slice(0, lim).map(t=>{
+    return '<tr data-txnrow="1"><td class="num">'+esc(t[E.col.txn_id])+'</td><td class="num">'+esc(t[E.col.code])+'</td>'
+      + '<td class="num">'+(t[E.col.disaster_number]==null?'—':'DR-'+esc(t[E.col.disaster_number]))+'</td>'
+      + '<td>'+esc(t[E.col.disbursement_type])+'</td><td class="num">'+esc(t[E.col.date])+'</td>'
+      + '<td class="num">'+E.fmtMoney(t[E.col.amount])+'</td></tr>';
+  }).join('');
+  return '<details class="drill" id="'+esc(id)+'"><summary>'+esc(label)+' ('+txns.length+' transactions — full lineage to source rows)</summary>'
+    + '<div class="drill-body"><div class="scroll-x"><table class="data"><thead><tr><th>Txn ID</th><th>Financial code</th><th>DR</th><th>Disbursement type</th><th>Date</th><th class="num">Amount</th></tr></thead><tbody>'
+    + rows + '</tbody></table></div>'
+    + (txns.length>lim?'<p class="src">Showing first '+lim+' of '+txns.length+' rows.</p>':'')
+    + '</div></details>';
+}
+/* inline SVG bar chart with explicit coordinate math (no canvas, no getBBox) */
+function barChart(series, opts){
+  const o = opts||{}; const W = 640, rowH = 26, pad = 4;
+  const H = series.length*rowH + pad*2;
+  const maxAbs = Math.max.apply(null, series.map(s=>Math.abs(s.value)).concat([o.minScale||1]));
+  const zero = o.signed ? W*0.45 : 170;
+  const span = o.signed ? W*0.40 : (W - zero - 90);
+  let bars = '';
+  series.forEach((s,i)=>{
+    const y = pad + i*rowH;
+    const len = Math.max(1, Math.abs(s.value)/maxAbs * span);
+    const x = o.signed ? (s.value>=0 ? zero : zero-len) : zero;
+    const color = s.hl ? '#8e3b2f' : (s.color || '#3d5a80');
+    bars += '<text x="'+(o.signed?8:0)+'" y="'+(y+16)+'" font-size="12" fill="#4a5768">'+esc(s.label)+'</text>'
+      + '<rect x="'+x.toFixed(1)+'" y="'+(y+4)+'" width="'+len.toFixed(1)+'" height="14" rx="2" fill="'+color+'"></rect>'
+      + '<text x="'+(o.signed ? (s.value>=0? zero+len+6 : zero-len-6) : zero+len+6)+'" y="'+(y+16)+'" font-size="12" '
+      + (o.signed && s.value<0 ? 'text-anchor="end" ':'') + 'fill="#212a35" font-family="Consolas,monospace">'+esc(s.text)+'</text>';
+  });
+  if (o.signed){
+    bars += '<line x1="'+zero+'" y1="0" x2="'+zero+'" y2="'+H+'" stroke="#d8d5cc"></line>';
+    if (o.threshold){
+      const tp = o.threshold/maxAbs*span;
+      bars += '<line x1="'+(zero+tp)+'" y1="0" x2="'+(zero+tp)+'" y2="'+H+'" stroke="#8a6d1f" stroke-dasharray="4 3"></line>'
+        + '<line x1="'+(zero-tp)+'" y1="0" x2="'+(zero-tp)+'" y2="'+H+'" stroke="#8a6d1f" stroke-dasharray="4 3"></line>'
+        + '<text x="'+(zero+tp+3)+'" y="12" font-size="10" fill="#8a6d1f">±'+o.threshold+'%</text>';
+    }
+  }
+  return '<svg class="svg-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.aria||'bar chart')+'">'+bars+'</svg>';
+}
+function trendChart(pid){
+  const years = D.meta.fiscal_years;
+  const vals = years.map(y=>E.progAgg(pid,y).total);
+  const W=640,H=120,pad=30, max=Math.max.apply(null,vals)||1;
+  const bw = (W-pad*2)/years.length - 14;
+  let s='';
+  years.forEach((y,i)=>{
+    const h = Math.max(2, vals[i]/max*(H-40));
+    const x = pad + i*((W-pad*2)/years.length);
+    s += '<rect x="'+x+'" y="'+(H-20-h)+'" width="'+bw+'" height="'+h+'" rx="2" fill="'+(y===FY?'#1a2a44':'#9db0c9')+'"></rect>'
+      + '<text x="'+(x+bw/2)+'" y="'+(H-6)+'" font-size="11" text-anchor="middle" fill="#4a5768">FY'+y+'</text>'
+      + '<text x="'+(x+bw/2)+'" y="'+(H-26-h)+'" font-size="10" text-anchor="middle" fill="#212a35" font-family="Consolas,monospace">'+E.fmtMoney0(vals[i]/1e6)+'M</text>';
+  });
+  return '<svg class="svg-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Disbursements by fiscal year">'+s+'</svg>';
+}
+function stripIds(s){ return String(s).replace(/[,;]?\s*\(?(ASSUMP|REQ|SME|SRC)-\d+\)?/g,'').replace(/\(\s*\)/g,'').replace(/, \)/g,')'); }
+function progName(pid){ return E.progById[pid] ? E.progById[pid].name : pid; }
+
+/* ---------- caveats shared by program ---------- */
+function programCaveats(pid){
+  const items = [];
+  const exc = E.exceptionDetail().filter(x=>x.m.program_id===pid);
+  if (exc.length){
+    const tot = exc.reduce((s,x)=>s+x.total,0);
+    items.push(E.fmtMoney(tot)+' across '+exc.length+' exception-queue code'+(exc.length>1?'s':'')+' carries a similarity suggestion pointing at '+esc(progName(pid))+', but is <strong>not</strong> in these totals — no rule maps it, and I won’t guess. <button class="chip" data-act="ask-tpl" data-tpl="exceptions">Open the exception queue</button>');
+  }
+  const infRules = [];
+  E.codesForProgram(pid).forEach(c=>{ if (c.rule && c.rule.status==='inferred' && infRules.indexOf(c.rule.rule_id)<0) infRules.push(c.rule.rule_id); });
+  if (infRules.length){
+    items.push('Some of this program’s spend is attributed through <strong>inferred</strong> crosswalk rule'+(infRules.length>1?'s':'')+' ('+infRules.join(', ')+', confidence 0.88) that no subject-matter expert has confirmed.');
+  }
+  items.push('The ±20% trigger parameters reflect the 2024 rule change but are unconfirmed with OCFO policy (see assumption register).');
+  return items;
+}
+
+/* ============================================================
+   THREAD BUILDERS — one per question template
+   ============================================================ */
+const BUILD = {};
+
+BUILD['why-flag'] = function(inq){
+  const pid = inq.params.program;
+  const trig = E.evalTrigger(pid, FY, null);
+  const y = trig.y;
+  const plan = planCard(
+    'To answer, I will recompute the FY'+FY+' trigger determination for <strong>'+esc(progName(pid))+'</strong> from transaction level, on both measures.',
+    ['Sum FY'+FY+' and FY'+PRIOR+' disbursements and transaction counts for '+esc(progName(pid))+' from the '+y.count+' + '+y.priorCount+' mapped transactions.',
+     'Compute year-over-year (YoY) change on <strong>dollars</strong> and on <strong>transaction count</strong>.',
+     'Apply the dual-measure trigger: breach if either measure moves ±'+trig.th+'% in either direction (2024 rule change).',
+     'Attribute the movement by sub-program and disaster event, with lineage to source rows.'],
+    ['transactions (1,459 rows)','program_mapping','trigger config: ±'+trig.th+'%, dollars OR count, either direction']);
+  const rows = [
+    { hl: trig.dollarFlag, cells:[ {h:'Disbursements'}, {h:E.fmtMoney(y.prior),num:true}, {h:E.fmtMoney(y.total),num:true}, deltaCell(y.dollarPct, trig.dollarFlag), {h: trig.dollarFlag?'<strong>BREACH</strong>':'within ±'+trig.th+'%', num:true} ]},
+    { hl: trig.countFlag, cells:[ {h:'Transaction count'}, {h:String(y.priorCount),num:true}, {h:String(y.count),num:true}, deltaCell(y.countPct, trig.countFlag), {h: trig.countFlag?'<strong>BREACH</strong>':'within ±'+trig.th+'%', num:true} ]}
+  ];
+  let headline, body;
+  if (!trig.flag){
+    headline = esc(progName(pid))+' did <u>not</u> flag — but it was close.';
+    body = '<p>Dollars moved '+E.fmtPct(y.dollarPct)+' and transaction count '+E.fmtPct(y.countPct)+'; neither crossed the ±'+trig.th+'% line. '
+      + 'A near-miss like this is worth watching: at a 19% threshold it <em>would</em> flag. '
+      + '<button class="chip" data-act="ask-tpl" data-tpl="what-if" data-th="19">Test a 19% threshold</button></p>';
+  } else if (trig.countOnly){
+    headline = esc(progName(pid))+' flagged on <u>transaction volume alone</u> — the dollars looked calm.';
+    body = '<p>Disbursements rose only '+E.fmtPct(y.dollarPct)+' — comfortably inside the ±'+trig.th+'% band. But the program paid out across '
+      + '<strong>'+y.count+' transactions vs '+y.priorCount+' last year ('+E.fmtPct(y.countPct)+')</strong>, which breaches the volume measure. '
+      + 'Under the pre-2024 dollars-only rule this program would have <strong>passed unnoticed</strong>. '
+      + 'Many more, smaller payments with a near-flat total is a classic improper-payment risk texture — exactly what the dual-measure rule was added to catch.</p>';
+  } else {
+    headline = esc(progName(pid))+' flagged: '+E.triggerPhrase(trig)+'.';
+    body = '<p>'+(y.dollarPct<0?'The decrease direction still counts — the rule is “either direction”, because a collapse in spend can signal the same control problems as a surge.':'Both measures moved together, which usually reflects genuine program-level change; the sub-program view below shows where.')+'</p>';
+  }
+  const chart = barChart([
+    {label:'Dollars YoY', value:y.dollarPct||0, text:E.fmtPct(y.dollarPct), hl:trig.dollarFlag},
+    {label:'Txn count YoY', value:y.countPct||0, text:E.fmtPct(y.countPct), hl:trig.countFlag}
+  ], {signed:true, threshold:trig.th, minScale:trig.th*1.4, aria:'YoY change vs threshold for '+progName(pid)});
+  const subs = E.subBreakdown(pid, FY);
+  const subTbl = tbl(
+    [{t:'Sub-program (sub-grouping — not a program)'},{t:'FY'+PRIOR,num:true},{t:'FY'+FY,num:true},{t:'Change',num:true}],
+    subs.map(r=>({cells:[{h:esc(r.sub.name)},{h:E.fmtMoney(r.prior),num:true},{h:E.fmtMoney(r.total),num:true},deltaCell(r.pct,false)]})));
+  const evs = E.eventBreakdown(pid, FY);
+  const evTbl = evs.length && evs[0].dr!=='ND' ? tbl(
+    [{t:'Disaster declaration'},{t:'FY'+PRIOR,num:true},{t:'FY'+FY,num:true},{t:'Change',num:true}],
+    evs.map(r=>({cells:[{h: r.ev ? 'DR-'+r.dr+' — '+esc(r.ev.title) : esc(r.dr)},{h:E.fmtMoney(r.prior),num:true},{h:E.fmtMoney(r.total),num:true},deltaCell(r.pct,false)]})))
+    : '<p class="cat-note">'+esc(progName(pid))+' is a non-disaster program — no disaster declarations contribute to its spend.</p>';
+  return plan
+    + answerCard(headline, body + '<p style="margin-top:.5rem">'+confMeter(0.99,'confidence — arithmetic over confirmed mappings')+'</p>')
+    + evidenceCard('trigger determination, both measures', tbl(
+        [{t:'Measure'},{t:'FY'+PRIOR,num:true},{t:'FY'+FY,num:true},{t:'YoY',num:true},{t:'vs ±'+trig.th+'%',num:true}], rows)
+        + '<div style="margin-top:.6rem">'+chart+'</div>',
+      'computed live from mapped transactions; trigger config ±'+trig.th+'% either direction, dollars OR count')
+    + evidenceCard('where the movement sits', subTbl + '<div style="margin-top:.7rem">'+evTbl+'</div>'
+        + drillTxns('drill-'+inq.id, 'Drill to FY'+FY+' transactions for '+progName(pid), E.txnsFor(pid, FY)),
+      'sub-program and disaster-event rollup; sub-groupings are never presented as programs')
+    + caveatCard(programCaveats(pid))
+    + adjBar('inq:'+inq.id, 'Finding — '+inq.title);
+};
+
+BUILD['compare'] = function(inq){
+  const pid = inq.params.program;
+  const fyA = inq.params.fy2 || PRIOR, fyB = inq.params.fy1 || FY;
+  const hi = Math.max(fyA,fyB), lo = Math.min(fyA,fyB);
+  const a = E.progAgg(pid, lo), b = E.progAgg(pid, hi);
+  const dp = a.total? (b.total-a.total)/a.total*100 : null;
+  const dc = a.count? (b.count-a.count)/a.count*100 : null;
+  const subsHi = E.subBreakdown(pid, hi);
+  return planCard('Comparing FY'+hi+' vs FY'+lo+' disbursements and transaction counts for <strong>'+esc(progName(pid))+'</strong>.',
+      ['Sum disbursements and count transactions mapped to '+esc(progName(pid))+' in FY'+lo+' and FY'+hi+'.',
+       'Compute the change on both measures.',
+       'Break FY'+hi+' down by sub-program and show the 5-year trend.'],
+      ['transactions','program_mapping'])
+    + answerCard(esc(progName(pid))+': '+E.fmtMoney(b.total)+' in FY'+hi+' vs '+E.fmtMoney(a.total)+' in FY'+lo+' ('+E.fmtPct(dp)+')',
+      '<p>Transaction count moved from '+a.count+' to '+b.count+' ('+E.fmtPct(dc)+'). '
+      + (dp!=null && dc!=null && Math.abs(dp-dc)>15 ? 'Dollars and volume moved very differently — worth interrogating why. <button class="chip" data-act="ask-tpl" data-tpl="why-flag" data-program="'+pid+'">Why did it flag?</button>' : '')
+      + '</p><p style="margin-top:.4rem">'+confMeter(0.99,'confidence — arithmetic over confirmed mappings')+'</p>')
+    + evidenceCard('side-by-side', tbl(
+        [{t:'Measure'},{t:'FY'+lo,num:true},{t:'FY'+hi,num:true},{t:'Change',num:true}],
+        [{cells:[{h:'Disbursements'},{h:E.fmtMoney(a.total),num:true},{h:E.fmtMoney(b.total),num:true},deltaCell(dp,false)]},
+         {cells:[{h:'Transaction count'},{h:String(a.count),num:true},{h:String(b.count),num:true},deltaCell(dc,false)]}])
+      + '<div style="margin-top:.7rem">'+trendChart(pid)+'</div>', 'computed live; 5-year trend FY2022–FY2026')
+    + evidenceCard('FY'+hi+' composition by sub-program', tbl(
+        [{t:'Sub-program'},{t:'FY'+hi,num:true},{t:'Share',num:true}],
+        subsHi.map(r=>({cells:[{h:esc(r.sub.name)},{h:E.fmtMoney(r.total),num:true},{h:(b.total? (r.total/b.total*100).toFixed(1):'0.0')+'%',num:true}]})))
+      + drillTxns('drill-'+inq.id, 'Drill to FY'+hi+' transactions', E.txnsFor(pid, hi)),
+      'sub-groupings are subsets of the program, never programs themselves')
+    + caveatCard(programCaveats(pid))
+    + adjBar('inq:'+inq.id, 'Comparison — '+inq.title);
+};
+
+BUILD['changed-most'] = function(inq){
+  const rows = D.programs.map(p=>{
+    const trig = E.evalTrigger(p.id, FY, null);
+    return { p:p, trig:trig, mag: Math.max(Math.abs(trig.y.dollarPct||0), Math.abs(trig.y.countPct||0)) };
+  }).sort((a,b)=>b.mag-a.mag);
+  const flagged = rows.filter(r=>r.trig.flag);
+  const chart = barChart(rows.map(r=>({label:r.p.name.replace(/\s*\(.*\)/,''), value:r.trig.y.dollarPct||0, text:E.fmtPct(r.trig.y.dollarPct), hl:r.trig.dollarFlag})),
+    {signed:true, threshold:20, minScale:28, aria:'Dollar YoY change by program'});
+  return planCard('Ranking all 5 reportable programs by their largest FY'+FY+' movement on either measure, then applying the trigger.',
+      ['Compute FY'+FY+' vs FY'+PRIOR+' change in disbursements and transaction count for each program.',
+       'Rank by the larger absolute movement of the two measures.',
+       'Apply the ±20% dual-measure trigger and note which measure fired.'],
+      ['transactions','program_mapping','trigger config'])
+    + answerCard(flagged.length+' of '+rows.length+' programs breach the FY'+FY+' trigger.',
+      '<p>'+rows.map(r=>'<strong>'+esc(r.p.name.replace(/\s*\(.*\)/,''))+'</strong> '+(r.trig.flag?('flagged — '+E.triggerPhrase(r.trig)):'did not flag')).join('; ')+'.</p>'
+      + '<p style="margin-top:.4rem">The one to look at twice is Individual Assistance: dollars '+E.fmtPct(E.evalTrigger('PROG-IA',FY,null).y.dollarPct)+' looks calm, but volume '+E.fmtPct(E.evalTrigger('PROG-IA',FY,null).y.countPct)+' breached. <button class="chip" data-act="open-inq" data-inq="INQ-SYS-IA">See the volume-only catch</button></p>'
+      + '<p style="margin-top:.4rem">'+confMeter(0.99,'confidence')+'</p>')
+    + evidenceCard('FY'+FY+' trigger determinations, all programs', tbl(
+        [{t:'Program'},{t:'FY'+FY+' disbursements',num:true},{t:'$ YoY',num:true},{t:'Txn YoY',num:true},{t:'Determination'}],
+        rows.map(r=>({ hl:r.trig.countOnly, cells:[
+          {h:esc(r.p.name)+(r.p.is_disaster?'':' <span class="badge user">non-disaster</span>')},
+          {h:E.fmtMoney(r.trig.y.total),num:true},
+          deltaCell(r.trig.y.dollarPct, r.trig.dollarFlag),
+          deltaCell(r.trig.y.countPct, r.trig.countFlag),
+          {h: r.trig.flag ? '<strong>Comprehensive assessment indicated</strong>'+(r.trig.countOnly?' — count-only':'') : 'Preliminary only'}]})))
+      + '<div style="margin-top:.6rem">'+chart+'</div>',
+      'computed live from 1,459 transactions; FY'+FY+' portfolio total '+E.fmtMoney(Object.keys(E.progById).reduce((s,pid)=>s+E.progAgg(pid,FY).total,0)))
+    + caveatCard(['Portfolio totals exclude '+E.fmtMoney(E.unmappedByFy[FY]?E.unmappedByFy[FY].total:0)+' of unmapped FY'+FY+' activity sitting in the exception queue.',
+        'The ±20% trigger parameters are unconfirmed with OCFO policy (assumption register).'])
+    + adjBar('inq:'+inq.id, 'Portfolio finding — '+inq.title);
+};
+BUILD['exceptions'] = function(inq){
+  const det = E.exceptionDetail();
+  const total = det.reduce((s,x)=>s+x.total,0);
+  const nTxn = det.reduce((s,x)=>s+x.txns.length,0);
+  const cards = det.map(x=>{
+    const key = 'exc:'+x.m.code;
+    return '<div class="card evidence" style="margin-bottom:.8rem"><div class="card-h">Unmapped code <span class="mono">'+esc(x.m.code)+'</span>'
+      + ' <span class="badge flag">exception queue</span></div><div class="card-b">'
+      + '<dl class="kv"><dt>FY'+FY+' activity</dt><dd>'+E.fmtMoney(x.total)+' across '+x.txns.length+' transactions</dd>'
+      + '<dt>Code anatomy</dt><dd>fund segment '+esc(x.code.fund_segment)+' · program segment '+esc(x.code.program_segment)+' · event segment '+esc(x.code.event_segment)+' · TAFS unknown</dd>'
+      + '<dt>My best similarity suggestion</dt><dd>'+esc(x.suggestProg.name)+' → '+esc(x.suggestSub.name)+'</dd></dl>'
+      + '<p style="margin:.45rem 0">'+confMeter(x.m.confidence,'similarity — below the 0.85 routing threshold, so this is a suggestion, not a mapping')+'</p>'
+      + '<p class="cat-note">No crosswalk rule covers fund segment '+esc(x.code.fund_segment)+'. I will not attribute this spend to any program until a human decides. <span class="sim-tag">Simulated suggestion</span></p>'
+      + drillTxns('drill-exc-'+esc(x.m.code), 'Transactions on '+x.m.code, x.txns)
+      + adjBar(key, 'Exception-queue suggestion — '+x.m.code+' → '+x.suggestProg.name)
+      + '</div></div>';
+  }).join('');
+  return planCard('Listing every financial code I could not map, what it is worth, and my best (insufficient) guess for each.',
+      ['Collect FY'+FY+' program-mapping rows with status <code>exception_queue</code> (no rule matched).',
+       'Sum the transactions riding on each unmapped code.',
+       'Show the similarity suggestion and its confidence — all are below the 0.85 routing threshold, so each needs a human decision.'],
+      ['program_mapping (6 exception rows)','financial_codes','transactions'])
+    + answerCard('6 codes, '+E.fmtMoney(total)+', '+nTxn+' transactions — unattributed until you decide.',
+      '<p>Two new fund segments (XR, NC) appeared in the FY'+FY+' extract with no crosswalk rule. That is '
+      + (E.fyTotals[FY]? (total/E.fyTotals[FY]*100).toFixed(2):'0')+'% of all FY'+FY+' activity currently missing from every program total, including the trigger math. '
+      + 'Accepting a suggestion records <em>your</em> decision — the suggestion itself never becomes a mapping on its own.</p>')
+    + cards
+    + caveatCard(['These suggestions are similarity scores over code anatomy, not evidence. Confidence 0.44–0.61 is well below the 0.85 routing threshold — that is why they are in front of you.',
+        'Until resolved, program totals (and the trigger determinations built on them) understate activity by '+E.fmtMoney(total)+'.'])
+    + adjBar('inq:'+inq.id, 'Exception queue review');
+};
+
+BUILD['inferred-rules'] = function(inq){
+  const inf = D.mapping_rules.filter(r=>r.status==='inferred');
+  const spendByRule = inf.map(r=>{
+    let total=0, n=0;
+    D.program_mapping.forEach(m=>{
+      if (m.rule_id===r.rule_id && m.fy===FY){
+        E.txnsFor(m.program_id, FY, t=>t[E.col.code]===m.code).forEach(t=>{ total+=t[E.col.amount]; n++; });
+      }
+    });
+    return {r:r, total:total, n:n};
+  });
+  const cards = spendByRule.map(x=>{
+    return '<div class="card evidence" style="margin-bottom:.8rem"><div class="card-h">Rule <span class="mono">'+esc(x.r.rule_id)+'</span> <span class="badge needs">inferred — not SME-confirmed</span></div>'
+      + '<div class="card-b"><p class="mono" style="font-size:.82rem;background:var(--paper);padding:.4rem .6rem;border-radius:4px">'+esc(x.r.expression)+'</p>'
+      + '<p style="margin:.45rem 0">'+confMeter(x.r.confidence,'confidence — inferred from historical mapping patterns')+' · FY'+FY+' spend attributed through this rule: <strong class="mono">'+E.fmtMoney(x.total)+'</strong> ('+x.n+' transactions)</p>'
+      + '<p class="cat-note">Accept = confirm this rule as if an SME had signed it (your name goes in the log). Correct = tell me what the rule should say. Flag = route to SME review.</p>'
+      + adjBar('rule:'+x.r.rule_id, 'Crosswalk rule '+x.r.rule_id)
+      + '</div></div>';
+  }).join('');
+  const totalInf = spendByRule.reduce((s,x)=>s+x.total,0);
+  return planCard('Identifying which crosswalk rules I inferred myself, and how much FY'+FY+' spend rides on them.',
+      ['Filter the 26 crosswalk rules to status <code>inferred</code> (3 rules, confidence 0.88).',
+       'Trace every FY'+FY+' mapping row that cites one of those rules.',
+       'Sum the transactions attributed through them.'],
+      ['mapping_rules','program_mapping','transactions'])
+    + answerCard('3 of 26 rules are my own inference — '+E.fmtMoney(totalInf)+' of FY'+FY+' spend depends on them.',
+      '<p>23 rules are SME-confirmed (confidence 0.97–1.00). These 3 I reconstructed from historical mapping patterns; they have behaved consistently, but nobody with tribal knowledge has signed them. On the graded holdout year, auto-mapping went 47/47 correct with 0 wrong and 10 low-confidence rows routed to review — the answer key is never read by inference. Still: inferred is inferred.</p>')
+    + cards
+    + caveatCard(['Confidence 0.88 clears the 0.85 routing threshold, so these rules run — but “runs” and “right” are different claims. That distinction is exactly what this inquiry exists to surface.'])
+    + adjBar('inq:'+inq.id, 'Inferred-rules review');
+};
+
+BUILD['cannot-verify'] = function(inq){
+  const un = E.unmappedByFy[FY] || {total:0,txns:[]};
+  const infSpend = (function(){ let t=0; D.mapping_rules.filter(r=>r.status==='inferred').forEach(r=>{
+      D.program_mapping.forEach(m=>{ if (m.rule_id===r.rule_id && m.fy===FY) E.txnsFor(m.program_id,FY,x=>x[E.col.code]===m.code).forEach(x=>{t+=x[E.col.amount];}); });
+    }); return t; })();
+  const items = [
+    { t:'Unmapped spend', v:E.fmtMoney(un.total)+' · 6 codes · '+un.txns.length+' transactions',
+      d:'Two new fund segments (XR, NC) have no crosswalk rule. This money is in no program total and no trigger computation.',
+      fix:'Resolve the exception queue.', act:'<button class="chip" data-act="ask-tpl" data-tpl="exceptions">Open exception queue</button>' },
+    { t:'Inferred crosswalk rules', v:'3 of 26 rules · '+E.fmtMoney(infSpend)+' FY'+FY+' spend',
+      d:'BR-012, BR-018, BR-023 are reconstructed from historical patterns at 0.88 confidence, not SME-confirmed.',
+      fix:'SME confirmation or correction.', act:'<button class="chip" data-act="open-inq" data-inq="INQ-SYS-INF">Review the 3 rules</button>' },
+    { t:'Trigger rule provenance', v:'±20%, dollars OR count, either direction',
+      d:'Reflects the 2024 rule change as understood; not confirmed against current OCFO policy text.',
+      fix:'Policy owner sign-off.', act:'' },
+    { t:'PRA instrument wording', v:'10 questions — illustrative placeholder',
+      d:'The question set mirrors the shape of the real Preliminary Risk Assessment but is not FEMA’s actual form.',
+      fix:'Swap in the official instrument.', act:'' },
+    { t:'Q9 / Q10 — human-only', v:'5 programs × 2 questions',
+      d:'Rule/regulation changes and staffing/control changes are program-office knowledge. I cannot compute them and will not draft them.',
+      fix:'Program-office input in each PRA thread.', act:'<button class="chip" data-act="open-inq" data-inq="INQ-SYS-Q910">See what’s waiting</button>' },
+    { t:'Assessment history', v:'3-year comprehensive-assessment cycle',
+      d:'FEMA holds assessment records from 2018–19 onward, but they are not in this dataset; Q8 is recomputed from spend data only.',
+      fix:'Connect the historical assessment record set.', act:'' },
+    { t:'Source-feed quality', v:E.dirtyCount+' format-dirty rows · '+E.legacyCount+' legacy aliases',
+      d:'Cleansing rules recovered canonical codes (e.g. retired LEG- aliases) — the recoveries are deterministic, but the upstream feed quality itself is a WebFMIS-modernization risk.',
+      fix:'Stabilized extract contract with the modernized system.', act:'<button class="chip" data-act="ask-tpl" data-tpl="provenance">See ingestion detail</button>' }
+  ];
+  return planCard('Compiling my verification ledger: everything material that I could <strong>not</strong> verify this fiscal year, quantified where possible.',
+      ['Scan the exception queue and sum unmapped activity.',
+       'Trace spend attributed through non-SME-confirmed rules.',
+       'List structural gaps: trigger provenance, instrument status, human-only questions, missing history, feed quality.'],
+      ['program_mapping','mapping_rules','transactions','assumption register'])
+    + answerCard('7 things I cannot verify — the two with dollars attached total '+E.fmtMoney(un.total+infSpend)+'.',
+      '<p>This ledger is the honest edge of the system. Everything below is stated plainly in the assumption register too; nothing here blocks the demo, but every item is a real-world dependency before these numbers are reportable.</p>')
+    + items.map(i=>'<section class="card caveat" style="margin-bottom:.7rem"><div class="card-h">'+esc(i.t)+'</div><div class="card-b">'
+        + '<p class="big-num" style="font-size:1.05rem">'+i.v+'</p><p style="margin:.3rem 0">'+i.d+'</p>'
+        + '<p class="cat-note">What would resolve it: '+i.fix+' '+i.act+'</p></div></section>').join('')
+    + adjBar('inq:'+inq.id, 'Verification ledger review');
+};
+
+BUILD['q910'] = function(inq){
+  const rows = D.programs.map(p=>{
+    const h = state.praHuman[p.id]||{};
+    const stat = q => {
+      const a = state.adj['pra:'+p.id+':'+q];
+      if (a) return '<span class="adj-state '+a.status+'">'+a.status+'</span>';
+      return (h[q]&&h[q].trim()) ? '<span class="badge needs">drafted — not adjudicated</span>' : '<span class="badge flag">awaiting input</span>';
+    };
+    return { cells:[ {h:esc(p.name)}, {h:stat('Q9')}, {h:stat('Q10')},
+      {h:'<button class="adj-btn" data-act="open-inq" data-inq="INQ-PRA-'+p.id+'">Open PRA thread</button>'} ] };
+  });
+  return planCard('Checking which Preliminary Risk Assessment questions cannot be auto-drafted, per program.',
+      ['Q9 (rule/regulation changes) and Q10 (staffing/process changes affecting controls) are qualitative, program-office knowledge.',
+       'For each of the 5 programs, check whether a human answer has been recorded and adjudicated.'],
+      ['risk_questions','PRA adjudication state'])
+    + answerCard('Q9 and Q10 need a human for all 5 programs — I will not guess at them.',
+      '<p>These two questions are the reason “nothing finalizes without human sign-off” is a feature, not a disclaimer. The auto-draftable eight (Q1–Q8) are already waiting in each PRA thread.</p>')
+    + evidenceCard('status by program', tbl([{t:'Program'},{t:'Q9 — rule changes'},{t:'Q10 — staffing/controls'},{t:''}], rows), 'live adjudication state, this session')
+    + adjBar('inq:'+inq.id, 'Q9/Q10 status review');
+};
+
+BUILD['how-q'] = function(inq){
+  const pid = inq.params.program, qn = inq.params.qn || 'Q1';
+  const q = D.risk_questions.filter(x=>x.id===qn)[0];
+  const stored = D.risk_responses.filter(r=>r.program_id===pid && r.question_id===qn && r.fy===FY)[0];
+  if (!q) return '<p>Unknown question.</p>';
+  /* eslint-style note: the stored draft is provenance only; the live recomputation is authoritative */
+  if (!q.auto_populatable){
+    return planCard('Explaining why <strong>'+esc(qn)+'</strong> cannot be computed.',
+        ['Look up '+qn+' in the instrument: it is qualitative.', 'Confirm its source binding: program-office input.'], ['risk_questions'])
+      + answerCard(qn+' is human-only.', '<p>“'+esc(stripIds(q.text))+'” is program-office knowledge. There is nothing in the financial extract that can answer it, so the system leaves it blank and routes it to you. Enter it in the PRA thread: <button class="chip" data-act="open-inq" data-inq="INQ-PRA-'+pid+'">Open '+esc(progName(pid))+' PRA</button></p>')
+      + adjBar('inq:'+inq.id, qn+' method review — '+progName(pid));
+  }
+  const comp = E.praComputed(pid)[qn];
+  const match = stored && String(stored.answer_value).length>0;
+  return planCard('Recomputing <strong>'+esc(progName(pid))+'</strong>’s '+qn+' answer from source, then cross-checking the stored auto-draft.',
+      ['Read the question’s source binding: <code>'+esc(stripIds(q.source_binding))+'</code>.',
+       'Recompute the value live from mapped transactions.',
+       'Compare with the auto-draft produced at ingestion time.'],
+      ['risk_questions','transactions','program_mapping'])
+    + answerCard(qn+' = '+esc(comp.value),
+      '<p><strong>Question:</strong> '+esc(stripIds(q.text))+'</p><p style="margin-top:.35rem"><strong>Method:</strong> '+comp.how+'</p>'
+      + '<p style="margin-top:.35rem">'+confMeter(comp.conf,'confidence')+'</p>')
+    + evidenceCard('cross-check vs stored auto-draft', tbl([{t:'Source'},{t:'Value'}],
+        [{cells:[{h:'Recomputed live (this page, deterministic)'},{h:'<span class="mono">'+esc(comp.value)+'</span>'}]},
+         {cells:[{h:'Auto-draft from ingestion <span class="sim-tag">simulated AI draft</span>'},{h:'<span class="mono">'+esc(stored?String(stored.answer_value):'—')+'</span>'}]}])
+      + '<p class="cat-note" style="margin-top:.4rem">'+(match?'A stored auto-draft exists for provenance; the live recomputation above is authoritative.':'No stored draft found.')+' The deterministic engine owns the reportable number; the draft only proposes.</p>',
+      'risk_responses FY'+FY)
+    + adjBar('inq:'+inq.id, qn+' method review — '+progName(pid));
+};
+
+BUILD['what-if'] = function(inq){
+  const th = state.whatIf[inq.id] != null ? state.whatIf[inq.id] : (inq.params.threshold != null ? inq.params.threshold : 20);
+  return planCard('Re-running every FY'+FY+' trigger determination at a hypothetical ±'+th+'% threshold and diffing against the default ±20%.',
+      ['Recompute YoY on both measures for all 5 programs (same numbers — the data never changes).',
+       'Apply the hypothetical threshold to both measures, either direction.',
+       'Diff the flag set against the default configuration.'],
+      ['transactions','program_mapping','hypothetical trigger config'])
+    + '<section class="card evidence"><div class="card-h">Live threshold control</div><div class="card-b">'
+    + '<label for="thSlider-'+inq.id+'" style="font-size:.85rem">Hypothetical threshold: <strong class="mono" id="thVal-'+inq.id+'">±'+th+'%</strong></label>'
+    + '<input type="range" id="thSlider-'+inq.id+'" min="5" max="50" step="1" value="'+th+'" data-role="th-slider" data-inq="'+inq.id+'" style="width:100%;margin:.4rem 0" aria-label="Hypothetical trigger threshold percent">'
+    + '<p class="cat-note">This is analysis only — the reporting configuration stays at ±20% unless the policy owner changes it.</p>'
+    + '</div></section>'
+    + '<div id="whatIfResult-'+inq.id+'">'+whatIfTable(th)+'</div>'
+    + caveatCard(['The ±20% default reflects the 2024 rule change but is unconfirmed with OCFO policy.',
+        'Threshold sensitivity says nothing about <em>why</em> a program moved — pursue the per-program inquiries for that.'])
+    + adjBar('inq:'+inq.id, 'Threshold what-if at ±'+th+'%');
+};
+function whatIfTable(th){
+  const rows = D.programs.map(p=>{
+    const cur = E.evalTrigger(p.id, FY, th), def = E.evalTrigger(p.id, FY, null);
+    let delta = '';
+    if (cur.flag !== def.flag) delta = cur.flag ? '<span class="badge flag">newly flagged</span>' : '<span class="badge resolved">drops off</span>';
+    return { hl: cur.flag!==def.flag, cells:[
+      {h:esc(p.name)}, deltaCell(cur.y.dollarPct, cur.dollarFlag), deltaCell(cur.y.countPct, cur.countFlag),
+      {h: cur.flag ? '<strong>flags</strong>'+(cur.countOnly?' (count-only)':'') : 'no flag'},
+      {h: delta } ]};
+  });
+  const n = D.programs.filter(p=>E.evalTrigger(p.id,FY,th).flag).length;
+  return evidenceCard('determinations at ±'+th+'%',
+    '<p style="margin-bottom:.5rem"><strong>'+n+' of 5</strong> programs would flag at ±'+th+'% (default ±20% flags 4 of 5).</p>'
+    + tbl([{t:'Program'},{t:'$ YoY',num:true},{t:'Txn YoY',num:true},{t:'At ±'+th+'%'},{t:'vs default'}], rows),
+    'recomputed live at the hypothetical threshold');
+}
+
+BUILD['codes'] = function(inq){
+  const pid = inq.params.program;
+  const codes = E.codesForProgram(pid);
+  const trap = (pid==='PROG-IA'||pid==='PROG-HS')
+    ? '<div class="note-box"><strong>Why segment alone can’t map a code:</strong> program segment <span class="mono">55501</span> exists under BOTH the IA and HS fund segments. Only the fund-segment + program-segment combination resolves it — one of the tribal-knowledge rules this crosswalk encodes.</div>' : '';
+  return planCard('Listing every financial code mapped to <strong>'+esc(progName(pid))+'</strong>, with the rule that maps it and that rule’s confidence and status.',
+      ['Collect FY'+FY+' mapping rows for '+esc(progName(pid))+' (excluding the exception queue).',
+       'Join each code to its crosswalk rule and the rule’s SME status.',
+       'Sort inferred (unconfirmed) rules to your attention.'],
+      ['program_mapping','mapping_rules','financial_codes'])
+    + answerCard(codes.length+' codes map to '+esc(progName(pid))+'.',
+      '<p>'+codes.filter(c=>c.rule&&c.rule.status==='inferred').length+' of them ride on inferred rules; the rest are SME-confirmed (0.97–1.00). Code anatomy is FUND-SEGMENT-EVENT; <span class="mono">ND</span> means non-disaster.</p>')
+    + evidenceCard('code → sub-program crosswalk', tbl(
+        [{t:'Code'},{t:'Sub-program'},{t:'Rule'},{t:'Rule status'},{t:'Confidence',num:true},{t:'TAFS',num:true}],
+        codes.map(c=>({ hl: !!(c.rule&&c.rule.status==='inferred'), cells:[
+          {h:'<span class="mono">'+esc(c.code)+'</span>'},
+          {h:esc(c.sub?c.sub.name:'—')},
+          {h:'<span class="mono">'+esc(c.rule?c.rule.rule_id:'—')+'</span>'},
+          {h: c.rule ? (c.rule.status==='inferred'?'<span class="badge needs">inferred</span>':'<span class="badge resolved">SME-confirmed</span>') : '—'},
+          {h:(c.confidence*100).toFixed(0)+'%',num:true},
+          {h:'<span class="mono">'+esc(E.codeInfo[c.code]&&E.codeInfo[c.code].tafs?E.codeInfo[c.code].tafs:'—')+'</span>',num:true}]})))
+      + trap, 'TAFS = Treasury Appropriation Fund Symbol (synthetic stand-ins)')
+    + caveatCard(programCaveats(pid))
+    + adjBar('inq:'+inq.id, 'Crosswalk review — '+progName(pid));
+};
+
+BUILD['by-sub'] = function(inq){
+  const pid = inq.params.program;
+  const subs = E.subBreakdown(pid, FY);
+  const total = E.progAgg(pid, FY).total || 1;
+  return planCard('Rolling <strong>'+esc(progName(pid))+'</strong>’s FY'+FY+' disbursements up by sub-program.',
+      ['Group the program’s FY'+FY+' mapped transactions by sub-program.',
+       'Compute each sub-grouping’s share and YoY change.'],
+      ['transactions','program_mapping','sub_programs'])
+    + answerCard(esc(progName(pid))+' = '+subs.length+' sub-grouping'+(subs.length>1?'s':'')+', '+E.fmtMoney(total)+' total.',
+      '<p><strong>Sub-groupings are not programs.</strong> They are subsets — reporting treats the program as the unit.</p>')
+    + evidenceCard('FY'+FY+' by sub-program', tbl(
+        [{t:'Sub-program'},{t:'FY'+FY,num:true},{t:'Share',num:true},{t:'YoY',num:true}],
+        subs.map(r=>({cells:[{h:esc(r.sub.name)},{h:E.fmtMoney(r.total),num:true},{h:(r.total/total*100).toFixed(1)+'%',num:true},deltaCell(r.pct,false)]})))
+      + '<div style="margin-top:.6rem">'+barChart(subs.map(r=>({label:r.sub.name.slice(0,28), value:r.total, text:E.fmtMoney0(r.total)})),{aria:'Sub-program totals'})+'</div>'
+      + drillTxns('drill-'+inq.id, 'Drill to FY'+FY+' transactions', E.txnsFor(pid, FY)),
+      'computed live from mapped transactions')
+    + caveatCard(programCaveats(pid))
+    + adjBar('inq:'+inq.id, 'Sub-program rollup — '+progName(pid));
+};
+
+BUILD['by-event'] = function(inq){
+  const pid = inq.params.program;
+  const evs = E.eventBreakdown(pid, FY);
+  const isND = !E.progById[pid].is_disaster;
+  const body = isND
+    ? '<p>'+esc(progName(pid))+' is a <strong>non-disaster</strong> program — no disaster declarations (DR numbers) contribute to its spend. Its codes carry the <span class="mono">ND</span> event segment.</p>'
+    : '<p>'+evs.filter(e=>e.dr!=='ND').length+' disaster declarations contribute. The largest is '+(evs[0]&&evs[0].ev?('DR-'+evs[0].dr+' — '+esc(evs[0].ev.title)):'')+' at '+(E.progAgg(pid,FY).total?(evs[0].total/E.progAgg(pid,FY).total*100).toFixed(1):'0')+'% of the program total.</p>';
+  return planCard('Rolling <strong>'+esc(progName(pid))+'</strong>’s FY'+FY+' disbursements up by disaster declaration.',
+      ['Group the program’s FY'+FY+' mapped transactions by DR number.',
+       'Join DR numbers to the declared events and compute shares.'],
+      ['transactions','disaster_events'])
+    + answerCard('Spend by disaster — '+esc(progName(pid)), body)
+    + (isND ? '' : evidenceCard('FY'+FY+' by disaster declaration', tbl(
+        [{t:'Disaster'},{t:'FY'+FY,num:true},{t:'YoY',num:true}],
+        evs.map(r=>({cells:[{h: r.ev?('DR-'+r.dr+' — '+esc(r.ev.title)+' <span class="badge user">'+esc(r.ev.incident_type)+', FY'+r.ev.fy_declared+'</span>'):esc(String(r.dr))},{h:E.fmtMoney(r.total),num:true},deltaCell(r.pct,false)]})))
+      + drillTxns('drill-'+inq.id, 'Drill to FY'+FY+' transactions', E.txnsFor(pid, FY)),
+      'DR numbers are real public identifiers; amounts are synthetic'))
+    + caveatCard(programCaveats(pid))
+    + adjBar('inq:'+inq.id, 'Event rollup — '+progName(pid));
+};
+
+BUILD['provenance'] = function(inq){
+  return planCard('Tracing the data’s chain of custody from source system to this workspace.',
+      ['Describe the fiscal-year extract contract (file-in / file-out).',
+       'Report cleansing statistics computed from the raw rows.',
+       'Report the historical grading of the mapping inference.'],
+      ['transactions (raw_code vs code)','mapping_rules (cleansing)','meta'])
+    + answerCard('One FY extract in, reportable outputs out — and the seams are visible.',
+      '<p>Source: <strong>WebFMIS</strong> (FEMA’s financial system of record) fiscal-year extract — <span class="sim-tag">simulated connection</span>; in this demo the extract is embedded. WebFMIS is being modernized (~Oct 1) and the transition is not going smoothly — which is exactly why the ingestion contract is file-based: whatever system produces the extract, the pipeline’s obligations stay the same.</p>')
+    + evidenceCard('ingestion & cleansing, computed from the embedded extract',
+      '<dl class="kv"><dt>Rows ingested</dt><dd>'+D.transactions.length+' transactions, FY2022–FY2026</dd>'
+      + '<dt>Financial codes seen</dt><dd>'+D.financial_codes.length+' (51 mapped, 6 exception-queue)</dd>'
+      + '<dt>Crosswalk rules</dt><dd>'+D.mapping_rules.length+' (23 SME-confirmed, 3 inferred)</dd>'
+      + '<dt>Format-dirty rows recovered</dt><dd>'+E.dirtyCount+' (lowercase / separator variants normalized by cleansing rules)</dd>'
+      + '<dt>Retired legacy aliases recovered</dt><dd>'+E.legacyCount+' rows on LEG-0001…0004, remapped to canonical codes</dd></dl>',
+      'computed live by comparing raw_code to canonical code on every row')
+    + evidenceCard('how the mapping inference was graded',
+      '<p>On a held-out year: <strong>47/47</strong> auto-mapped codes correct, <strong>10</strong> low-confidence codes routed to human review, <strong>0</strong> incorrect. The answer key is never read by the inference — it grades, it does not teach.</p>',
+      'historical grading exhibit (precomputed)')
+    + caveatCard(['The WebFMIS connection is simulated; this file carries a synthetic embedded extract watermarked SYNTHETIC-DEMO.',
+        'Cleansing recoveries are deterministic, but upstream feed quality during modernization is an open risk (assumption register).'])
+    + adjBar('inq:'+inq.id, 'Provenance review');
+};
+/* ---------- PRA drafting thread (the 10-question adjudication) ---------- */
+BUILD['draft-pra'] = function(inq){
+  const pid = inq.params.program;
+  const comp = E.praComputed(pid);
+  const human = state.praHuman[pid] || {};
+  const qBlocks = D.risk_questions.map(q=>{
+    const key = 'pra:'+pid+':'+q.id;
+    const a = state.adj[key];
+    let body;
+    if (q.auto_populatable){
+      const c = comp[q.id];
+      body = '<p class="pra-ans">'+esc(c.value)+'</p>'
+        + '<p class="cat-note" style="margin:.3rem 0">'+c.how+' <span class="sim-tag">auto-draft — simulated analyst</span></p>'
+        + '<p>'+confMeter(c.conf,'confidence')+'</p>';
+    } else {
+      const val = human[q.id] || '';
+      body = '<div class="pra-human"><label for="pin-'+pid+'-'+q.id+'" style="font-size:.8rem;color:var(--ink-soft)">Program-office answer (required — I cannot compute this)</label>'
+        + '<input type="text" id="pin-'+pid+'-'+q.id+'" data-role="pra-input" data-prog="'+pid+'" data-q="'+q.id+'" value="'+esc(val)+'" placeholder="Enter what the program office reports…">'
+        + '<p class="cat-note" style="margin-top:.3rem"><span class="badge needs">needs human</span> Qualitative — outside the financial extract. Nothing here is auto-drafted.</p></div>';
+    }
+    return '<div class="pra-q"><div class="pq-h"><span class="pq-id">'+q.id+'</span><span class="pq-text">'+esc(stripIds(q.text))+'</span>'
+      + (a?'<span class="adj-state '+a.status+'">'+a.status+'</span>':'<span class="badge open">awaiting adjudication</span>')
+      + '</div><div class="pq-b">'+body+adjBar(key, progName(pid)+' '+q.id)+'</div></div>';
+  }).join('');
+  const adjStates = D.risk_questions.map(q=>state.adj['pra:'+pid+':'+q.id]);
+  const done = adjStates.filter(a=>a && (a.status==='accepted'||a.status==='corrected')).length;
+  const flagged = adjStates.filter(a=>a && a.status==='flagged').length;
+  const pills = D.risk_questions.map((q,i)=>{
+    const a = adjStates[i];
+    const cls = a ? (a.status==='flagged'?'flag':(a.status==='corrected'?'corr':'done')) : '';
+    return '<span class="pill '+cls+'" title="'+q.id+'"></span>';
+  }).join('');
+  const finalized = !!state.praFinal[pid];
+  const gate = '<div class="gate"><h3 style="font-family:var(--serif);color:var(--navy)">Finalization gate — human sign-off</h3>'
+    + '<div class="progress-pills" aria-label="Adjudication progress">'+pills+'</div>'
+    + '<p class="gate-state">'+(finalized
+        ? '<span class="adj-state accepted">✓ Finalized — human sign-off recorded in the decision log.</span>'
+        : done+' of 10 adjudicated'+(flagged?(' · '+flagged+' flagged for SME (flags block finalization)'):'')+'. Nothing finalizes without a human adjudicating all 10.')+'</p>'
+    + (finalized ? '' : '<p class="form-err" id="gateErr-'+pid+'" role="alert"></p>'
+        + '<button class="hdr-btn" style="margin-top:.5rem" data-act="pra-finalize" data-prog="'+pid+'">Finalize '+esc(progName(pid))+' PRA</button>')
+    + '</div>';
+  return planCard('Drafting the FY'+FY+' Preliminary Risk Assessment (PRA) for <strong>'+esc(progName(pid))+'</strong>: I auto-draft the eight computable questions with evidence, and hold Q9/Q10 open for the program office. You adjudicate each answer; the gate below refuses to finalize until all ten carry a human decision.',
+      ['Compute Q1–Q8 live from mapped transactions (each answer states its method).',
+       'Leave Q9–Q10 blank with an explicit “needs human” state — they are program-office knowledge.',
+       'Require your adjudication (accept / correct / flag) on every question.',
+       'Record finalization as human sign-off in the decision log.'],
+      ['risk_questions (illustrative placeholder instrument)','transactions','program_mapping'])
+    + '<div class="note-box" style="margin-bottom:.8rem">The 10-question instrument below is an <strong>illustrative placeholder</strong>, not FEMA’s real PRA form. “Preliminary” is the start of a lifecycle — a flagged program proceeds to a comprehensive assessment (required at least every 3 years regardless).</div>'
+    + qBlocks + gate;
+};
+
+/* ---------- unresolved ask (did-you-mean) ---------- */
+function dymView(text, suggestions){
+  return '<div class="thread-head"><p class="q">“'+esc(text)+'”</p><p class="meta"><span class="badge sys">Examiner</span> I don’t have a computation for that exact phrasing.</p></div>'
+    + '<div class="dym"><p style="margin-bottom:.4rem"><strong>Did you mean one of these?</strong> (Everything I can answer is a deterministic computation — browse the full catalog for the complete list.)</p>'
+    + suggestions.map(t=>'<button data-act="ask-text" data-q="'+esc(t.example)+'">→ '+esc(t.example)+'</button>').join('')
+    + '<button data-act="open-catalog">→ Browse the full question catalog…</button></div>';
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function railItem(inq){
+  const a = state.adj['inq:'+inq.id];
+  const status = inq.status==='dismissed' ? '<span class="badge dismissed">dismissed</span>'
+    : (a ? '<span class="badge resolved">'+a.status+'</span>' : '<span class="badge open">open</span>');
+  return '<button class="inq-item'+(inq.id===state.activeId?' active':'')+(inq.headline?' headline':'')+(inq.status==='dismissed'?' dismissed':'')+'" data-act="open-inq" data-inq="'+inq.id+'">'
+    + '<span class="t">'+esc(inq.title)+'</span>'
+    + '<span class="m"><span class="badge '+(inq.kind==='user'?'user':'sys')+'">'+(inq.kind==='user'?'you asked':'examiner')+'</span>'+status+'</span></button>';
+}
+function renderRail(){
+  const sys = state.inquiries.filter(i=>i.kind==='system');
+  const pra = state.inquiries.filter(i=>i.kind==='pra');
+  const usr = state.inquiries.filter(i=>i.kind==='user');
+  $('#listSys').innerHTML = sys.map(railItem).join('');
+  $('#listPra').innerHTML = pra.map(railItem).join('');
+  $('#listUser').innerHTML = usr.length ? usr.map(railItem).join('') : '<p class="cat-note">None yet — ask below, or open the question catalog.</p>';
+  $('#cntSys').textContent = '('+sys.length+')';
+  $('#cntPra').textContent = '('+pra.length+')';
+  $('#cntUser').textContent = '('+usr.length+')';
+}
+function renderThread(){
+  const pane = $('#threadPane');
+  if (state.dym){ pane.innerHTML = dymView(state.dym.text, state.dym.suggestions); return; }
+  const inq = state.inquiries.filter(i=>i.id===state.activeId)[0];
+  if (!inq){ pane.innerHTML = '<p class="cat-note">Select an inquiry.</p>'; return; }
+  const openedBy = inq.kind==='user' ? 'You asked' : 'Examiner-initiated';
+  const dismissBtn = inq.status==='dismissed'
+    ? '<button class="adj-btn" data-act="reopen-inq" data-inq="'+inq.id+'">Reopen inquiry</button>'
+    : '<button class="adj-btn" data-act="dismiss-inq" data-inq="'+inq.id+'">Dismiss inquiry</button>';
+  const head = '<div class="thread-head"><p class="q">'+esc(inq.title)+'</p>'
+    + '<p class="meta"><span class="badge '+(inq.kind==='user'?'user':'sys')+'">'+openedBy+'</span>'
+    + '<span>'+fmtWhen(inq.t)+'</span>' + dismissBtn + '</p></div>';
+  const builder = BUILD[inq.tplId];
+  pane.innerHTML = head + (builder ? builder(inq) : '<p>No builder for '+esc(inq.tplId)+'</p>');
+}
+function renderLog(){
+  const el = $('#logList');
+  el.innerHTML = state.log.length ? state.log.slice().reverse().map(l=>
+    '<div class="log-entry"><span class="when">'+fmtWhen(l.t)+' · '+esc(l.actor)+'</span><br>'
+    + '<span class="act '+esc(l.action)+'">'+esc(l.action)+'</span> — '+esc(l.subject)
+    + (l.note?'<br><em>“'+esc(l.note)+'”</em>':'')+'</div>').join('')
+    : '<p class="cat-note">Nothing yet this session.</p>';
+  $('#cntLog').textContent = '('+state.log.length+')';
+}
+function renderAssumptions(){
+  $('#assumpList').innerHTML = ASSUMPTIONS.map(a=>
+    '<div class="assump"><span class="st '+a.st+'">'+(a.st==='open'?'Open question':'Confirmed')+'</span><br>'+esc(a.text)+'</div>').join('');
+  $('#cntAssump').textContent = '('+ASSUMPTIONS.length+')';
+}
+function renderChips(){
+  const chips = ['Why did Individual Assistance flag?','What changed most this year?','What can’t you verify?',
+    'What’s in the exception queue?','What would happen at a 30% threshold?','Draft the PRA for Public Assistance'];
+  $('#chipRow').innerHTML = chips.map(c=>'<button class="chip" data-act="ask-text" data-q="'+esc(c)+'">'+esc(c)+'</button>').join('');
+}
+function renderCatalog(){
+  const groups = {};
+  E.TEMPLATES.forEach(t=>{ (groups[t.group] || (groups[t.group]=[])).push(t); });
+  $('#catalogBody').innerHTML = '<p class="cat-note" style="margin-bottom:.5rem">This is the complete, honest list of what the simulated analyst can answer. Each entry is a parameterized template resolving to a deterministic computation over the embedded synthetic dataset — there is no live AI model, so there is nothing it can answer beyond this catalog.</p>'
+    + Object.keys(groups).map(g=>'<div class="catalog-group"><h3>'+esc(g)+'</h3>'
+      + groups[g].map(t=>'<button class="cat-q" data-act="ask-text" data-q="'+esc(t.example)+'"><strong>'+esc(t.label)+'</strong><br><span class="cat-note">e.g. “'+esc(t.example)+'”</span></button>').join('')+'</div>').join('');
+}
+function renderAll(){ renderRail(); renderThread(); renderLog(); renderAssumptions(); }
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function newInquiry(kind, tplId, params, title, opts){
+  const id = (opts && opts.id) || ('INQ-'+(++state.seq));
+  const inq = { id:id, kind:kind, tplId:tplId, params:params||{}, title:title, status:'open', t:now(), headline:!!(opts&&opts.headline) };
+  state.inquiries.push(inq);
+  return inq;
+}
+function fillLabel(tpl, params){
+  let s = tpl.label;
+  if (params.program) s = s.replace('{program}', progName(params.program));
+  s = s.replace('{FY} vs {FY}', 'FY'+(params.fy1||FY)+' vs FY'+(params.fy2||PRIOR));
+  if (params.qn) s = s.replace('Q{n}', params.qn);
+  if (params.threshold!=null) s = s.replace('{n}%', params.threshold+'%');
+  return s.replace('{program}','a program').replace('Q{n}','Q1').replace('{n}%','20%');
+}
+function ask(text){
+  const res = E.matchQuestion(text);
+  if (!res.ok){
+    state.dym = { text:text, suggestions:res.suggestions };
+    logIt('You','asked', '“'+text+'” (no template match — did-you-mean offered)');
+    renderAll();
+    return null;
+  }
+  state.dym = null;
+  if (res.tpl.id==='draft-pra' && res.params.program){
+    const target = 'INQ-PRA-'+res.params.program;
+    logIt('You','asked', '“'+text+'” → opened '+progName(res.params.program)+' PRA thread');
+    openInquiry(target);
+    return state.inquiries.filter(i=>i.id===target)[0];
+  }
+  const inq = newInquiry('user', res.tpl.id, res.params, fillLabel(res.tpl, res.params));
+  state.activeId = inq.id;
+  logIt('You','asked','“'+text+'” → resolved to template “'+res.tpl.label+'”');
+  logIt('Examiner','answered', inq.title, 'plan shown before answer; deterministic computation');
+  renderAll();
+  return inq;
+}
+function openInquiry(id){
+  const inq = state.inquiries.filter(i=>i.id===id)[0];
+  if (!inq) return;
+  state.dym = null;
+  state.activeId = id;
+  state.correctOpen = null;
+  renderAll();
+}
+function adjudicate(key, status, subject, note){
+  if (status==='corrected' && !(note && note.trim())) return false;
+  state.adj[key] = { status:status, note:(note||'').trim(), t:now() };
+  state.correctOpen = null;
+  logIt('You', status, subject, note);
+  renderAll();
+  return true;
+}
+function resetAdj(key, subject){
+  delete state.adj[key];
+  logIt('You','reconsidered', subject||key);
+  renderAll();
+}
+function finalizePra(pid){
+  const missingHuman = ['Q9','Q10'].filter(q=>{
+    const h = state.praHuman[pid]||{};
+    return !(h[q] && h[q].trim());
+  });
+  const notAdj = D.risk_questions.filter(q=>{
+    const a = state.adj['pra:'+pid+':'+q.id];
+    return !a || a.status==='flagged';
+  }).map(q=>q.id);
+  const err = document.getElementById('gateErr-'+pid);
+  if (missingHuman.length || notAdj.length){
+    if (err) err.textContent = 'Cannot finalize: '
+      + (missingHuman.length ? missingHuman.join(', ')+' need program-office input. ' : '')
+      + (notAdj.length ? notAdj.join(', ')+' still need a non-flagged human adjudication.' : '');
+    return false;
+  }
+  state.praFinal[pid] = true;
+  logIt('You','finalized', progName(pid)+' FY'+FY+' PRA', 'human sign-off; all 10 questions adjudicated');
+  renderAll();
+  toast(progName(pid)+' PRA finalized — recorded in the decision log.');
+  return true;
+}
+
+/* ---------- export (simulated; watermarked) ---------- */
+function buildExportText(){
+  const L = [];
+  L.push('==== SYNTHETIC-DEMO ==== SYNTHETIC-DEMO ==== SYNTHETIC-DEMO ====');
+  L.push('THE EXAMINER — FY'+FY+' PAYMENT-INTEGRITY EXAMINATION: DECISION LOG & REPORTABLE OUTPUTS');
+  L.push('Simulated export. All data synthetic. Deterministic engine owns every number; the simulated');
+  L.push('analyst proposes and explains, humans decide. No live AI model. Offline single-file demo.');
+  L.push('');
+  L.push('--- FY'+FY+' TRIGGER DETERMINATIONS (dual measure, ±20%, either direction) ---');
+  D.programs.forEach(p=>{
+    const t = E.evalTrigger(p.id, FY, null);
+    L.push('  '+p.name+': '+E.fmtMoney(t.y.total)+' | $ YoY '+E.fmtPct(t.y.dollarPct)+' | txn YoY '+E.fmtPct(t.y.countPct)
+      + ' | '+(t.flag ? 'FLAG'+(t.countOnly?' (count-only)':'') : 'no flag'));
+  });
+  L.push('  Unmapped (exception queue): '+E.fmtMoney(E.unmappedByFy[FY]?E.unmappedByFy[FY].total:0)+' across 6 codes — excluded from all totals');
+  L.push('');
+  L.push('--- PRA STATUS (illustrative placeholder instrument) ---');
+  D.programs.forEach(p=>{
+    const done = D.risk_questions.filter(q=>{ const a=state.adj['pra:'+p.id+':'+q.id]; return a&&a.status!=='flagged'; }).length;
+    L.push('  '+p.name+': '+(state.praFinal[p.id]?'FINALIZED (human sign-off)':done+'/10 adjudicated — not finalized'));
+  });
+  L.push('');
+  L.push('--- DECISION LOG ('+state.log.length+' entries, session-relative timestamps) ---');
+  state.log.forEach(l=>{
+    L.push('  ['+fmtWhen(l.t)+'] '+l.actor+' '+l.action.toUpperCase()+': '+l.subject+(l.note?' — note: "'+l.note+'"':''));
+  });
+  L.push('');
+  L.push('--- ASSUMPTION REGISTER ---');
+  ASSUMPTIONS.forEach(a=>L.push('  ['+(a.st==='open'?'OPEN':'CONFIRMED')+'] '+a.text));
+  L.push('');
+  L.push('==== SYNTHETIC-DEMO — not real FEMA data; not a real federal record ====');
+  return L.join('\n');
+}
+function openExport(){
+  const el = $('#exportBody');
+  el.innerHTML = '<span class="wm">SYNTHETIC-DEMO</span>' + esc(buildExportText());
+  $('#modalExport').classList.add('show');
+  logIt('You','exported','decision log & reportable outputs (simulated, watermarked SYNTHETIC-DEMO)');
+}
+
+/* ============================================================
+   EVENT DELEGATION (single listener; all controls are data-act)
+   ============================================================ */
+document.addEventListener('click', function(ev){
+  const btn = ev.target.closest ? ev.target.closest('[data-act]') : null;
+  if (!btn) return;
+  const act = btn.getAttribute('data-act');
+  const key = btn.getAttribute('data-key');
+  const subject = btn.getAttribute('data-subject') || '';
+  if (act==='open-inq') openInquiry(btn.getAttribute('data-inq'));
+  else if (act==='dismiss-inq'){
+    const inq = state.inquiries.filter(i=>i.id===btn.getAttribute('data-inq'))[0];
+    if (inq){ inq.status='dismissed'; logIt('You','dismissed', inq.title); renderAll(); }
+  }
+  else if (act==='reopen-inq'){
+    const inq = state.inquiries.filter(i=>i.id===btn.getAttribute('data-inq'))[0];
+    if (inq){ inq.status='open'; logIt('You','reopened', inq.title); renderAll(); }
+  }
+  else if (act==='ask-text'){ closeModals(); ask(btn.getAttribute('data-q')); }
+  else if (act==='ask-tpl'){
+    const tpl = E.TEMPLATES.filter(t=>t.id===btn.getAttribute('data-tpl'))[0];
+    if (tpl){
+      const params = {};
+      if (btn.getAttribute('data-program')) params.program = btn.getAttribute('data-program');
+      if (btn.getAttribute('data-th')) params.threshold = +btn.getAttribute('data-th');
+      if (tpl.needProgram && !params.program) params.program = 'PROG-PA';
+      const inq = newInquiry('user', tpl.id, params, fillLabel(tpl, params));
+      state.activeId = inq.id; state.dym = null;
+      logIt('You','asked', inq.title+' (via link)');
+      renderAll();
+    }
+  }
+  else if (act==='adj-accept') adjudicate(key,'accepted',subject);
+  else if (act==='adj-flag') adjudicate(key,'flagged',subject,'routed to SME review');
+  else if (act==='adj-correct-open'){ state.correctOpen = key; renderAll();
+    const ta = document.getElementById('cf-'+key); if (ta) ta.focus(); }
+  else if (act==='adj-correct-cancel'){ state.correctOpen = null; renderAll(); }
+  else if (act==='adj-correct-submit'){
+    const ta = document.getElementById('cf-'+key);
+    const note = ta ? ta.value : '';
+    if (!(note && note.trim())){
+      const errEl = document.getElementById('cferr-'+key);
+      if (errEl) errEl.textContent = 'A correction note is required — corrections without reasons are not auditable.';
+      return;
+    }
+    adjudicate(key,'corrected',subject,note);
+  }
+  else if (act==='adj-reset') resetAdj(key, subject);
+  else if (act==='pra-finalize') finalizePra(btn.getAttribute('data-prog'));
+  else if (act==='open-catalog'){ renderCatalog(); $('#modalCatalog').classList.add('show'); }
+});
+document.addEventListener('input', function(ev){
+  const t = ev.target;
+  if (!t || !t.getAttribute) return;
+  const role = t.getAttribute('data-role');
+  if (role==='pra-input'){
+    const pid = t.getAttribute('data-prog'), q = t.getAttribute('data-q');
+    (state.praHuman[pid] || (state.praHuman[pid]={}))[q] = t.value;
+  } else if (role==='th-slider'){
+    const inqId = t.getAttribute('data-inq');
+    const th = +t.value;
+    state.whatIf[inqId] = th;
+    const lab = document.getElementById('thVal-'+inqId);
+    if (lab) lab.textContent = '±'+th+'%';
+    const out = document.getElementById('whatIfResult-'+inqId);
+    if (out) out.innerHTML = whatIfTable(th);
+  }
+});
+function closeModals(){
+  document.querySelectorAll('.modal-back.show').forEach(m=>m.classList.remove('show'));
+}
+document.addEventListener('keydown', function(ev){
+  if (ev.key==='Escape') closeModals();
+  if (ev.key==='Enter' && ev.target && ev.target.id==='askInput'){
+    const v = ev.target.value.trim(); if (v){ ev.target.value=''; ask(v); }
+  }
+});
+
+/* ---------- header buttons & modal close ---------- */
+function wireChrome(){
+  $('#btnAsk').addEventListener('click', function(){
+    const inp = $('#askInput'); const v = inp.value.trim();
+    if (!v){ state.dym = { text:'', suggestions:E.TEMPLATES.slice(0,4) }; renderThread(); return; }
+    inp.value=''; ask(v);
+  });
+  $('#btnCatalog').addEventListener('click', function(){ renderCatalog(); $('#modalCatalog').classList.add('show'); });
+  $('#btnExport').addEventListener('click', openExport);
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', function(){
+    document.getElementById(b.getAttribute('data-close')).classList.remove('show');
+  }));
+  $('#btnRailToggle').addEventListener('click', function(){ $('#railLeft').classList.toggle('drawer-open'); });
+  $('#btnLogToggle').addEventListener('click', function(){ $('#railRight').classList.toggle('drawer-open'); });
+}
+
+/* ============================================================
+   SEED — the Examiner opens the fiscal year with its findings
+   ============================================================ */
+function seed(){
+  const iaTrig = E.evalTrigger('PROG-IA', FY, null);
+  const un = E.unmappedByFy[FY] || {total:0,txns:[]};
+  const nFlag = D.programs.filter(p=>E.evalTrigger(p.id,FY,null).flag).length;
+  newInquiry('system','why-flag',{program:'PROG-IA'},
+    'Individual Assistance flagged on volume alone — dollars '+E.fmtPct(iaTrig.y.dollarPct)+', transactions '+E.fmtPct(iaTrig.y.countPct),
+    {id:'INQ-SYS-IA', headline:true});
+  newInquiry('system','changed-most',{}, nFlag+' of 5 programs breach the FY'+FY+' trigger — here is the whole board', {id:'INQ-SYS-FLAGS'});
+  newInquiry('system','exceptions',{}, 'I found 6 codes I can’t map — '+E.fmtMoney(un.total)+' is unattributed', {id:'INQ-SYS-EXC'});
+  newInquiry('system','inferred-rules',{}, '3 of my 26 crosswalk rules are inferred, not confirmed', {id:'INQ-SYS-INF'});
+  newInquiry('system','q910',{}, 'Q9/Q10 need human input for 5 programs', {id:'INQ-SYS-Q910'});
+  newInquiry('system','cannot-verify',{}, 'What I could not verify this fiscal year', {id:'INQ-SYS-VERIFY'});
+  D.programs.forEach(p=>{
+    newInquiry('pra','draft-pra',{program:p.id}, 'Draft PRA — '+p.name, {id:'INQ-PRA-'+p.id});
+  });
+  state.activeId = 'INQ-SYS-IA';
+  state.log.push({ t: now(), actor:'Examiner', action:'answered',
+    subject:'Opened FY'+FY+' with '+(6)+' findings and 5 PRA drafts', note:'system-initiated; deterministic scan of the FY extract' });
+}
+
+function init(){
+  seed();
+  renderChips();
+  renderCatalog();
+  wireChrome();
+  renderAll();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+return { state:state, ask:ask, openInquiry:openInquiry, adjudicate:adjudicate, resetAdj:resetAdj,
+         finalizePra:finalizePra, buildExportText:buildExportText, renderAll:renderAll,
+         newInquiry:newInquiry, whatIfTable:whatIfTable, ASSUMPTIONS:ASSUMPTIONS };
+})();
+</script>
+<script>
+/* ============================================================================
+   CHUNK C — EMBEDDED SELF-TESTS
+   window.__SELFTEST__() returns [{name, pass, detail?}]. Side-effect-safe:
+   session state is snapshotted before and restored after.
+   Planted cross-check constants are used ONLY here, as required.
+   ============================================================================ */
+window.__SELFTEST__ = function(){
+  const E = window.EX, U = window.UI, D = window.FEMA_DATA;
+  const out = [];
+  const T = (name, pass, detail) => out.push({ name:name, pass:!!pass, detail:detail||'' });
+
+  /* ---- snapshot session state (restored in finally) ---- */
+  const snap = {
+    inquiries: U.state.inquiries.slice(),
+    activeId: U.state.activeId,
+    adj: JSON.parse(JSON.stringify(U.state.adj)),
+    log: U.state.log.slice(),
+    praHuman: JSON.parse(JSON.stringify(U.state.praHuman)),
+    praFinal: JSON.parse(JSON.stringify(U.state.praFinal)),
+    whatIf: JSON.parse(JSON.stringify(U.state.whatIf)),
+    dym: U.state.dym, correctOpen: U.state.correctOpen
+  };
+  try {
+    /* 1 — payload loaded */
+    T('payload loaded: 1,459 transactions', D && D.transactions && D.transactions.length === 1459,
+      'got ' + (D && D.transactions ? D.transactions.length : 'none'));
+
+    /* 2 — computed FY2026 totals match planted values (±$1); cross-check constants live only here */
+    const planted = { 'PROG-PA':1094293204.80, 'PROG-HM':166280284.80, 'PROG-IA':422002008.00,
+                      'PROG-HS':469332864.00, 'PROG-UR':39617061.12 };
+    let totalsOk = true, det = [];
+    let grand = 0;
+    for (const pid in planted){
+      const got = E.progAgg(pid, 2026).total; grand += got;
+      if (Math.abs(got - planted[pid]) > 1){ totalsOk = false; det.push(pid+' got '+got); }
+    }
+    if (Math.abs(grand - 2191525422.72) > 1){ totalsOk = false; det.push('grand '+grand); }
+    T('computed FY2026 totals match planted values (±$1, incl. grand total)', totalsOk, det.join('; '));
+
+    /* 3 — dual-measure trigger at default config; IA is count-only */
+    const f = pid => E.evalTrigger(pid, 2026, null);
+    T('trigger fires for PA/HM/IA/HS and not UR at default ±20%',
+      f('PROG-PA').flag && f('PROG-HM').flag && f('PROG-IA').flag && f('PROG-HS').flag && !f('PROG-UR').flag,
+      ['PA','HM','IA','HS','UR'].map(s=>s+':'+f('PROG-'+s).flag).join(' '));
+    const ia = f('PROG-IA');
+    T('IA is the count-only catch (dollars within band, count breaches)',
+      ia.countOnly && !ia.dollarFlag && ia.countFlag,
+      '$ '+E.fmtPct(ia.y.dollarPct)+' count '+E.fmtPct(ia.y.countPct));
+    T('HM decrease direction flags (−31% dollars)', f('PROG-HM').dollarFlag && f('PROG-HM').y.dollarPct < 0);
+
+    /* 4 — primary navigation: opening an inquiry switches the thread pane */
+    U.openInquiry('INQ-SYS-EXC');
+    const paneTxt = document.getElementById('threadPane').textContent;
+    T('navigation: opening an inquiry switches the main thread pane',
+      U.state.activeId === 'INQ-SYS-EXC' && paneTxt.indexOf('exception') >= 0 && paneTxt.indexOf('I can’t map') >= 0);
+
+    /* 5 — drill-down reaches transaction rows */
+    U.openInquiry('INQ-SYS-IA');
+    const txnRows = document.querySelectorAll('#threadPane [data-txnrow]');
+    T('drill-down reaches transaction-level rows (lineage)', txnRows.length >= 40,
+      txnRows.length + ' rows rendered in drill');
+
+    /* 6 — signature interaction: a question resolves to plan-before-answer */
+    const before = U.state.inquiries.length;
+    const inq = U.ask('Compare Public Assistance 2026 vs 2025');
+    const cards = document.querySelectorAll('#threadPane .card');
+    const planFirst = cards.length >= 2 && cards[0].classList.contains('plan');
+    T('signature: free-text question creates an inquiry whose computation plan precedes the answer',
+      !!inq && U.state.inquiries.length === before + 1 && planFirst,
+      'cards: ' + [].map.call(cards, c=>c.className.replace('card','').trim()).slice(0,3).join(','));
+    const dym = U.ask('please sing me a sea shanty');
+    T('did-you-mean: unmatched question offers suggestions, never a dead end',
+      dym === null && !!U.state.dym && U.state.dym.suggestions.length >= 3
+      && document.getElementById('threadPane').textContent.indexOf('Did you mean') >= 0);
+
+    /* 7 — override/decision path enforces reason capture */
+    const rejected = U.adjudicate('selftest:key', 'corrected', 'self-test subject', '   ');
+    const acceptedNoNote = U.adjudicate('selftest:key', 'corrected', 'self-test subject', 'IA umbrella excludes DCM here');
+    T('correction path: refuses empty note, records reasoned correction',
+      rejected === false && acceptedNoNote === true
+      && U.state.adj['selftest:key'] && U.state.adj['selftest:key'].note.indexOf('umbrella') >= 0);
+
+    /* 7b — PRA finalization gate blocks until all 10 adjudicated */
+    const blocked = U.finalizePra('PROG-UR');
+    T('PRA gate: finalization blocked before all 10 questions adjudicated', blocked === false && !U.state.praFinal['PROG-UR']);
+
+    /* 8 — export simulation is watermarked and carries the audit trail */
+    const exp = U.buildExportText();
+    T('export contains SYNTHETIC-DEMO watermark and decision-log entries',
+      exp.indexOf('SYNTHETIC-DEMO') >= 0 && exp.indexOf('DECISION LOG') >= 0 && exp.indexOf('umbrella') >= 0);
+
+    /* 9 — what-if engine: thresholds change the flag set deterministically */
+    const at5 = D.programs.filter(p=>E.evalTrigger(p.id,2026,5).flag).length;
+    const at40 = D.programs.filter(p=>E.evalTrigger(p.id,2026,40).flag).length;
+    T('what-if: flag count responds to threshold (±5% flags more than ±40%)', at5 === 5 && at40 < 4,
+      'at5='+at5+' at40='+at40);
+
+    /* 10 — exception queue is excluded from totals and quantified */
+    const un = E.unmappedByFy[2026];
+    T('exception queue quantified: $4,340,000 / 17 txns / 6 codes excluded from totals',
+      un && Math.abs(un.total - 4340000) <= 1 && un.txns.length === 17 && E.exceptions.length === 6,
+      un ? un.total+' / '+un.txns.length : 'none');
+  } catch (e){
+    T('self-test suite threw', false, String(e).slice(0,200));
+  } finally {
+    /* ---- restore session state ---- */
+    U.state.inquiries.length = 0;
+    snap.inquiries.forEach(i=>U.state.inquiries.push(i));
+    U.state.activeId = snap.activeId;
+    U.state.adj = snap.adj;
+    U.state.log.length = 0;
+    snap.log.forEach(l=>U.state.log.push(l));
+    U.state.praHuman = snap.praHuman;
+    U.state.praFinal = snap.praFinal;
+    U.state.whatIf = snap.whatIf;
+    U.state.dym = snap.dym;
+    U.state.correctOpen = snap.correctOpen;
+    U.renderAll();
+  }
+  return out;
+};
+</script>
+</body>
+</html>
