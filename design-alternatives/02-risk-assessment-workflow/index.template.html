@@ -138,10 +138,26 @@ main{max-width:1460px;margin:0 auto;padding:1rem 1.1rem 2.5rem}
 .board-top h1{font-size:1.25rem}
 .board-top .desc{font-size:.8rem;color:var(--text-soft);max-width:52ch}
 .kpis{display:flex;gap:.7rem;flex-wrap:wrap;margin-left:auto}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:.45rem .8rem;min-width:120px}
-.kpi .k-val{font-size:1.05rem;font-weight:700;color:var(--ink)}
-.kpi .k-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint)}
+.kpi{
+  background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent);
+  border-radius:var(--radius);padding:.5rem .85rem .55rem;min-width:158px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+}
+.kpi .k-lbl{font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:700}
+.kpi .k-val{font-size:1.5rem;font-weight:800;color:var(--ink);line-height:1.15;margin:.05rem 0 .05rem}
+.kpi .k-val.k-money{font-size:1.18rem;padding-top:.22rem}
+.kpi .k-sub{font-size:.68rem;color:var(--text-soft)}
+.kpi.k-warn{border-top-color:var(--warn)}
+.kpi.k-warn .k-val{color:var(--warn)}
+.kpi.k-bad{border-top-color:var(--bad)}
 .kpi.k-bad .k-val{color:var(--bad)}
+.kpi.k-ok{border-top-color:var(--st-signed)}
+.lane-sum{
+  display:flex;gap:.55rem;align-items:baseline;font-size:.66rem;color:var(--text-soft);
+  padding:0 .2rem;margin:-.3rem 0 .5rem;
+}
+.lane-sum .ls-money{font-weight:700;color:var(--ink-2)}
+.lane-sum .ls-flag{color:var(--bad);font-weight:600}
 .board-filters{display:flex;gap:.7rem;align-items:center;margin-bottom:.8rem;flex-wrap:wrap}
 .board-filters input[type=search],.board-filters input[type=text]{
   border:1px solid var(--line);border-radius:5px;padding:.34rem .6rem;font-size:.84rem;min-width:230px;background:#fff;
@@ -171,7 +187,8 @@ main{max-width:1460px;margin:0 auto;padding:1rem 1.1rem 2.5rem}
 .crumbs{display:flex;align-items:center;gap:.55rem;font-size:.8rem;margin-bottom:.6rem;flex-wrap:wrap}
 .crumbs .sep{color:#9aa4b2}
 .case-header{margin-bottom:.8rem}
-.case-header h1{font-size:1.2rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.case-header .ch-title{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.case-header h1{font-size:1.2rem}
 .case-header .ch-meta{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.76rem;color:var(--text-soft);margin-top:.35rem;align-items:center}
 
 /* lifecycle rail */
@@ -632,6 +649,13 @@ function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g,
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+/* compact money for stat rows / lane summaries */
+function fmtMoneyShort(v) {
+  if (v >= 1e9) return "$" + (v / 1e9).toFixed(2) + "B";
+  if (v >= 1e6) return "$" + (v / 1e6).toFixed(v >= 1e8 ? 0 : 1) + "M";
+  return fmtUSD(v);
+}
+const SHORT_NAMES = { "PROG-PA": "PA", "PROG-HM": "HMGP", "PROG-IA": "IA", "PROG-HS": "HSGP", "PROG-UR": "US&R" };
 
 /* ---------------- 2. CASE MODEL (SIMULATED workflow records) ----------------
    The payload has no workflow records; owners, stage timestamps, due dates,
@@ -899,19 +923,33 @@ function boardHTML() {
   const fy = state.fy;
   const fyCases = Object.values(state.cases).filter(c => c.fy === fy);
   const flagged = fyCases.filter(c => evalTrigger(c.programId, fy).flagged).length;
-  const overdue = fyCases.filter(c => compDue(c.programId, fy).overdue).length;
+  const countOnlyN = fyCases.filter(c => evalTrigger(c.programId, fy).countOnly).length;
+  const overdueCases = fyCases.filter(c => compDue(c.programId, fy).overdue);
+  const overdue = overdueCases.length;
+  const signed = fyCases.filter(c => c.stage === "signed").length;
   let grand = 0; D.programs.forEach(p => grand += agg(p.id, fy).total);
   let excl = 0, exclN = 0; D.programs.forEach(p => { const e = exceptionImpact(p.id, fy); excl += e.total; exclN += e.count; });
+  const kpi = (lbl, val, sub, cls, money) =>
+    '<div class="kpi' + (cls ? " " + cls : "") + '"><div class="k-lbl">' + lbl + "</div>" +
+    '<div class="k-val' + (money ? " k-money num" : "") + '">' + val + "</div>" +
+    '<div class="k-sub">' + sub + "</div></div>";
 
   return '' +
   '<div class="board-top">' +
     '<div><h1>Assessment queue — FY' + fy + '</h1>' +
     '<p class="desc">One case per reportable program per fiscal year. Move every case from <em>triggered</em> to <em>signed off</em> — nothing lost, nothing unreviewed.</p></div>' +
-    '<div class="kpis">' +
-      '<div class="kpi"><div class="k-val">' + fyCases.length + '</div><div class="k-lbl">Cases FY' + fy + "</div></div>" +
-      '<div class="kpi"><div class="k-val">' + flagged + '</div><div class="k-lbl">Trigger-flagged</div></div>' +
-      '<div class="kpi' + (overdue ? " k-bad" : "") + '"><div class="k-val">' + overdue + '</div><div class="k-lbl">Comprehensive overdue</div></div>' +
-      '<div class="kpi"><div class="k-val num">' + fmtUSD(grand) + '</div><div class="k-lbl">FY' + fy + " disbursements</div></div>" +
+    '<div class="kpis" role="group" aria-label="Queue statistics">' +
+      kpi("Cases FY" + fy, fyCases.length,
+        fyCases.length ? (signed ? signed + " signed · " + (fyCases.length - signed) + " in progress" : "all in progress") : "none on record",
+        "", false) +
+      kpi("Trigger-flagged", flagged,
+        flagged ? (countOnlyN ? countOnlyN + " caught by volume only" : "dollars and/or volume, ±20%") : "no YoY breaches",
+        flagged ? "k-warn" : "k-ok", false) +
+      kpi("Comprehensive overdue", overdue,
+        overdue ? overdueCases.map(c => SHORT_NAMES[c.programId] || c.programId).join(", ") + " — 3-year cycle" : "3-year cycle on track",
+        overdue ? "k-bad" : "k-ok", false) +
+      kpi("FY" + fy + " disbursements", fmtMoneyShort(grand),
+        "computed live" + (exclN ? " · excl. exception-queue $" : ""), "", true) +
     "</div>" +
   "</div>" +
   '<div class="board-filters">' +
@@ -934,9 +972,17 @@ function lanesHTML() {
   }
   return STAGES.map(st => {
     const cs = fyCases.filter(c => c.stage === st.id);
+    /* compact per-lane posture summary: disbursements represented + flags */
+    let laneSum = "";
+    if (cs.length) {
+      const laneTotal = cs.reduce((n, c) => n + agg(c.programId, fy).total, 0);
+      const laneFlagged = cs.filter(c => evalTrigger(c.programId, fy).flagged).length;
+      laneSum = '<div class="lane-sum"><span class="ls-money num">' + fmtMoneyShort(laneTotal) + "</span>" +
+        (laneFlagged ? '<span class="ls-flag">' + laneFlagged + " flagged</span>" : "<span>none flagged</span>") + "</div>";
+    }
     return '<section class="lane" aria-label="' + esc(st.label) + '">' +
       '<div class="lane-head"><span class="dot" style="background:' + st.color + '"></span><h2>' + esc(st.label) + '</h2>' +
-      '<span class="lane-count">' + cs.length + "</span></div>" +
+      '<span class="lane-count">' + cs.length + "</span></div>" + laneSum +
       (cs.length ? cs.map(caseCardHTML).join("") : '<div class="lane-empty">No cases</div>') +
     "</section>";
   }).join("");
@@ -974,10 +1020,12 @@ function caseHTML(c) {
     '<span class="sep">/</span><span>' + esc(p.name) + " · FY" + c.fy + "</span>" +
   "</nav>" +
   '<header class="case-header">' +
-    "<h1>" + esc(p.name) +
+    /* chips live NEXT TO the h1, not inside it, so the accessible
+       heading reads as just the program name */
+    '<div class="ch-title"><h1>' + esc(p.name) + "</h1>" +
       '<span class="chip" style="background:' + stageOf(c).color + ';color:#fff">' + esc(stageOf(c).label) + "</span>" +
       disasterTag(p) + compDueChipHTML(c.programId, c.fy) +
-    "</h1>" +
+    "</div>" +
     '<div class="ch-meta">' +
       "<span>TAFS (Treasury Appropriation Fund Symbol): <span class=\"num\">" + esc(p.tafs) + "</span> — synthetic stand-in</span>" +
       (p.listing ? "<span>Assistance listing " + esc(p.listing) + "</span>" : "<span>Umbrella program (no single assistance listing)</span>") +
@@ -1053,12 +1101,11 @@ function whyCardHTML(c) {
 
 function whatIfOutHTML() {
   const th = state.whatIfThreshold;
-  const names = { "PROG-PA": "PA", "PROG-HM": "HMGP", "PROG-IA": "IA", "PROG-HS": "HSGP", "PROG-UR": "US&R" };
   const fy = (currentCase() ? currentCase().fy : state.fy);
   const flagged = [], clear = [];
   D.programs.forEach(p => {
     const t = evalTrigger(p.id, fy, th);
-    (t.flagged ? flagged : clear).push(names[p.id] + (t.countOnly ? " (volume-only)" : ""));
+    (t.flagged ? flagged : clear).push(SHORT_NAMES[p.id] + (t.countOnly ? " (volume-only)" : ""));
   });
   return "At <strong>&plusmn;" + th + "%</strong> across FY" + fy + ": <strong>" + (flagged.length ? flagged.join(", ") : "none") +
     "</strong> would flag" + (clear.length ? "; " + clear.join(", ") + " within threshold" : "") + ".";
@@ -1996,6 +2043,16 @@ window.__SELFTEST__ = function () {
     const caseVisible = !el("view-case").hidden && el("view-board").hidden;
     T("opening a case switches to the case-file view",
       caseVisible && el("view-case").textContent.indexOf("Individual Assistance") >= 0);
+    const caseH1 = el("view-case").querySelector(".case-header h1");
+    T("case heading is just the program name (status chips outside the h1)",
+      !!caseH1 && caseH1.textContent.trim() === "Individual Assistance",
+      caseH1 ? caseH1.textContent : "h1 missing");
+    T("board KPIs render as a 4-stat row with context sublines",
+      document.querySelectorAll("#view-board .kpi .k-sub").length === 4,
+      document.querySelectorAll("#view-board .kpi .k-sub").length + " sublines");
+    T("board lanes carry compact posture summaries ($ + flagged)",
+      document.querySelectorAll("#view-board .lane-sum").length === 5,
+      document.querySelectorAll("#view-board .lane-sum").length + " lane summaries");
     T("case file explains the count-only catch in plain language",
       el("view-case").textContent.indexOf("Caught by volume, not dollars") >= 0);
 

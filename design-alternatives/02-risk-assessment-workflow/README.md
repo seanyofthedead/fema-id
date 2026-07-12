@@ -25,7 +25,7 @@ Master–detail queue. The **assessment queue** is a triage board grouped by lif
 
 ## Major functionality
 
-- Triage board: 6 lifecycle lanes, case cards with trigger chips, count-only badge, comprehensive-cycle chips (incl. an **overdue** state for US&R), owner, due date, completeness meter; live search filter; queue KPIs computed live.
+- Triage board: 6 lifecycle lanes, case cards with trigger chips, count-only badge, comprehensive-cycle chips (incl. an **overdue** state for US&R), owner, due date, completeness meter; live search filter. The queue header is a 4-stat KPI row (cases with signed/in-progress split, trigger-flagged with the volume-only count, comprehensive-overdue naming the offending program, FY disbursements computed live) with status-colored accents, and each lane carries a compact posture summary (disbursements represented + flagged count) — a 30-second executive read without leaving the queue.
 - "Why this case exists" panel: dual-measure YoY trigger table computed live from transactions, verdict prose (the IA **count-only catch**: dollars +8.0% within threshold, volume +37.5% breach), and a what-if threshold slider (labeled exploration-only).
 - Per-question surface: cleaned illustrative question text, auto answer with confidence badge and populated-by label, evidence blocks (rollup composition, YoY math, event concentration, exception queue, assessment history, five-year SVG trend) with **drill-to-transaction lineage** including raw-code → cleansed-code repairs.
 - Accept / Override (reason required, refuses blank) / Revert-to-auto; Q9/Q10 validated narrative input.
@@ -83,4 +83,4 @@ The unit of navigation changes from **pipeline stage** to **assessment case**. T
 
 - Source of truth: `index.template.html` (edit this, never the generated file).
 - Build: `python ..\_qa\inject.py index.template.html index.html` (embeds `window.FEMA_DATA`).
-- Test: `node ..\_qa\test_harness.mjs index.html` — currently **45/45 checks passed**, including the embedded `window.__SELFTEST__` suite (payload integrity, planted-fact totals, trigger semantics, navigation, lineage drill, gate enforcement, override-reason refusal, watermark).
+- Test: `node ..\_qa\test_harness.mjs index.html` — currently **48/48 checks passed**, including the embedded `window.__SELFTEST__` suite (payload integrity, planted-fact totals, trigger semantics, navigation, lineage drill, gate enforcement, override-reason refusal, watermark).
