@@ -154,7 +154,7 @@ h2.section-title .n{color:var(--faint);margin-right:10px;font-weight:600;}
 .cleansed-note{color:var(--gold);font-size:10.5px;display:block;}
 .lineage-note{font:12px/1.6 var(--sans);color:var(--muted);margin:8px 0 0;max-width:78ch;}
 
-/* --- Editors (send back / assign / override) --- */
+/* --- Editors (send back / assign) --- */
 .editor{border:1px solid var(--navy);background:var(--navy-soft);border-radius:6px;padding:14px 16px;margin-top:12px;font-family:var(--sans);max-width:620px;}
 .editor label{display:block;font-size:12.5px;font-weight:600;margin:0 0 4px;}
 .editor textarea{width:100%;min-height:64px;font:13.5px/1.5 var(--sans);padding:8px;border:1px solid var(--rule);border-radius:4px;background:#fff;color:var(--ink);}
@@ -171,7 +171,12 @@ h2.section-title .n{color:var(--faint);margin-right:10px;font-weight:600;}
 .pra-q{max-width:34em;}
 .src-auto{color:var(--navy);font-weight:600;font-size:11.5px;}
 .src-human{color:var(--gold);font-weight:600;font-size:11.5px;}
-.overridden{background:var(--gold-bg);}
+/* Per-program PRA draft blocks (executive review surface) */
+.pra-draft{border:1px solid var(--rule);background:#fff;border-radius:5px;padding:12px 14px;margin:10px 0;}
+.pra-draft-head{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;font-family:var(--sans);}
+.pra-draft-title{flex:1;min-width:240px;font-size:14px;}
+.pra-draft-meta{font-size:12px;color:var(--muted);}
+.pra-draft-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 
 /* --- Decision record --- */
 #decision-log{list-style:none;margin:0;padding:0;font-family:var(--sans);}
@@ -454,12 +459,10 @@ var state = {
   fy: MAXFY,
   cfg: { threshold: D.meta.trigger_default.threshold_pct, dollars:true, counts:true },
   cfgOpen: false,
-  expanded: {},        // cardKey -> 0 | 1 (evidence) | 2 (transactions)
+  expanded: {},        // cardKey -> 0 | 1 (evidence) | 2 (transactions); PRAD-* keys for PRA draft detail
   showAll: {},         // cardKey -> bool (full transaction list)
-  editor: null,        // {type:'sendback'|'assign'|'override', subject, key?}
+  editor: null,        // {type:'sendback'|'assign', subject}
   decisions: [],       // the session decision record (audit trail)
-  praOverrides: {},    // overrideKey -> {value, reason}
-  praProg: 'PROG-PA',
   exportOpen: false
 };
 var _seq = 0;
@@ -472,7 +475,7 @@ function decisionFor(subject){
   return null;
 }
 function recordDecision(subject, label, action, extra){
-  /* one active decision per subject per FY (except PRA overrides, keyed uniquely) */
+  /* one active decision per subject per FY */
   state.decisions = state.decisions.filter(function(d){
     return !(d.subject===subject && d.fy===state.fy);
   });
@@ -665,17 +668,26 @@ function decisionBar(subject, label, opts){
     var verb = d.action==='concur' ? 'You concurred'
              : d.action==='send_back' ? 'You sent this back'
              : d.action==='assign' ? 'Assigned to '+esc(d.assignee||'')
+             : d.action==='acknowledge' ? 'You noted this'
              : 'Recorded';
     var why = d.note ? ' <span class="why">&ldquo;'+esc(d.note)+'&rdquo;</span>' : '';
     return '<span class="decision-status">'+verb+' at '+esc(d.ts)+'.'+why+'</span>'
       + '<button class="btn" data-action="undo-decision" data-id="'+d.id+'">Undo</button>';
+  }
+  /* Findings that need no decision carry a deliberately lighter affordance:
+     acknowledge only. The full concur / send-back / assign weight is reserved
+     for findings that actually require the executive's call. */
+  if(opts.ackOnly){
+    return '<button class="btn" data-action="acknowledge" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-ack-'+subject+'">'+(opts.ackText||'Noted')+'</button>';
   }
   var b = '';
   if(!opts.assignOnly){
     b += '<button class="btn" data-action="concur" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-concur-'+subject+'">Concur</button>'
        + '<button class="btn btn-danger" data-action="open-sendback" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-sendback-'+subject+'">Send back&hellip;</button>';
   }
-  b += '<button class="btn" data-action="open-assign" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-assign-'+subject+'">Assign&hellip;</button>';
+  if(!opts.noAssign){
+    b += '<button class="btn" data-action="open-assign" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-assign-'+subject+'">Assign&hellip;</button>';
+  }
   return b;
 }
 function editorPanel(subject, label){
@@ -685,7 +697,7 @@ function editorPanel(subject, label){
     return '<div class="editor" data-editor="sendback">'
       + '<label for="editor-note">Why are you sending &ldquo;'+esc(label)+'&rdquo; back? (required &mdash; this becomes part of the audit record)</label>'
       + '<textarea id="editor-note" placeholder="e.g. Need the DR-4332 validation before I concur."></textarea>'
-      + '<p class="err" id="editor-err" hidden>A reason is required before a recommendation can be sent back.</p>'
+      + '<p class="err" id="editor-err" hidden>A reason is required before this can be sent back.</p>'
       + '<div class="editor-buttons">'
       + '<button class="btn btn-primary" data-action="confirm-sendback" data-subject="'+subject+'" data-label="'+esc(label)+'">Send back with note</button>'
       + '<button class="btn" data-action="cancel-editor">Cancel</button>'
@@ -773,18 +785,36 @@ function renderProgramCard(s){
       + '</div>';
   }
 
+  /* Concise short form for screen-reader heading navigation (the full-sentence
+     finding stays as the visible heading text). */
+  var shortLabel = p.name+' — '+(fl.countOnly?'flagged by transaction volume only'
+    : fl.flagged?'flagged, needs comprehensive assessment'
+    : !fl.evaluable?'baseline year, no comparison'
+    : cycleDue?'within threshold, 3-year assessment cycle due'
+    : 'within threshold');
+
+  /* Only findings that need a decision get the full concur/send-back/assign set;
+     unflagged findings get a lighter acknowledge-only affordance. */
+  var needsDecision = fl.flagged || cycleDue;
+  var subjectLabel = 'the '+p.name+' recommendation';
+  var bar = needsDecision
+    ? decisionBar(p.id, subjectLabel)
+    : decisionBar(p.id, subjectLabel, { ackOnly:true,
+        ackText: fl.evaluable ? 'Noted &mdash; no assessment required this year'
+                              : 'Noted &mdash; baseline year, nothing to decide' });
+
   return '<article class="card '+cls+'" id="card-'+p.id+'" data-program="'+p.id+'" aria-labelledby="finding-'+p.id+'">'
     + '<div class="card-top">'+kicker+statusChip(fl)+'<span class="card-meta">'+meta+'</span></div>'
-    + '<h3 class="finding" id="finding-'+p.id+'">'+findingSentence(s,fl)+'</h3>'
+    + '<h3 class="finding" id="finding-'+p.id+'" aria-label="'+esc(shortLabel)+'">'+findingSentence(s,fl)+'</h3>'
     + '<p class="numbers-line">FY'+state.fy+' disbursements: <strong>'+fmtUSD(s.total)+'</strong> across <strong>'+fmtInt(s.count)+'</strong> transactions'
     + (s.priorTotal!==null?' (FY'+(state.fy-1)+': '+fmtUSD(s.priorTotal)+' across '+fmtInt(s.priorCount)+')':'')+'.</p>'
     + '<p class="rec '+rec.cls+'">'+rec.text+'</p>'
     + '<div class="card-actions">'
     + '<button class="btn" data-action="toggle-evidence" data-prog="'+p.id+'" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-'+p.id+'" id="btn-evi-'+p.id+'">'+(lvl>=1?'Hide the evidence':'Show me why')+'</button>'
     + '<span class="spacer"></span>'
-    + decisionBar(p.id, p.name)
+    + bar
     + '</div>'
-    + editorPanel(p.id, p.name)
+    + editorPanel(p.id, subjectLabel)
     + evidence
     + '</article>';
 }
@@ -871,9 +901,12 @@ function renderExceptionCard(){
       + '<p class="lineage-note">Anything below the '+(D.meta.confidence_routing_threshold*100).toFixed(0)+'% confidence bar routes to human review by policy &mdash; the suggestion is a starting point, never a mapping. These suggestions are simulated (deterministic similarity scoring, illustrative of the intended AI assist). Dollars in this queue are excluded from every program total above until an analyst confirms a home for them.</p>'
       + '</div>';
   }
+  var excShort = exc.length
+    ? 'Exception queue — '+exc.length+' unmapped financial codes awaiting review'
+    : 'Exception queue — clear for FY'+state.fy;
   return '<article class="card '+cls+'" id="card-EXC" aria-labelledby="finding-EXC">'
     + '<div class="card-top">'+chip+'<span class="card-meta">Code&rarr;program mapping governance</span></div>'
-    + '<h3 class="finding" id="finding-EXC">'+head+'</h3>'
+    + '<h3 class="finding" id="finding-EXC" aria-label="'+esc(excShort)+'">'+head+'</h3>'
     + '<div class="card-actions">'
     + (exc.length? '<button class="btn" data-action="toggle-evidence" data-prog="EXC" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-EXC" id="btn-evi-EXC">'+(lvl>=1?'Hide the queue':'Show me the queue')+'</button>':'')
     + '<span class="spacer"></span>'
@@ -884,85 +917,90 @@ function renderExceptionCard(){
     + '</article>';
 }
 
-/* ---- 7f. PRA card (auto-population + human override with reason) ---- */
-function overrideKey(prog,q){ return 'pra|'+state.fy+'|'+prog+'|'+q; }
+/* ---- 7f. PRA card — an executive REVIEW surface, not a form.
+   Each program's machine-drafted PRA is presented as evidence
+   (auto-population status, confidence, what still needs the program
+   office) with an expandable read-only detail; the executive's
+   affordances are concur / send back (reason required) per draft.
+   The reason-gated send-back preserves the override-with-reason
+   capability in an executive-appropriate form. ---- */
 function renderPraCard(){
   var lvl = state.expanded['PRA']||0;
   var resp = D.risk_responses.filter(function(r){ return r.fy===state.fy; });
-  var head, body='', chip;
+  var head, body='', chip, shortLabel;
   if(!resp.length){
     chip = '<span class="chip chip-neutral">Not yet drafted</span>';
+    shortLabel = 'Preliminary Risk Assessment — not yet drafted for FY'+state.fy;
     head = 'The Preliminary Risk Assessment (PRA) &mdash; the ten-question instrument each program must complete &mdash; has not been drafted for FY'+state.fy+' in this extract. Drafting begins when the fiscal year closes; the FY'+MAXFY+' drafts are available under that year.';
   } else {
     var autoN = resp.filter(function(r){ return r.populated_by==='auto' && r.answer_value!==null; }).length;
     var perProg = Math.round(autoN / D.programs.length);
     var awaiting = resp.filter(function(r){ return r.answer_value===null; }).length;
     chip = '<span class="chip chip-navy">'+perProg+' of 10 machine-drafted</span>';
-    head = 'The FY'+state.fy+' Preliminary Risk Assessment (PRA) is already '+(perProg*10)+'% drafted for every program: '
-      + perProg+' of the 10 questions are auto-populated from the same ledger shown above (simulated auto-population, each answer traceable to its source), '
-      + 'and '+(awaiting/D.programs.length)+' qualitative questions wait on program-office judgment. Nothing files without a human signature.';
+    shortLabel = 'Preliminary Risk Assessment drafts — review and decide';
+    head = 'The FY'+state.fy+' Preliminary Risk Assessment (PRA) is already '+(perProg*10)+'% machine-drafted for every program from the same ledger shown above (simulated auto-population, each answer traceable to its source); '
+      + (awaiting/D.programs.length)+' qualitative questions per program wait on program-office judgment. Your job is not to fill the form &mdash; review each program&rsquo;s draft below and either concur or send it back with a note. Nothing files without a human signature.';
     if(lvl>=1){
-      var progOpts = D.programs.map(function(p){
-        return '<option value="'+p.id+'"'+(p.id===state.praProg?' selected':'')+'>'+esc(p.name)+'</option>';
-      }).join('');
       var qById={};
       D.risk_questions.forEach(function(q){ qById[q.id]=q; });
-      var rows = resp.filter(function(r){ return r.program_id===state.praProg; })
-        .sort(function(a,b){ return parseInt(a.question_id.slice(1),10)-parseInt(b.question_id.slice(1),10); })
-        .map(function(r){
-          var q = qById[r.question_id]||{text:r.question_id, qtype:''};
-          var key = overrideKey(r.program_id, r.question_id);
-          var ov = state.praOverrides[key];
-          var ansHtml, srcHtml;
-          if(ov){
-            ansHtml = '<b>'+esc(ov.value)+'</b><br><span style="font-size:11px;color:var(--gold)">Overridden &mdash; was: '+esc(fmtAnswer(r.answer_value))+'</span>';
-            srcHtml = '<span class="src-human">Human override</span><br><span style="font-size:11px;color:var(--muted)">&ldquo;'+esc(ov.reason)+'&rdquo;</span>';
-          } else if(r.answer_value===null){
-            ansHtml = '<em style="color:var(--muted)">Awaiting program-office input</em>';
-            srcHtml = '<span class="src-human">Human-only by design</span>';
-          } else {
-            ansHtml = esc(fmtAnswer(r.answer_value));
-            srcHtml = r.populated_by==='auto'
-              ? '<span class="src-auto">Auto-populated (simulated)</span><br><span style="font-size:11px;color:var(--muted)">confidence '+(r.confidence*100).toFixed(0)+'%</span>'
-              : '<span class="src-human">Human</span>';
-          }
-          var act = '';
-          if(r.answer_value!==null){
-            act = ov
-              ? '<button class="btn" data-action="undo-override" data-key="'+key+'">Undo</button>'
-              : '<button class="btn" data-action="open-override" data-key="'+key+'" data-subject="'+key+'" id="btn-ov-'+r.program_id+'-'+r.question_id+'">Override&hellip;</button>';
-          }
-          var edit = (state.editor && state.editor.type==='override' && state.editor.subject===key)
-            ? '<div class="editor" data-editor="override">'
-              + '<label for="editor-value">Corrected answer</label>'
-              + '<input type="text" id="editor-value" value="'+esc(fmtAnswer(r.answer_value))+'">'
-              + '<label for="editor-note" style="margin-top:8px">Reason for override (required &mdash; captured in the audit record)</label>'
-              + '<textarea id="editor-note" placeholder="e.g. Program office reports a corrected figure pending reconciliation."></textarea>'
-              + '<p class="err" id="editor-err" hidden>An override requires a reason before it can be recorded.</p>'
-              + '<div class="editor-buttons">'
-              + '<button class="btn btn-primary" data-action="confirm-override" data-key="'+key+'" data-q="'+r.question_id+'" data-progid="'+r.program_id+'">Record override</button>'
-              + '<button class="btn" data-action="cancel-editor">Cancel</button></div></div>'
-            : '';
-          return '<tr'+(ov?' class="overridden"':'')+'><td><b>'+r.question_id+'</b></td>'
-            + '<td class="pra-q">'+esc(scrubIds(q.text))+'</td>'
-            + '<td>'+ansHtml+'</td><td>'+srcHtml+'</td><td>'+act+edit+'</td></tr>';
-        }).join('');
+      var blocks = D.programs.map(function(p){
+        var rs = resp.filter(function(r){ return r.program_id===p.id; })
+          .sort(function(a,b){ return parseInt(a.question_id.slice(1),10)-parseInt(b.question_id.slice(1),10); });
+        if(!rs.length) return '';
+        var auto = rs.filter(function(r){ return r.populated_by==='auto' && r.answer_value!==null; });
+        var awaitingN = rs.filter(function(r){ return r.answer_value===null; }).length;
+        var minConf = auto.length ? Math.min.apply(null, auto.map(function(r){ return r.confidence; })) : null;
+        var subj = 'PRA-'+p.id;
+        var draftLabel = 'the FY'+state.fy+' PRA draft for '+p.name;
+        var open = !!state.expanded['PRAD-'+p.id];
+        var detail = '';
+        if(open){
+          var rows = rs.map(function(r){
+            var q = qById[r.question_id]||{text:r.question_id};
+            var ans, src;
+            if(r.answer_value===null){
+              ans = '<em style="color:var(--muted)">Awaiting program-office input</em>';
+              src = '<span class="src-human">Human-only by design</span>';
+            } else {
+              ans = esc(fmtAnswer(r.answer_value));
+              src = r.populated_by==='auto'
+                ? '<span class="src-auto">Auto-drafted (simulated)</span><br><span style="font-size:11px;color:var(--muted)">confidence '+(r.confidence*100).toFixed(0)+'%</span>'
+                : '<span class="src-human">Human</span>';
+            }
+            return '<tr><td><b>'+r.question_id+'</b></td>'
+              + '<td class="pra-q">'+esc(scrubIds(q.text))+'</td>'
+              + '<td>'+ans+'</td><td>'+src+'</td></tr>';
+          }).join('');
+          detail = '<table class="pra-table" id="prad-tbl-'+p.id+'" style="margin-top:10px">'
+            + '<thead><tr><th scope="col">Q</th><th scope="col">Question (illustrative instrument)</th><th scope="col">Draft answer</th><th scope="col">Source</th></tr></thead>'
+            + '<tbody>'+rows+'</tbody></table>';
+        }
+        return '<div class="pra-draft" id="prad-'+p.id+'">'
+          + '<div class="pra-draft-head">'
+          + '<div class="pra-draft-title"><b>'+esc(p.name)+'</b><br>'
+          + '<span class="pra-draft-meta">'+auto.length+' of '+rs.length+' answers auto-drafted (simulated'
+          + (minConf!==null?', lowest confidence '+(minConf*100).toFixed(0)+'%':'')+') &middot; '
+          + awaitingN+' awaiting program-office input &middot; status: draft &mdash; requires sign-off</span></div>'
+          + '<div class="pra-draft-actions">'
+          + '<button class="btn" data-action="toggle-evidence" data-prog="PRAD-'+p.id+'" aria-expanded="'+(open?'true':'false')+'" aria-controls="prad-tbl-'+p.id+'" id="btn-prad-'+p.id+'">'+(open?'Hide the draft':'View the draft')+'</button>'
+          + decisionBar(subj, draftLabel, {noAssign:true})
+          + '</div></div>'
+          + editorPanel(subj, draftLabel)
+          + detail
+          + '</div>';
+      }).join('');
       body = '<div class="evidence" id="evi-PRA">'
-        + '<p class="ev-level-label">Evidence &mdash; the draft instrument, answer by answer</p>'
-        + '<p style="font:13px var(--sans);margin:0 0 10px"><label for="pra-prog-select" style="font-weight:600">Program:</label> '
-        + '<select id="pra-prog-select" data-bind="pra-program" style="font:13.5px var(--sans);padding:5px 8px;border:1px solid var(--rule);border-radius:4px">'+progOpts+'</select>'
-        + ' <span style="color:var(--muted);font-size:12px">All ten questions shown are an illustrative placeholder instrument, not FEMA&rsquo;s official PRA form. Status: draft &mdash; requires sign-off.</span></p>'
-        + '<table class="pra-table"><thead><tr><th scope="col">Q</th><th scope="col">Question (illustrative instrument)</th><th scope="col">Draft answer</th><th scope="col">Source</th><th scope="col">Action</th></tr></thead>'
-        + '<tbody>'+rows+'</tbody></table>'
-        + '<p class="lineage-note">Auto-populated answers are computed by the same deterministic engine as this page&rsquo;s totals and labeled with their source binding; the &ldquo;AI&rdquo; assist here is simulated. Overriding any answer requires a written reason and lands in the session decision record below. A comprehensive assessment &mdash; the deeper review a flagged program gets &mdash; is required at least once every three years regardless of triggers.</p>'
+        + '<p class="ev-level-label">Evidence &mdash; the five program drafts; concur with a draft or send it back to the program office (a send-back requires a note)</p>'
+        + '<p class="lineage-note" style="margin:0 0 10px">The ten questions are an illustrative placeholder instrument, not FEMA&rsquo;s official PRA form. Auto-drafted answers are computed by the same deterministic engine as this page&rsquo;s totals; the &ldquo;AI&rdquo; assist is simulated and confidence-labeled. Sending a draft back requires a written reason, which becomes part of the decision record below &mdash; nothing finalizes without human sign-off. A comprehensive assessment &mdash; the deeper review a flagged program gets &mdash; is required at least once every three years regardless of triggers.</p>'
+        + blocks
         + '</div>';
     }
   }
   return '<article class="card neutral" id="card-PRA" aria-labelledby="finding-PRA">'
-    + '<div class="card-top">'+chip+'<span class="card-meta">Preliminary Risk Assessment (PRA) drafting</span></div>'
-    + '<h3 class="finding" id="finding-PRA">'+head+'</h3>'
+    + '<div class="card-top">'+chip+'<span class="card-meta">Preliminary Risk Assessment (PRA) &mdash; executive review</span></div>'
+    + '<h3 class="finding" id="finding-PRA" aria-label="'+esc(shortLabel)+'">'+head+'</h3>'
     + '<div class="card-actions">'
-    + (resp.length? '<button class="btn" data-action="toggle-evidence" data-prog="PRA" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-PRA" id="btn-evi-PRA">'+(lvl>=1?'Hide the draft answers':'Show the draft answers')+'</button>' : '')
+    + (resp.length? '<button class="btn" data-action="toggle-evidence" data-prog="PRA" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-PRA" id="btn-evi-PRA">'+(lvl>=1?'Hide the program drafts':'Review the program drafts')+'</button>' : '')
     + '</div>'
     + body
     + '</article>';
@@ -981,16 +1019,15 @@ function fmtAnswer(v){
 /* ---- 7g. Decision record (the session audit trail) ---- */
 function renderDecisionRecord(){
   var items = state.decisions.map(function(d){
-    var verb = d.action==='concur' ? 'Concurred with the recommendation for'
-             : d.action==='send_back' ? 'Sent back the recommendation for'
+    var verb = d.action==='concur' ? 'Concurred with'
+             : d.action==='send_back' ? 'Sent back'
              : d.action==='assign' ? 'Assigned'
-             : d.action==='override_pra' ? 'Overrode a PRA draft answer for'
+             : d.action==='acknowledge' ? 'Noted'
              : d.action==='sme_request' ? 'Requested subject-matter-expert confirmation of'
-             : 'Recorded on';
+             : 'Recorded';
     return '<li><span class="when">'+esc(d.ts)+' &middot; FY'+d.fy+'</span>'
       + '<span class="what">'+verb+' <b>'+esc(d.label)+'</b>'
       + (d.assignee?' to '+esc(d.assignee):'')
-      + (d.q?' ('+esc(d.q)+')':'')
       + (d.note?' &mdash; <span class="note-quote">&ldquo;'+esc(d.note)+'&rdquo;</span>':'')
       + '</span>'
       + '<button class="btn" data-action="undo-decision" data-id="'+d.id+'">Undo</button></li>';
@@ -999,7 +1036,7 @@ function renderDecisionRecord(){
     + '<h2 class="section-title" id="dr-title"><span class="n">II.</span>Your decision record this session</h2>'
     + (state.decisions.length
         ? '<ul id="decision-log" aria-live="polite">'+items+'</ul>'
-        : '<p class="log-empty" id="decision-log-empty">No decisions recorded yet. Decisions you take on the cards above &mdash; concur, send back, assign, override &mdash; are captured here, become the audit trail, and ride along in the export.</p>')
+        : '<p class="log-empty" id="decision-log-empty">No decisions recorded yet. Decisions you take on the cards above &mdash; concur, send back, assign, note &mdash; are captured here, become the audit trail, and ride along in the export.</p>')
     + '<p class="lineage-note" style="margin-top:10px">This record lives only in this page&rsquo;s memory (nothing is stored or transmitted) and every entry is reversible while the session is open. In production it would post to the system of record.</p>'
     + '</section>';
 }
@@ -1087,7 +1124,7 @@ function buildExportText(){
   lines.push('DECISIONS CAPTURED THIS SESSION ('+state.decisions.length+')');
   if(state.decisions.length){
     state.decisions.forEach(function(d){
-      var what = d.action==='concur'?'CONCUR':d.action==='send_back'?'SEND BACK':d.action==='assign'?'ASSIGN → '+(d.assignee||''):d.action==='override_pra'?'PRA OVERRIDE'+(d.q?' ('+d.q+')':''):d.action==='sme_request'?'SME CONFIRMATION REQUESTED':d.action.toUpperCase();
+      var what = d.action==='concur'?'CONCUR':d.action==='send_back'?'SEND BACK':d.action==='assign'?'ASSIGN → '+(d.assignee||''):d.action==='acknowledge'?'NOTED':d.action==='sme_request'?'SME CONFIRMATION REQUESTED':d.action.toUpperCase();
       lines.push('  ['+d.ts+' FY'+d.fy+'] '+what+' — '+d.label+(d.note?' — "'+d.note+'"':''));
     });
   } else {
@@ -1178,6 +1215,10 @@ document.addEventListener('click', function(ev){
     case 'concur':
       recordDecision(subject, label, 'concur');
       render(); break;
+    case 'acknowledge':
+      /* the lighter affordance for findings that need no decision — still audited */
+      recordDecision(subject, label, 'acknowledge');
+      render(); break;
     case 'open-sendback':
       state.editor = { type:'sendback', subject:subject }; render(); break;
     case 'open-assign':
@@ -1200,31 +1241,8 @@ document.addEventListener('click', function(ev){
       });
       state.editor = null; render(); break;
     }
-    case 'open-override':
-      state.editor = { type:'override', subject:el.getAttribute('data-key') }; render(); break;
-    case 'confirm-override': {
-      var key = el.getAttribute('data-key');
-      var vEl = document.getElementById('editor-value');
-      var rEl = document.getElementById('editor-note');
-      var reason = rEl ? rEl.value.trim() : '';
-      if(!reason){ showEditorError(); return; } /* reason is REQUIRED */
-      var val = vEl ? vEl.value.trim() : '';
-      state.praOverrides[key] = { value: val || '(cleared)', reason: reason };
-      var progId = el.getAttribute('data-progid');
-      recordDecision(key, (progById[progId]?progById[progId].name:progId), 'override_pra',
-        { note: reason, q: el.getAttribute('data-q') });
-      state.editor = null; render(); break;
-    }
-    case 'undo-override': {
-      var k2 = el.getAttribute('data-key');
-      delete state.praOverrides[k2];
-      state.decisions = state.decisions.filter(function(d){ return d.subject!==k2; });
-      render(); break;
-    }
     case 'undo-decision': {
       var id = el.getAttribute('data-id');
-      var gone = state.decisions.filter(function(d){ return d.id===id; });
-      gone.forEach(function(d){ if(d.action==='override_pra') delete state.praOverrides[d.subject]; });
       state.decisions = state.decisions.filter(function(d){ return d.id!==id; });
       render(); break;
     }
@@ -1261,7 +1279,6 @@ function onBindChange(ev){
     }
     case 'measure-dollars': state.cfg.dollars = !!tgt.checked; render(); break;
     case 'measure-counts': state.cfg.counts = !!tgt.checked; render(); break;
-    case 'pra-program': state.praProg = tgt.value; render(); break;
   }
 }
 document.addEventListener('change', onBindChange);
@@ -1378,17 +1395,42 @@ window.__SELFTEST__ = function(){
     var stillThere = state.decisions.some(function(d){ return rec && d.id===rec.id; });
     T('decisions are reversible (undo removes the record)', rec && !stillThere);
 
-    /* (7b) PRA override also enforces reason capture */
-    state.fy = 2026; state.praProg='PROG-PA'; state.expanded['PRA']=1; state.editor=null; render();
-    var ovBtn = q('[data-action="open-override"]');
-    ovBtn.click();
-    var ovCountBefore = Object.keys(state.praOverrides).length;
-    q('[data-action="confirm-override"]').click();          /* no reason typed */
-    var ovBlocked = Object.keys(state.praOverrides).length===ovCountBefore;
-    document.getElementById('editor-note').value = 'Program office reports a corrected figure.';
-    q('[data-action="confirm-override"]').click();
-    T('PRA override requires a written reason before recording',
-      ovBlocked && Object.keys(state.praOverrides).length===ovCountBefore+1);
+    /* (7b) unflagged program carries acknowledge-only affordance (no concur/send-back) */
+    state.fy = 2026; state.editor = null; render();
+    var urConcur = q('#card-PROG-UR [data-action="concur"]');
+    var urSend = q('#card-PROG-UR [data-action="open-sendback"]');
+    var urAck = q('#card-PROG-UR [data-action="acknowledge"]');
+    if(urAck) urAck.click();
+    var ackRec = null;
+    state.decisions.forEach(function(d){ if(d.subject==='PROG-UR'&&d.action==='acknowledge') ackRec=d; });
+    T('unflagged program gets acknowledge-only affordance, captured in the record',
+      !urConcur && !urSend && urAck && !!ackRec,
+      'concur='+!!urConcur+' send='+!!urSend+' ack='+!!urAck+' recorded='+!!ackRec);
+    if(ackRec){
+      var ackUndo = q('[data-action="undo-decision"][data-id="'+ackRec.id+'"]');
+      if(ackUndo) ackUndo.click();
+    }
+
+    /* (7c) PRA is a review surface: draft detail unfolds read-only,
+       and per-draft send-back enforces reason capture */
+    state.fy = 2026; state.expanded['PRA']=1; state.editor=null; render();
+    q('[data-action="toggle-evidence"][data-prog="PRAD-PROG-PA"]').click();
+    var praRows = document.querySelectorAll('#prad-tbl-PROG-PA tbody tr');
+    var noEditing = !q('#prad-tbl-PROG-PA input') && !q('#prad-tbl-PROG-PA textarea');
+    T('PRA draft detail unfolds as read-only evidence (10 questions)',
+      praRows.length===10 && noEditing, praRows.length+' rows, read-only='+noEditing);
+    q('[data-action="open-sendback"][data-subject="PRA-PROG-PA"]').click();
+    var praBefore = state.decisions.length;
+    q('[data-action="confirm-sendback"][data-subject="PRA-PROG-PA"]').click(); /* no reason typed */
+    var praErr = document.getElementById('editor-err');
+    var praBlocked = state.decisions.length===praBefore && praErr && praErr.hidden===false;
+    document.getElementById('editor-note').value = 'Q3 figure needs program-office reconciliation first.';
+    q('[data-action="confirm-sendback"][data-subject="PRA-PROG-PA"]').click();
+    var praRec = null;
+    state.decisions.forEach(function(d){ if(d.subject==='PRA-PROG-PA'&&d.action==='send_back') praRec=d; });
+    T('PRA draft send-back requires a written reason (executive-form override)',
+      praBlocked && praRec && praRec.note.length>10,
+      praBlocked?'blocked then recorded':'not blocked');
 
     /* (8) export simulation carries SYNTHETIC-DEMO and captured decisions */
     if(q('#card-PROG-HS [data-action="concur"]')) q('#card-PROG-HS [data-action="concur"]').click();

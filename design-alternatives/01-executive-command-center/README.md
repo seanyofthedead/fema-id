@@ -8,14 +8,14 @@ The Acting Deputy Chief Financial Officer (executive sponsor). Non-technical, ti
 
 ## Design thesis
 
-**Answer-first, not pipeline-first.** The page opens with conclusions in complete plain-English sentences ("4 of 5 programs breach the ±20% year-over-year trigger in FY2026… Individual Assistance was caught only by transaction volume"). Every conclusion can be unfolded *in place* to its evidence — trigger math, five-year trend, then the actual transactions — and every recommendation ends in a decision affordance (concur / send back with a required note / assign). The data pipeline is demoted from navigation to provenance: a "How these numbers were produced" footer with live counts, not screens the executive must tour. Numbers appear only after the sentence that interprets them.
+**Answer-first, not pipeline-first.** The page opens with conclusions in complete plain-English sentences ("4 of 5 programs breach the ±20% year-over-year trigger in FY2026… Individual Assistance was caught only by transaction volume"). Every conclusion can be unfolded *in place* to its evidence — trigger math, five-year trend, then the actual transactions — and every finding ends in a decision affordance whose weight matches the decision needed: flagged findings get the full concur / send back (required note) / assign set; unflagged findings get a lighter acknowledge-only affordance. The data pipeline is demoted from navigation to provenance: a "How these numbers were produced" footer with live counts, not screens the executive must tour. Numbers appear only after the sentence that interprets them.
 
 ## Primary workflow
 
 1. **Scan (30s):** headline lede + sticky situation bar (FY, total disbursements, programs flagged, decisions pending) + one-line status ladder for all five programs.
 2. **Expand the flagged cards:** each finding card unfolds three levels deep without leaving the page — (1) trigger math with explicit formulas plus inline SVG trend sparklines for dollars and volume, (2) event/sub-grouping breakdown showing where the movement lives (e.g. the largest contributing DR), (3) the transaction rows that sum exactly to the aggregate (lineage).
 3. **Review the count-only catch:** Individual Assistance (+8.0% dollars, +37.5% volume) is styled as the hero card — "flagged only by the 2024 volume rule; a dollars-only review would have passed it."
-4. **Decide on the card:** concur, send back (reason required), or assign — every decision lands in a visible session decision record with undo.
+4. **Decide on the card:** decision weight matches decision need — flagged (or 3-year-cycle-due) programs carry the full concur / send back (reason required) / assign set; unflagged programs carry only a lighter "Noted — no assessment required this year" acknowledge affordance, still captured in the decision record. Every decision lands in the visible session record with undo.
 5. **Export the briefing** (simulated, SYNTHETIC-DEMO-watermarked) including the captured decisions.
 
 ## Navigation & interaction model
@@ -29,16 +29,16 @@ The Acting Deputy Chief Financial Officer (executive sponsor). Non-technical, ti
 
 - Plain-language finding cards with "Show me why" three-level evidence unfolds (sentence → trigger math + trends → event breakdown → transaction table with cleansing annotations).
 - Dual-measure YoY trigger (dollars OR transaction count, either direction), live-configurable; count-only catch celebrated as the hero moment.
-- Decision capture on every card: concur / send back (reason enforced) / assign (illustrative staff directory), all reversible, all recorded in a session decision record that rides along in the export.
+- Tiered decision capture: flagged/cycle-due findings get concur / send back (reason enforced) / assign (illustrative staff directory); unflagged findings get acknowledge-only. All reversible, all recorded in a session decision record that rides along in the export.
 - Exception-queue card: 6 orphan FY2026 codes, dollars excluded from totals, simulated AI similarity suggestions labeled and confidence-gated at 0.85.
-- PRA card: 8 of 10 questions auto-populated per program (labeled simulated, source-bound, per-program selector), Q9/Q10 honestly "human-only by design," per-answer override requiring a written reason.
+- PRA card as an executive review-and-decision surface, not a form: each program's machine-drafted PRA is presented as evidence (8 of 10 auto-drafted with confidence, Q9/Q10 honestly "human-only by design") with an expandable read-only question-by-question detail; the executive's affordances are concur / send back with a required note per program draft — the reason-gated send-back preserves the override-with-reason capability in executive-appropriate form.
 - Assumptions section: the 3 inferred mapping rules (0.88 confidence) in plain language with "request SME confirmation" actions, the 55501 segment trap, the sub-groupings-are-not-programs guardrail, the WebFMIS modernization risk.
 - Provenance footer: extract (1,459 rows) → cleanse (computed dirty/legacy counts) → map (57 codes, 26 rules) → review (6 exceptions) → aggregate & trigger, plus the holdout-grading accuracy exhibit (47/47, 10 routed, 0 wrong) and a one-breath glossary.
 - Export simulation: plain-text briefing memo with SYNTHETIC-DEMO header/footer, program status, captured decisions, and the trigger config at export time.
 
 ## Repository requirements addressed
 
-All seven essential capabilities in some form: (1) mapping confidence + exception queue card; (2) dual-measure trigger with live config and the IA count-only catch; (3) PRA auto-population with evidence and reason-enforced override; (4) aggregate→transaction lineage inside every card; (5) FY-extract file-in/file-out contract as provenance step 1; (6) assumptions/SME transparency section in plain language; (7) watermarked export simulation. Hard constraints honored: single offline file, no network/storage, deterministic JS computes every reportable number live from the embedded payload, simulated AI always labeled and confidence-gated, no requirement-ID badges (payload ID tokens are scrubbed from display text), acronyms glossed.
+All seven essential capabilities in some form: (1) mapping confidence + exception queue card; (2) dual-measure trigger with live config and the IA count-only catch; (3) PRA auto-population with evidence and human override in executive form (per-draft send-back with an enforced written reason; nothing finalizes without sign-off); (4) aggregate→transaction lineage inside every card; (5) FY-extract file-in/file-out contract as provenance step 1; (6) assumptions/SME transparency section in plain language; (7) watermarked export simulation. Hard constraints honored: single offline file, no network/storage, deterministic JS computes every reportable number live from the embedded payload, simulated AI always labeled and confidence-gated, no requirement-ID badges (payload ID tokens are scrubbed from display text), acronyms glossed.
 
 ## How it differs from the original PoC
 
@@ -50,7 +50,7 @@ All seven essential capabilities in some form: (1) mapping confidence + exceptio
 
 ## What was intentionally deprioritized
 
-Analysts get nothing, by design: no mapping-governance workbench, no exception-working UI (the queue is visible and assignable but not resolvable here), no ingestion or rule-editing screens, no PRA form-filling workflow beyond override. The concept optimizes ruthlessly for the executive reading.
+Analysts get nothing, by design: no mapping-governance workbench, no exception-working UI (the queue is visible and assignable but not resolvable here), no ingestion or rule-editing screens, and no PRA form-filling at all — the executive reviews drafts and concurs or sends back; answer editing belongs to the program office and analysts, outside this surface. The concept optimizes ruthlessly for the executive reading.
 
 ## Strengths
 
@@ -80,4 +80,6 @@ Analysts get nothing, by design: no mapping-governance workbench, no exception-w
 
 - Edit `index.template.html` only (contains `window.FEMA_DATA = /*__FEMA_DATA__*/null;` exactly once).
 - Build: `python "C:\dev\fema-id\design-alternatives\_qa\inject.py" index.template.html index.html`
-- Test: `node "C:\dev\fema-id\design-alternatives\_qa\test_harness.mjs" index.html` — currently **21/21 checks passed**, including 11 embedded self-tests (`window.__SELFTEST__`, side-effect-safe) covering payload load, planted-total cross-checks, trigger flags incl. the IA count-only catch, FY re-derivation, transaction drill-down, evidence unfold, reason-enforced send-back and PRA override, undo, and the watermarked export.
+- Test: `node "C:\dev\fema-id\design-alternatives\_qa\test_harness.mjs" index.html` — currently **23/23 checks passed**, including 13 embedded self-tests (`window.__SELFTEST__`, side-effect-safe) covering payload load, planted-total cross-checks, trigger flags incl. the IA count-only catch, FY re-derivation, transaction drill-down, evidence unfold, reason-enforced send-back, undo, the acknowledge-only affordance on unflagged programs, the read-only PRA draft detail, the reason-gated PRA draft send-back, and the watermarked export.
+
+Accessibility note: the full-sentence findings remain the visible headings, but each `h3` carries a concise `aria-label` short form (e.g. "Individual Assistance — flagged by transaction volume only") for screen-reader heading navigation.
