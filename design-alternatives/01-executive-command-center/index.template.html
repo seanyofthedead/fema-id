@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Morning Brief — FEMA Program Integrity (SYNTHETIC-DEMO)</title>
+<style>
+/* ============================================================
+   THE MORNING BRIEF — Program Integrity Command Center
+   Design language: calm, editorial, briefing-document register.
+   Serif for findings & headlines; humanist sans for data/UI.
+   ============================================================ */
+:root{
+  --paper:#f6f4ee;
+  --card:#fffdf8;
+  --ink:#22262c;
+  --muted:#5d646f;
+  --faint:#8b909a;
+  --rule:#ddd7c9;
+  --rule-soft:#e9e4d8;
+  --navy:#1f3a5f;
+  --navy-soft:#eef1f6;
+  --flag:#9d3226;
+  --flag-bg:#faf0ee;
+  --ok:#2e6e4e;
+  --ok-bg:#eff5f1;
+  --gold:#8a6a15;
+  --gold-bg:#fbf5e3;
+  --gold-edge:#c9a53d;
+  --focus:#1d5bbf;
+  --serif:Georgia,"Times New Roman",Times,serif;
+  --sans:"Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--serif);}
+button{font-family:var(--sans);cursor:pointer;}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:2px;}
+a{color:var(--navy);}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* --- Synthetic banner (always visible, travels with the file) --- */
+.demo-banner{background:#2b2f36;color:#f2e9c9;font:600 12px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:7px 16px;}
+.demo-banner strong{color:#ffd869;}
+
+/* --- Masthead --- */
+.masthead{max-width:1060px;margin:0 auto;padding:34px 28px 18px;border-bottom:3px double var(--rule);}
+.masthead .kicker{font:600 12px/1.3 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--muted);}
+.masthead h1{font:400 44px/1.08 var(--serif);letter-spacing:.01em;margin:.18em 0 .12em;}
+.masthead .dateline{font:400 13px/1.5 var(--sans);color:var(--muted);}
+.masthead .standfirst{max-width:64ch;font-size:16.5px;color:#3a3f47;margin:.9em 0 .2em;}
+
+/* --- Sticky situation bar --- */
+#situation-bar{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:1px solid var(--rule);box-shadow:0 1px 0 rgba(0,0,0,.03);}
+.sit-inner{max-width:1060px;margin:0 auto;padding:8px 28px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;font-family:var(--sans);}
+.sit-item{font-size:12.5px;color:var(--muted);}
+.sit-item b{display:block;font-size:15px;color:var(--ink);font-weight:600;}
+.sit-item .flagged-n{color:var(--flag);}
+.sit-fy label{font:600 11px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;}
+.sit-fy select{font:600 15px var(--sans);padding:4px 8px;border:1px solid var(--rule);background:#fff;border-radius:4px;color:var(--ink);}
+.sit-spacer{flex:1}
+.btn{border:1px solid var(--rule);background:#fff;border-radius:5px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--ink);}
+.btn:hover{border-color:var(--navy);color:var(--navy);}
+.btn-primary{background:var(--navy);border-color:var(--navy);color:#fff;}
+.btn-primary:hover{background:#16304f;color:#fff;}
+.btn-quiet{border-color:transparent;background:transparent;color:var(--navy);text-decoration:underline;text-underline-offset:3px;padding:6px 6px;}
+.btn-danger{color:var(--flag);}
+.btn[disabled]{opacity:.5;cursor:default}
+
+/* --- Layout --- */
+main{max-width:1060px;margin:0 auto;padding:10px 28px 40px;}
+section{margin:34px 0;}
+h2.section-title{font:400 13px/1.3 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:8px;margin:0 0 18px;}
+h2.section-title .n{color:var(--faint);margin-right:10px;font-weight:600;}
+
+/* --- Summary / lede --- */
+#headline-lede{font:400 27px/1.4 var(--serif);max-width:38em;margin:6px 0 4px;}
+#headline-lede .count-catch{background:var(--gold-bg);box-shadow:inset 0 -2px 0 var(--gold-edge);padding:0 3px;}
+.lede-sub{font:400 15.5px/1.6 var(--serif);color:#3a3f47;max-width:70ch;margin:.6em 0;}
+.decision-count{font:600 13px var(--sans);color:var(--navy);}
+
+/* --- Trigger config --- */
+.config-wrap{margin-top:14px;font-family:var(--sans);}
+.config-panel{border:1px solid var(--rule);background:var(--card);border-radius:6px;padding:14px 18px;margin-top:8px;max-width:640px;}
+.config-panel .cfg-row{display:flex;gap:26px;align-items:center;flex-wrap:wrap;}
+.config-panel label{font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.config-panel input[type=range]{width:180px;}
+.config-panel output{font-weight:700;min-width:44px;display:inline-block;}
+.config-note{font-size:12px;color:var(--muted);margin:10px 0 0;}
+
+/* --- Status ladder --- */
+.ladder{width:100%;border-collapse:collapse;font:13.5px/1.45 var(--sans);background:var(--card);border:1px solid var(--rule);}
+.ladder th{font:600 11px/1.3 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);}
+.ladder td{padding:9px 12px;border-bottom:1px solid var(--rule-soft);vertical-align:middle;}
+.ladder tr:last-child td{border-bottom:0}
+.ladder .num{text-align:right;font-variant-numeric:tabular-nums;}
+.ladder a{font-size:12.5px;}
+
+/* --- Chips --- */
+.chip{display:inline-block;font:600 11px/1.1 var(--sans);letter-spacing:.06em;text-transform:uppercase;border-radius:3px;padding:4px 8px;white-space:nowrap;}
+.chip-flag{background:var(--flag-bg);color:var(--flag);border:1px solid #e5c4be;}
+.chip-gold{background:var(--gold-bg);color:var(--gold);border:1px solid #e3d296;}
+.chip-ok{background:var(--ok-bg);color:var(--ok);border:1px solid #c4d8cc;}
+.chip-neutral{background:#f0efe9;color:var(--muted);border:1px solid var(--rule);}
+.chip-navy{background:var(--navy-soft);color:var(--navy);border:1px solid #ccd6e4;}
+
+/* --- Finding cards --- */
+.card{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--rule);border-radius:6px;padding:22px 26px 18px;margin:16px 0;}
+.card.flagged{border-left-color:var(--flag);}
+.card.hero{border-left-color:var(--gold-edge);background:linear-gradient(0deg,var(--card),var(--card)),var(--card);}
+.card.hero{box-shadow:0 0 0 1px var(--gold-edge) inset, 0 1px 4px rgba(0,0,0,.04);}
+.card.ok{border-left-color:var(--ok);}
+.card.neutral{border-left-color:#b9b4a6;}
+.card-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-family:var(--sans);}
+.card-meta{font-size:12px;color:var(--muted);}
+.finding{font:400 21px/1.45 var(--serif);margin:2px 0 6px;max-width:44em;}
+.numbers-line{font:400 14px/1.6 var(--sans);color:var(--muted);margin:0 0 10px;}
+.rec{font:600 14.5px/1.5 var(--sans);color:var(--ink);margin:4px 0 12px;}
+.rec.rec-flag{color:var(--flag);}
+.rec.rec-ok{color:var(--ok);}
+.card-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--rule-soft);padding-top:12px;font-family:var(--sans);}
+.card-actions .spacer{flex:1}
+.decision-status{font:600 13px var(--sans);color:var(--navy);background:var(--navy-soft);border:1px solid #ccd6e4;border-radius:4px;padding:6px 10px;}
+.decision-status .why{font-weight:400;color:var(--muted);}
+
+/* --- Evidence unfolds --- */
+.evidence{border-top:1px solid var(--rule-soft);margin-top:14px;padding-top:14px;}
+.ev-level-label{font:600 11px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 10px;}
+.ev-grid{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
+.ev-col{flex:1 1 300px;min-width:280px;}
+.math-table{border-collapse:collapse;font:13px/1.5 var(--sans);width:100%;}
+.math-table th{font:600 10.5px/1.3 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 10px;border-bottom:1px solid var(--rule);}
+.math-table td{padding:7px 10px;border-bottom:1px solid var(--rule-soft);font-variant-numeric:tabular-nums;}
+.math-table .breach{color:var(--flag);font-weight:700;}
+.math-table .within{color:var(--ok);}
+.formula{font:12px/1.6 var(--mono);color:var(--muted);background:#f4f2ea;border:1px solid var(--rule-soft);border-radius:4px;padding:8px 10px;margin:8px 0 0;overflow-x:auto;}
+.spark-wrap{font-family:var(--sans);}
+.spark-title{font:600 12px/1.4 var(--sans);color:var(--ink);margin:0 0 2px;}
+.spark-vals{font:12px/1.4 var(--sans);color:var(--muted);display:flex;justify-content:space-between;max-width:280px;}
+.spark-labels{font:10.5px/1.3 var(--sans);color:var(--faint);display:flex;justify-content:space-between;max-width:280px;margin-top:2px;}
+.spark svg{color:var(--navy);display:block;}
+.spark.spark-flagged svg{color:var(--flag);}
+.mover{font:400 14px/1.6 var(--serif);margin:12px 0 0;max-width:60ch;}
+
+/* --- Transaction lineage --- */
+.txn-block{margin-top:16px;}
+.event-table,.txn-table{border-collapse:collapse;font:12.5px/1.45 var(--sans);width:100%;background:#fff;}
+.event-table th,.txn-table th{font:600 10.5px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 9px;border-bottom:1px solid var(--rule);position:sticky;top:0;background:#fff;}
+.event-table td,.txn-table td{padding:6px 9px;border-bottom:1px solid var(--rule-soft);vertical-align:top;}
+.txn-scroll{max-height:340px;overflow:auto;border:1px solid var(--rule);border-radius:4px;margin-top:8px;}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
+.code-cell{font-family:var(--mono);font-size:11.5px;}
+.cleansed-note{color:var(--gold);font-size:10.5px;display:block;}
+.lineage-note{font:12px/1.6 var(--sans);color:var(--muted);margin:8px 0 0;max-width:78ch;}
+
+/* --- Editors (send back / assign / override) --- */
+.editor{border:1px solid var(--navy);background:var(--navy-soft);border-radius:6px;padding:14px 16px;margin-top:12px;font-family:var(--sans);max-width:620px;}
+.editor label{display:block;font-size:12.5px;font-weight:600;margin:0 0 4px;}
+.editor textarea{width:100%;min-height:64px;font:13.5px/1.5 var(--sans);padding:8px;border:1px solid var(--rule);border-radius:4px;background:#fff;color:var(--ink);}
+.editor input[type=text]{width:100%;font:13.5px var(--sans);padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:#fff;color:var(--ink);}
+.editor select{font:13.5px var(--sans);padding:6px 8px;border:1px solid var(--rule);border-radius:4px;background:#fff;max-width:100%;}
+.editor .editor-buttons{display:flex;gap:10px;margin-top:10px;}
+.editor .err{color:var(--flag);font:600 12.5px var(--sans);margin:8px 0 0;}
+.editor .hint{font-size:11.5px;color:var(--muted);margin:6px 0 0;}
+
+/* --- PRA table --- */
+.pra-table{border-collapse:collapse;font:13px/1.5 var(--sans);width:100%;background:#fff;border:1px solid var(--rule);}
+.pra-table th{font:600 10.5px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);}
+.pra-table td{padding:8px 10px;border-bottom:1px solid var(--rule-soft);vertical-align:top;}
+.pra-q{max-width:34em;}
+.src-auto{color:var(--navy);font-weight:600;font-size:11.5px;}
+.src-human{color:var(--gold);font-weight:600;font-size:11.5px;}
+.overridden{background:var(--gold-bg);}
+
+/* --- Decision record --- */
+#decision-log{list-style:none;margin:0;padding:0;font-family:var(--sans);}
+#decision-log li{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;border-bottom:1px solid var(--rule-soft);padding:10px 2px;font-size:13.5px;}
+#decision-log .when{color:var(--faint);font-size:12px;min-width:70px;}
+#decision-log .what b{font-weight:700;}
+#decision-log .note-quote{color:var(--muted);font-style:italic;}
+.log-empty{color:var(--muted);font:italic 14px/1.6 var(--serif);}
+
+/* --- Assumptions & provenance --- */
+.assump-list{list-style:none;margin:0;padding:0;}
+.assump-list li{border-left:3px solid var(--rule);padding:6px 0 6px 16px;margin:12px 0;max-width:80ch;}
+.assump-list .tag{font:600 10.5px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;}
+.prov-steps{display:flex;gap:0;flex-wrap:wrap;counter-reset:prov;margin:14px 0 6px;font-family:var(--sans);}
+.prov-step{flex:1 1 180px;min-width:170px;border:1px solid var(--rule);background:var(--card);padding:14px 16px;margin:-1px 0 0 -1px;position:relative;}
+.prov-step h4{font:600 12px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;color:var(--navy);}
+.prov-step p{font-size:12.5px;color:var(--muted);margin:0;line-height:1.55;}
+.prov-step .big{font:700 19px/1.2 var(--sans);color:var(--ink);display:block;margin-bottom:2px;font-variant-numeric:tabular-nums;}
+.prov-foot{font:12.5px/1.7 var(--sans);color:var(--muted);max-width:86ch;}
+.accuracy-box{border:1px solid var(--rule);background:var(--ok-bg);border-radius:6px;padding:14px 18px;margin-top:14px;font:13.5px/1.6 var(--sans);max-width:720px;}
+
+/* --- Export overlay --- */
+.overlay-backdrop{position:fixed;inset:0;background:rgba(34,38,44,.55);z-index:90;}
+.overlay-panel{position:fixed;inset:5% 8%;background:var(--card);border:1px solid var(--rule);border-radius:8px;z-index:95;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.25);}
+.overlay-head{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--rule);font-family:var(--sans);}
+.overlay-head h3{font:400 19px var(--serif);margin:0;flex:1;}
+.overlay-body{overflow:auto;padding:18px 22px;flex:1;}
+#export-body{font:12px/1.65 var(--mono);white-space:pre-wrap;margin:0;color:var(--ink);}
+.sim-tag{font:600 11px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:#7a4a12;background:#fdf1de;border:1px solid #ecd3a8;border-radius:3px;padding:3px 7px;display:inline-block;}
+
+/* --- Footer --- */
+.site-footer{border-top:3px double var(--rule);margin-top:36px;padding:22px 28px 46px;max-width:1060px;margin-left:auto;margin-right:auto;font:12.5px/1.7 var(--sans);color:var(--muted);}
+.site-footer strong{color:var(--ink);}
+
+/* --- Responsive: tablet & below --- */
+@media (max-width:1024px){
+  .masthead{padding:26px 20px 14px;}
+  .masthead h1{font-size:36px;}
+  main{padding:8px 20px 32px;}
+  .sit-inner{padding:8px 20px;gap:16px;}
+  #headline-lede{font-size:23px;}
+  .finding{font-size:19px;}
+  .ev-grid{gap:18px;}
+}
+@media (max-width:768px){
+  .masthead h1{font-size:30px;}
+  #headline-lede{font-size:20px;}
+  .sit-inner{gap:12px;}
+  .sit-item{font-size:11.5px;}
+  .sit-item b{font-size:13.5px;}
+  .card{padding:16px 16px 14px;}
+  .prov-step{flex-basis:100%;}
+  .overlay-panel{inset:3% 3%;}
+  .ladder{display:block;overflow-x:auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SYNTHETIC DATA BANNER (honest disclosure; the artifact travels by email) ===== -->
+<div class="demo-banner" role="note">
+  <strong>SYNTHETIC-DEMO</strong> &mdash; every figure on this page is synthetic demonstration data. No real FEMA financial records appear here.
+</div>
+
+<!-- ===== MASTHEAD ===== -->
+<header class="masthead">
+  <p class="kicker">FEMA &middot; Office of the Chief Financial Officer &middot; Payment Integrity</p>
+  <h1>The Morning Brief</h1>
+  <p class="dateline" id="dateline">Program-integrity briefing</p>
+  <p class="standfirst">
+    Federal payment-integrity law (PIIA &mdash; the Payment Integrity Information Act) requires FEMA to know each
+    reportable program&rsquo;s actual disbursements by fiscal year and to run a Preliminary Risk Assessment (PRA)
+    per program &mdash; &ldquo;preliminary&rdquo; because it is the start of a lifecycle, not a terminal status.
+    This brief reads the fiscal-year extract for you and leads with what needs your decision.
+  </p>
+</header>
+
+<!-- ===== STICKY SITUATION BAR ===== -->
+<div id="situation-bar">
+  <div class="sit-inner" id="situation-content"><!-- rendered by JS --></div>
+</div>
+
+<!-- ===== MAIN BRIEFING (single scroll; all drill-downs unfold in place) ===== -->
+<main id="app" aria-live="off"><!-- rendered by JS --></main>
+
+<!-- ===== OVERLAY ROOT (export simulation) ===== -->
+<div id="overlay-root"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer" id="site-footer"><!-- rendered by JS --></footer>
+
+<!-- ===== EMBEDDED DATA PAYLOAD (injected by inject.py; never edited by hand) ===== -->
+<script>
+window.FEMA_DATA = /*__FEMA_DATA__*/null;
+</script>
+
+<!-- ===== APPLICATION ===== -->
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   SECTION 0 — Payload guard
+   ============================================================ */
+var D = window.FEMA_DATA;
+if(!D){
+  document.getElementById('app').innerHTML =
+    '<p style="padding:2em">Data payload not injected. Build with inject.py from index.template.html.</p>';
+  return;
+}
+
+/* ============================================================
+   SECTION 1 — Indices & derived structures.
+   Deterministic JS owns every reportable number: all totals,
+   counts and percentages below are computed live from the
+   embedded transaction table. Nothing displayed is hardcoded.
+   ============================================================ */
+var FYS = D.meta.fiscal_years.slice().sort(function(a,b){return a-b;});
+var MINFY = FYS[0], MAXFY = FYS[FYS.length-1];
+
+var progById = {};
+D.programs.forEach(function(p){ progById[p.id]=p; });
+var subById = {};
+D.sub_programs.forEach(function(s){ subById[s.id]=s; });
+var eventByDr = {};
+D.disaster_events.forEach(function(e){ eventByDr[e.dr]=e; });
+var codeInfo = {};
+D.financial_codes.forEach(function(c){ codeInfo[c.code]=c; });
+
+function codeSub(code){ var c=codeInfo[code]; return (c&&c.sub_program_id)?subById[c.sub_program_id]:null; }
+function codeProg(code){ var s=codeSub(code); return s?s.program_id:null; }
+
+/* Transactions: column-order arrays -> objects (resilient to column reorder). */
+var COLS = D.transaction_columns;
+function colIx(name, fb){ var i=COLS.indexOf(name); return i>=0?i:fb; }
+var IX = {
+  id:colIx('txn_id',0), raw:colIx('raw_code',1), code:colIx('code',2),
+  dr:colIx('disaster_number',3), isd:colIx('is_disaster',4), fy:colIx('fiscal_year',5),
+  amt:colIx('amount',6), typ:colIx('disbursement_type',7), date:colIx('date',8)
+};
+var TX = D.transactions.map(function(r){
+  return { id:r[IX.id], raw:r[IX.raw], code:r[IX.code], dr:r[IX.dr],
+           fy:r[IX.fy], amt:r[IX.amt], typ:r[IX.typ], date:r[IX.date],
+           prog:codeProg(r[IX.code]) };
+});
+
+/* Mapping-rule & exception facts (computed, used in provenance). */
+var RULES_TOTAL = D.mapping_rules.length;
+var RULES_CONFIRMED = D.mapping_rules.filter(function(r){return r.status==='sme_confirmed';}).length;
+var RULES_INFERRED = D.mapping_rules.filter(function(r){return r.status!=='sme_confirmed';});
+var CODES_TOTAL = D.financial_codes.length;
+function exceptionsFor(fy){
+  return D.program_mapping.filter(function(m){ return m.status==='exception_queue' && m.fy===fy; });
+}
+var LEGACY_N = TX.filter(function(t){ return String(t.raw).indexOf('LEG')===0; }).length;
+var DIRTY_N  = TX.filter(function(t){ return t.raw!==t.code && String(t.raw).indexOf('LEG')!==0; }).length;
+
+/* ---- Illustrative 3-year-cycle records (SIMULATED — the payload has no
+   historical assessment table; real records exist at FEMA from 2018-19 onward). ---- */
+var LAST_COMPREHENSIVE = { 'PROG-PA':2024, 'PROG-HM':2023, 'PROG-IA':2025, 'PROG-HS':2023, 'PROG-UR':2024 };
+
+/* ---- Illustrative staff directory for the Assign action (SIMULATED). ---- */
+var ASSIGNEES = [
+  'M. Alvarez — Senior Program-Integrity Analyst',
+  'J. Whitfield — Risk Assessment Reviewer',
+  'T. Okafor — Financial Systems Liaison'
+];
+
+/* ============================================================
+   SECTION 2 — Aggregation engine (live, deterministic).
+   ============================================================ */
+var _rawCache = {};
+function rawFor(fy){
+  if(_rawCache[fy]) return _rawCache[fy];
+  var o = { byProg:{}, un:{total:0,count:0} };
+  D.programs.forEach(function(p){ o.byProg[p.id]={total:0,count:0}; });
+  TX.forEach(function(t){
+    if(t.fy!==fy) return;
+    if(t.prog){ var b=o.byProg[t.prog]; b.total+=t.amt; b.count++; }
+    else { o.un.total+=t.amt; o.un.count++; }
+  });
+  _rawCache[fy]=o;
+  return o;
+}
+function pctChange(cur, prior){
+  if(prior===null||prior===undefined||prior===0) return null;
+  return (cur-prior)/prior*100;
+}
+/* Per-program stats for a fiscal year, with prior-year comparison. */
+function statsFor(fy){
+  var cur = rawFor(fy);
+  var hasPrior = FYS.indexOf(fy-1)>=0;
+  var pr = hasPrior ? rawFor(fy-1) : null;
+  return D.programs.map(function(p){
+    var c=cur.byProg[p.id], q=pr?pr.byProg[p.id]:null;
+    return {
+      prog:p, total:c.total, count:c.count,
+      priorTotal:q?q.total:null, priorCount:q?q.count:null,
+      yoyD:q?pctChange(c.total,q.total):null,
+      yoyC:q?pctChange(c.count,q.count):null
+    };
+  });
+}
+/* Dual-measure trigger: dollars OR transaction count, either direction. */
+function flagsOf(s, cfg){
+  var th = cfg.threshold - 1e-9;
+  var dB = cfg.dollars && s.yoyD!==null && Math.abs(s.yoyD)>=th;
+  var cB = cfg.counts  && s.yoyC!==null && Math.abs(s.yoyC)>=th;
+  return {
+    dollar:dB, count:cB, flagged:dB||cB,
+    countOnly:cB&&!dB, dollarOnly:dB&&!cB,
+    evaluable:(s.yoyD!==null)||(s.yoyC!==null)
+  };
+}
+/* Event-level movement (this FY vs prior) for one program — lineage level 2. */
+function eventsFor(progId, fy){
+  var m={};
+  TX.forEach(function(t){
+    if(t.prog!==progId) return;
+    if(t.fy!==fy && t.fy!==fy-1) return;
+    var k = (t.dr===null||t.dr===undefined) ? 'ND' : String(t.dr);
+    if(!m[k]) m[k]={dr:(k==='ND'?null:t.dr), cur:0, prior:0, curN:0, priorN:0};
+    if(t.fy===fy){ m[k].cur+=t.amt; m[k].curN++; } else { m[k].prior+=t.amt; m[k].priorN++; }
+  });
+  return Object.keys(m).map(function(k){return m[k];})
+    .sort(function(a,b){ return Math.abs(b.cur-b.prior)-Math.abs(a.cur-a.prior); });
+}
+function txnsFor(progId, fy){
+  return TX.filter(function(t){ return t.prog===progId && t.fy===fy; })
+           .sort(function(a,b){ return b.amt-a.amt; });
+}
+function unmappedTxns(fy){
+  return TX.filter(function(t){ return !t.prog && t.fy===fy; })
+           .sort(function(a,b){ return b.amt-a.amt; });
+}
+/* Series across all FYs for sparklines. */
+function seriesFor(progId){
+  return FYS.map(function(fy){ return rawFor(fy).byProg[progId]; });
+}
+
+/* ============================================================
+   SECTION 3 — Formatting & text helpers (plain language first).
+   ============================================================ */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function fmtUSD(n){ return n.toLocaleString('en-US',{style:'currency',currency:'USD'}); }
+function fmtShort(n){
+  var a=Math.abs(n);
+  if(a>=1e9) return '$'+(n/1e9).toFixed(2)+'&thinsp;billion';
+  if(a>=1e6) return '$'+(n/1e6).toFixed(1)+'&thinsp;million';
+  if(a>=1e3) return '$'+Math.round(n/1e3)+'K';
+  return fmtUSD(n);
+}
+function fmtPct(p){
+  if(p===null||p===undefined) return '&mdash;';
+  return (p<0?'&minus;':'+') + Math.abs(p).toFixed(1) + '%';
+}
+function fmtInt(n){ return n.toLocaleString('en-US'); }
+/* Strip internal requirement/assumption ID tokens from display text
+   (the payload's placeholder question text embeds them; the decision
+   log forbids ID badges in the main UI). */
+function scrubIds(s){
+  return String(s)
+    .replace(/[,;]?\s*\(?(REQ|ASSUMP|SME|SRC)-\d+\)?/g,'')
+    .replace(/\(\s*illustrative placeholder\s*\)/i,'')
+    .replace(/\(\s*,/g,'(').replace(/,\s*\)/g,')').replace(/\(\s*\)/g,'')
+    .replace(/\s{2,}/g,' ').trim();
+}
+function riseFall(p){ return p>=0 ? 'rose' : 'fell'; }
+function growShrink(p){ return p>=0 ? 'grew' : 'shrank'; }
+
+/* ============================================================
+   SECTION 4 — Application state (in-memory only; nothing persists,
+   no browser storage anywhere in this file).
+   ============================================================ */
+var state = {
+  fy: MAXFY,
+  cfg: { threshold: D.meta.trigger_default.threshold_pct, dollars:true, counts:true },
+  cfgOpen: false,
+  expanded: {},        // cardKey -> 0 | 1 (evidence) | 2 (transactions)
+  showAll: {},         // cardKey -> bool (full transaction list)
+  editor: null,        // {type:'sendback'|'assign'|'override', subject, key?}
+  decisions: [],       // the session decision record (audit trail)
+  praOverrides: {},    // overrideKey -> {value, reason}
+  praProg: 'PROG-PA',
+  exportOpen: false
+};
+var _seq = 0;
+
+function decisionFor(subject){
+  for(var i=0;i<state.decisions.length;i++){
+    var d=state.decisions[i];
+    if(d.subject===subject && d.fy===state.fy) return d;
+  }
+  return null;
+}
+function recordDecision(subject, label, action, extra){
+  /* one active decision per subject per FY (except PRA overrides, keyed uniquely) */
+  state.decisions = state.decisions.filter(function(d){
+    return !(d.subject===subject && d.fy===state.fy);
+  });
+  var d = {
+    id:'d'+(++_seq), subject:subject, label:label, action:action, fy:state.fy,
+    ts:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})
+  };
+  if(extra) Object.keys(extra).forEach(function(k){ d[k]=extra[k]; });
+  state.decisions.push(d);
+  return d;
+}
+
+/* ============================================================
+   SECTION 5 — Sparkline SVG (explicit scale math; no layout
+   measurement, jsdom-safe, no canvas).
+   ============================================================ */
+function sparkSVG(values, flagged, ariaLabel){
+  var W=280, H=64, PAD=8;
+  var vs = values.filter(function(v){ return v!==null && v!==undefined; });
+  if(!vs.length) return '';
+  var min=Math.min.apply(null,vs), max=Math.max.apply(null,vs);
+  if(min===max){ min-=1; max+=1; }
+  var n=values.length;
+  function X(i){ return PAD + i*(W-2*PAD)/(n-1); }
+  function Y(v){ return H-PAD - (v-min)*(H-2*PAD)/(max-min); }
+  var pts=[];
+  values.forEach(function(v,i){ if(v!==null&&v!==undefined) pts.push([X(i),Y(v)]); });
+  var poly = pts.map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' ');
+  var last = pts[pts.length-1];
+  var base = (H-PAD).toFixed(1);
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="'+esc(ariaLabel)+'">'
+    + '<line x1="'+PAD+'" y1="'+base+'" x2="'+(W-PAD)+'" y2="'+base+'" stroke="#ddd7c9" stroke-width="1"/>'
+    + '<polyline points="'+poly+'" fill="none" stroke="currentColor" stroke-width="2"/>'
+    + '<circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="3.5" fill="currentColor"/>'
+    + '</svg>';
+}
+function sparkBlock(title, values, fmt, flagged, unit){
+  var first=null, lastV=null;
+  values.forEach(function(v){ if(v!==null&&v!==undefined){ if(first===null) first=v; lastV=v; } });
+  return '<div class="spark'+(flagged?' spark-flagged':'')+' spark-wrap">'
+    + '<p class="spark-title">'+esc(title)+'</p>'
+    + '<div class="spark-vals"><span>'+fmt(first)+'</span><span><b>'+fmt(lastV)+'</b></span></div>'
+    + sparkSVG(values, flagged, title+' trend, FY'+FYS[0]+' to FY'+FYS[FYS.length-1])
+    + '<div class="spark-labels">'+FYS.map(function(f){return '<span>FY'+String(f).slice(2)+'</span>';}).join('')+'</div>'
+    + '</div>';
+}
+
+/* ============================================================
+   SECTION 6 — Sentence generation (the briefing voice).
+   Interpretation first, numbers after; acronyms glossed.
+   ============================================================ */
+function findingSentence(s, fl){
+  var t = state.cfg.threshold;
+  var name = s.prog.name;
+  var dP = fmtPct(s.yoyD), cP = fmtPct(s.yoyC);
+  if(!fl.evaluable){
+    return esc(name)+' recorded its baseline year: this is the earliest fiscal year in the extract, so there is no prior year to compare against and the year-over-year trigger cannot be evaluated.';
+  }
+  if(fl.countOnly){
+    return esc(name)+' looks calm in dollars &mdash; disbursements '+riseFall(s.yoyD)+' just '+dP+' &mdash; but transaction volume '+growShrink(s.yoyC)+' '+cP+', breaching the &plusmn;'+t+'% trigger on volume alone. Only the 2024 dual-measure rule caught this; a dollars-only review would have passed it without a second look.';
+  }
+  if(fl.dollar && fl.count){
+    return esc(name)+' disbursements '+riseFall(s.yoyD)+' '+dP+' year over year and transaction volume '+growShrink(s.yoyC)+' '+cP+' &mdash; both measures breach the &plusmn;'+t+'% trigger'+(s.yoyD<0?' (the trigger reads movement in either direction, so a steep decrease flags too)':'')+'.';
+  }
+  if(fl.dollarOnly){
+    return esc(name)+' disbursements '+riseFall(s.yoyD)+' '+dP+', breaching the &plusmn;'+t+'% trigger on dollars; transaction volume ('+cP+') stayed inside it.';
+  }
+  var near = Math.max(Math.abs(s.yoyD===null?0:s.yoyD), Math.abs(s.yoyC===null?0:s.yoyC));
+  if(near >= t-5 && near < t){
+    return esc(name)+' moved '+dP+' in dollars and '+cP+' in transaction volume &mdash; inside the &plusmn;'+t+'% trigger, but close enough to keep an eye on.';
+  }
+  return esc(name)+' is steady: '+dP+' in dollars and '+cP+' in transaction volume, comfortably inside the &plusmn;'+t+'% trigger.';
+}
+function recSentence(fl, cycleDue){
+  if(fl.flagged) return {cls:'rec-flag', text:'Recommendation: schedule a comprehensive assessment this fiscal year.'};
+  if(cycleDue)  return {cls:'rec-flag', text:'Recommendation: no trigger breach, but the three-year comprehensive-assessment cycle comes due this year (illustrative cycle record) &mdash; schedule one anyway.'};
+  if(!fl.evaluable) return {cls:'', text:'Recommendation: no action &mdash; baseline year, no comparison available.'};
+  return {cls:'rec-ok', text:'Recommendation: no comprehensive assessment required this cycle; continue routine monitoring.'};
+}
+function statusChip(fl){
+  if(fl.countOnly) return '<span class="chip chip-gold">Flagged &mdash; volume only</span>';
+  if(fl.flagged)   return '<span class="chip chip-flag">Flagged &mdash; needs assessment</span>';
+  if(!fl.evaluable)return '<span class="chip chip-neutral">Baseline year</span>';
+  return '<span class="chip chip-ok">Within threshold</span>';
+}
+
+/* ============================================================
+   SECTION 7 — Renderers. The whole page re-derives from state.
+   ============================================================ */
+function currentStats(){ return statsFor(state.fy); }
+function flaggedList(st){ return st.filter(function(s){ return flagsOf(s,state.cfg).flagged; }); }
+
+function renderSituation(){
+  var st = currentStats();
+  var grand = st.reduce(function(a,s){ return a+s.total; },0);
+  var fl = flaggedList(st).length;
+  var undecided = st.filter(function(s){ return !decisionFor(s.prog.id); }).length;
+  var opts = FYS.map(function(f){
+    return '<option value="'+f+'"'+(f===state.fy?' selected':'')+'>FY'+f+'</option>';
+  }).join('');
+  document.getElementById('situation-content').innerHTML =
+    '<div class="sit-fy"><label for="fy-select">Fiscal year</label>'
+    + '<select id="fy-select" data-bind="fy" aria-label="Select fiscal year (federal: October 1 through September 30)">'+opts+'</select></div>'
+    + '<div class="sit-item">Total disbursements<b>'+fmtShort(grand)+'</b></div>'
+    + '<div class="sit-item">Programs flagged<b class="'+(fl?'flagged-n':'')+'">'+fl+' of '+D.programs.length+'</b></div>'
+    + '<div class="sit-item">Trigger<b>&plusmn;'+state.cfg.threshold+'% YoY</b></div>'
+    + '<div class="sit-item">Decisions pending<b>'+undecided+'</b></div>'
+    + '<div class="sit-spacer"></div>'
+    + '<button class="btn btn-primary" id="btn-export" data-action="open-export">Export briefing (simulated)</button>';
+  document.getElementById('dateline').textContent =
+    'Prepared '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})
+    +' · Fiscal Year '+state.fy+' (Oct 1, '+(state.fy-1)+' – Sep 30, '+state.fy+') · Synthetic demonstration data';
+}
+
+/* ---- 7a. Summary: lede + trigger config + status ladder ---- */
+function renderSummary(){
+  var st = currentStats();
+  var t = state.cfg.threshold;
+  var withFlags = st.map(function(s){ return {s:s, f:flagsOf(s,state.cfg)}; });
+  var flagged = withFlags.filter(function(x){ return x.f.flagged; });
+  var countOnly = withFlags.filter(function(x){ return x.f.countOnly; });
+  var evaluable = withFlags.some(function(x){ return x.f.evaluable; });
+  var grand = st.reduce(function(a,s){ return a+s.total; },0);
+  var un = rawFor(state.fy).un;
+  var undecided = st.filter(function(s){ return !decisionFor(s.prog.id); }).length;
+
+  var lede;
+  if(!evaluable){
+    lede = 'FY'+state.fy+' is the baseline year of this extract &mdash; there is no prior year to compare against, so the year-over-year trigger cannot fire. The totals below establish the reference point.';
+  } else {
+    var one = flagged.length===1;
+    lede = flagged.length+' of '+D.programs.length+' programs '+(one?'breaches':'breach')+' the &plusmn;'+t+'% year-over-year trigger in FY'+state.fy
+      + (flagged.length? ' and '+(one?'needs':'need')+' a comprehensive assessment this fiscal year.':'.');
+    if(countOnly.length){
+      lede += ' <span class="count-catch">'
+        + countOnly.map(function(x){ return esc(x.s.prog.name); }).join(' and ')
+        + (countOnly.length>1?' were':' was')
+        + ' caught only by transaction volume &mdash; dollars alone would have missed '
+        + (countOnly.length>1?'them':'it') + '.</span>';
+    }
+  }
+  var sub = 'Total FY'+state.fy+' disbursements across the five reportable programs: '+fmtUSD(grand)+'.';
+  if(un.count>0){
+    sub += ' A further '+fmtUSD(un.total)+' across '+un.count+' transactions cannot yet be attributed to a program and sits in the exception queue (see below).';
+  }
+  var cfgPanel = state.cfgOpen ?
+    '<div class="config-panel" id="config-panel">'
+    + '<div class="cfg-row">'
+    + '<label for="trigger-threshold">Threshold &plusmn;<output id="th-out">'+t+'</output>%'
+    + ' <input type="range" id="trigger-threshold" data-bind="threshold" min="5" max="50" step="1" value="'+t+'" aria-label="Year-over-year trigger threshold percent"></label>'
+    + '<label><input type="checkbox" data-bind="measure-dollars"'+(state.cfg.dollars?' checked':'')+'> Watch dollars</label>'
+    + '<label><input type="checkbox" data-bind="measure-counts"'+(state.cfg.counts?' checked':'')+'> Watch transaction count</label>'
+    + '<button class="btn" data-action="reset-config" id="btn-reset-config">Reset to policy default (&plusmn;'+D.meta.trigger_default.threshold_pct+'%, both measures)</button>'
+    + '</div>'
+    + '<p class="config-note">The trigger flags a program when disbursements <em>or</em> transaction count moves past the threshold in either direction (the 2024 rule change). Moving this slider re-derives every sentence, flag and recommendation on this page instantly &mdash; nothing is prewritten.</p>'
+    + '</div>' : '';
+
+  var ladderRows = withFlags.map(function(x){
+    var s=x.s, f=x.f;
+    return '<tr>'
+      + '<td><b>'+esc(s.prog.name)+'</b><br><span style="color:var(--faint);font-size:11px">'+(s.prog.is_disaster?'Disaster program':'Non-disaster program')+'</span></td>'
+      + '<td class="num">'+fmtUSD(s.total)+'</td>'
+      + '<td class="num">'+fmtPct(s.yoyD)+'</td>'
+      + '<td class="num">'+fmtInt(s.count)+'</td>'
+      + '<td class="num">'+fmtPct(s.yoyC)+'</td>'
+      + '<td>'+statusChip(f)+'</td>'
+      + '<td><a href="#card-'+s.prog.id+'">Review &darr;</a></td>'
+      + '</tr>';
+  }).join('');
+
+  return '<section id="summary" aria-labelledby="summary-title">'
+    + '<h2 class="section-title" id="summary-title"><span class="n">I.</span>This morning&rsquo;s headline</h2>'
+    + '<p id="headline-lede" data-flag-count="'+flagged.length+'">'+lede+'</p>'
+    + '<p class="lede-sub">'+sub+' <span class="decision-count">'+undecided+' of '+D.programs.length+' recommendations are awaiting your decision.</span></p>'
+    + '<div class="config-wrap">'
+    + '<button class="btn btn-quiet" id="btn-toggle-config" data-action="toggle-config" aria-expanded="'+(state.cfgOpen?'true':'false')+'" aria-controls="config-panel">'
+    + (state.cfgOpen?'Hide trigger settings':'Adjust the trigger (currently &plusmn;'+t+'% on '+(state.cfg.dollars&&state.cfg.counts?'dollars or volume':state.cfg.dollars?'dollars only':state.cfg.counts?'volume only':'no measures &mdash; trigger off')+')')
+    + '</button>'+cfgPanel+'</div>'
+    + '<table class="ladder" style="margin-top:20px" aria-label="Program status ladder for fiscal year '+state.fy+'">'
+    + '<thead><tr><th scope="col">Program</th><th scope="col" class="num">FY'+state.fy+' disbursements</th><th scope="col" class="num">YoY $</th><th scope="col" class="num">Transactions</th><th scope="col" class="num">YoY volume</th><th scope="col">Status</th><th scope="col"></th></tr></thead>'
+    + '<tbody>'+ladderRows+'</tbody></table>'
+    + '</section>';
+}
+
+/* ---- 7b. Decision affordances (shared by cards) ---- */
+function decisionBar(subject, label, opts){
+  opts = opts || {};
+  var d = decisionFor(subject);
+  if(d){
+    var verb = d.action==='concur' ? 'You concurred'
+             : d.action==='send_back' ? 'You sent this back'
+             : d.action==='assign' ? 'Assigned to '+esc(d.assignee||'')
+             : 'Recorded';
+    var why = d.note ? ' <span class="why">&ldquo;'+esc(d.note)+'&rdquo;</span>' : '';
+    return '<span class="decision-status">'+verb+' at '+esc(d.ts)+'.'+why+'</span>'
+      + '<button class="btn" data-action="undo-decision" data-id="'+d.id+'">Undo</button>';
+  }
+  var b = '';
+  if(!opts.assignOnly){
+    b += '<button class="btn" data-action="concur" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-concur-'+subject+'">Concur</button>'
+       + '<button class="btn btn-danger" data-action="open-sendback" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-sendback-'+subject+'">Send back&hellip;</button>';
+  }
+  b += '<button class="btn" data-action="open-assign" data-subject="'+subject+'" data-label="'+esc(label)+'" id="btn-assign-'+subject+'">Assign&hellip;</button>';
+  return b;
+}
+function editorPanel(subject, label){
+  if(!state.editor || state.editor.subject!==subject) return '';
+  var e = state.editor;
+  if(e.type==='sendback'){
+    return '<div class="editor" data-editor="sendback">'
+      + '<label for="editor-note">Why are you sending &ldquo;'+esc(label)+'&rdquo; back? (required &mdash; this becomes part of the audit record)</label>'
+      + '<textarea id="editor-note" placeholder="e.g. Need the DR-4332 validation before I concur."></textarea>'
+      + '<p class="err" id="editor-err" hidden>A reason is required before a recommendation can be sent back.</p>'
+      + '<div class="editor-buttons">'
+      + '<button class="btn btn-primary" data-action="confirm-sendback" data-subject="'+subject+'" data-label="'+esc(label)+'">Send back with note</button>'
+      + '<button class="btn" data-action="cancel-editor">Cancel</button>'
+      + '</div><p class="hint">Decisions are reversible in this demo &mdash; an Undo appears on the card and in the decision record.</p></div>';
+  }
+  if(e.type==='assign'){
+    var opts = ASSIGNEES.map(function(a){ return '<option>'+esc(a)+'</option>'; }).join('');
+    return '<div class="editor" data-editor="assign">'
+      + '<label for="editor-assignee">Assign &ldquo;'+esc(label)+'&rdquo; to (illustrative staff directory &mdash; simulated):</label>'
+      + '<select id="editor-assignee">'+opts+'</select>'
+      + '<label for="editor-note" style="margin-top:10px">Note for the assignee (optional)</label>'
+      + '<textarea id="editor-note" placeholder="e.g. Please verify the volume spike before Friday."></textarea>'
+      + '<div class="editor-buttons">'
+      + '<button class="btn btn-primary" data-action="confirm-assign" data-subject="'+subject+'" data-label="'+esc(label)+'">Assign</button>'
+      + '<button class="btn" data-action="cancel-editor">Cancel</button>'
+      + '</div></div>';
+  }
+  return '';
+}
+
+/* ---- 7c. Program finding cards with three-level evidence unfolds ---- */
+function renderProgramCard(s){
+  var p = s.prog;
+  var fl = flagsOf(s, state.cfg);
+  var t = state.cfg.threshold;
+  var last = LAST_COMPREHENSIVE[p.id];
+  var cycleDue = (last<state.fy) && (state.fy-last>=3);
+  var rec = recSentence(fl, cycleDue);
+  var lvl = state.expanded[p.id]||0;
+  var cls = fl.countOnly?'hero':fl.flagged?'flagged':fl.evaluable?'ok':'neutral';
+  var kicker = fl.countOnly ? '<span class="chip chip-gold">The volume catch</span> ' : '';
+
+  var meta = (p.is_disaster?'Disaster program':'Non-disaster program')
+    + ' &middot; TAFS '+esc(p.tafs||'n/a')+' (Treasury Appropriation Fund Symbol; synthetic stand-in)'
+    + (last<state.fy ? ' &middot; Last comprehensive assessment: FY'+last+' <em>(illustrative record &mdash; simulated)</em>' : '');
+
+  /* Level 1 — trigger math + trends + top mover */
+  var evidence = '';
+  if(lvl>=1){
+    var mathRows, formula;
+    if(fl.evaluable){
+      function mrow(labelTxt, prior, cur, pch, breach, fmt){
+        return '<tr><td>'+labelTxt+'</td><td class="num">'+fmt(prior)+'</td><td class="num">'+fmt(cur)+'</td>'
+          + '<td class="num '+(breach?'breach':'within')+'">'+fmtPct(pch)+'</td>'
+          + '<td class="'+(breach?'breach':'within')+'">'+(breach?'BREACH':'within')+'</td></tr>';
+      }
+      mathRows = mrow('Disbursements', s.priorTotal, s.total, s.yoyD, fl.dollar, fmtUSD)
+               + mrow('Transaction count', s.priorCount, s.count, s.yoyC, fl.count, fmtInt);
+      formula = '<p class="formula">dollars: ('+fmtUSD(s.total)+' &minus; '+fmtUSD(s.priorTotal)+') &divide; '+fmtUSD(s.priorTotal)+' = '+fmtPct(s.yoyD)
+        + '<br>volume: ('+fmtInt(s.count)+' &minus; '+fmtInt(s.priorCount)+') &divide; '+fmtInt(s.priorCount)+' = '+fmtPct(s.yoyC)
+        + '<br>flag if |change| &ge; '+t+'% on either measure, either direction</p>';
+    } else {
+      mathRows = '<tr><td>Disbursements</td><td class="num">&mdash;</td><td class="num">'+fmtUSD(s.total)+'</td><td class="num">&mdash;</td><td>baseline</td></tr>'
+               + '<tr><td>Transaction count</td><td class="num">&mdash;</td><td class="num">'+fmtInt(s.count)+'</td><td class="num">&mdash;</td><td>baseline</td></tr>';
+      formula = '<p class="formula">FY'+state.fy+' is the first year in the extract; no prior-year comparison exists.</p>';
+    }
+    var series = seriesFor(p.id);
+    var mover = '';
+    if(fl.evaluable){
+      var evs = eventsFor(p.id, state.fy).filter(function(e){ return e.prior>0||e.cur>0; });
+      if(evs.length){
+        var m = evs[0];
+        var evName = m.dr!==null && eventByDr[m.dr] ? esc(eventByDr[m.dr].title) : 'non-disaster activity';
+        var delta = m.cur-m.prior;
+        mover = '<p class="mover">Where the movement lives: <strong>'
+          + (m.dr!==null?'DR-'+m.dr+' ('+evName+')':evName)+'</strong> '
+          + (delta>=0?'added ':'gave back ')+fmtUSD(Math.abs(delta))
+          + ' versus FY'+(state.fy-1)+' &mdash; the largest single contributor to this program&rsquo;s change. (DR = federal disaster declaration number.)</p>';
+      }
+    }
+    evidence = '<div class="evidence" id="evi-'+p.id+'">'
+      + '<p class="ev-level-label">Evidence &middot; level 1 &mdash; the trigger math</p>'
+      + '<div class="ev-grid">'
+      + '<div class="ev-col"><table class="math-table"><thead><tr><th scope="col">Measure</th><th scope="col" class="num">'+(fl.evaluable?'FY'+(state.fy-1):'Prior FY (none)')+'</th><th scope="col" class="num">FY'+state.fy+'</th><th scope="col" class="num">Change</th><th scope="col">vs &plusmn;'+t+'%</th></tr></thead>'
+      + '<tbody>'+mathRows+'</tbody></table>'+formula+'</div>'
+      + '<div class="ev-col">'
+      + sparkBlock('Disbursements by fiscal year', series.map(function(x){return x.total;}), function(v){return fmtShort(v);}, fl.dollar)
+      + '<div style="height:12px"></div>'
+      + sparkBlock('Transaction volume by fiscal year', series.map(function(x){return x.count;}), function(v){return fmtInt(v);}, fl.count)
+      + '</div></div>'
+      + mover
+      + '<div style="margin-top:14px"><button class="btn" data-action="toggle-txns" data-prog="'+p.id+'" aria-expanded="'+(lvl===2?'true':'false')+'" aria-controls="txn-'+p.id+'" id="btn-txns-'+p.id+'">'
+      + (lvl===2?'Hide the underlying transactions':'Show the underlying transactions (lineage)')+'</button></div>'
+      + (lvl===2 ? renderTxnBlock(p, s) : '')
+      + '</div>';
+  }
+
+  return '<article class="card '+cls+'" id="card-'+p.id+'" data-program="'+p.id+'" aria-labelledby="finding-'+p.id+'">'
+    + '<div class="card-top">'+kicker+statusChip(fl)+'<span class="card-meta">'+meta+'</span></div>'
+    + '<h3 class="finding" id="finding-'+p.id+'">'+findingSentence(s,fl)+'</h3>'
+    + '<p class="numbers-line">FY'+state.fy+' disbursements: <strong>'+fmtUSD(s.total)+'</strong> across <strong>'+fmtInt(s.count)+'</strong> transactions'
+    + (s.priorTotal!==null?' (FY'+(state.fy-1)+': '+fmtUSD(s.priorTotal)+' across '+fmtInt(s.priorCount)+')':'')+'.</p>'
+    + '<p class="rec '+rec.cls+'">'+rec.text+'</p>'
+    + '<div class="card-actions">'
+    + '<button class="btn" data-action="toggle-evidence" data-prog="'+p.id+'" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-'+p.id+'" id="btn-evi-'+p.id+'">'+(lvl>=1?'Hide the evidence':'Show me why')+'</button>'
+    + '<span class="spacer"></span>'
+    + decisionBar(p.id, p.name)
+    + '</div>'
+    + editorPanel(p.id, p.name)
+    + evidence
+    + '</article>';
+}
+
+/* ---- 7d. Level 2: event breakdown + transaction-level lineage ---- */
+function renderTxnBlock(p, s){
+  var hasPrior = FYS.indexOf(state.fy-1)>=0;
+  var evs = eventsFor(p.id, state.fy);
+  var evRows = evs.map(function(e){
+    var nm = e.dr!==null ? (eventByDr[e.dr] ? esc(eventByDr[e.dr].title) : 'DR-'+e.dr) : 'Non-disaster activity';
+    var pch = pctChange(e.cur, e.prior);
+    return '<tr><td>'+(e.dr!==null?'<b>DR-'+e.dr+'</b> &middot; ':'')+nm+'</td>'
+      + (hasPrior?'<td class="num">'+fmtUSD(e.prior)+'</td>':'')
+      + '<td class="num">'+fmtUSD(e.cur)+'</td>'
+      + (hasPrior?'<td class="num">'+(pch===null?'&mdash;':fmtPct(pch))+'</td>':'')
+      + '<td class="num">'+fmtInt(e.curN)+'</td></tr>';
+  }).join('');
+  var evTable = evs.length>1
+    ? '<p class="ev-level-label" style="margin-top:14px">Evidence &middot; level 2 &mdash; where within the program (sub-groupings are components of this program, never programs themselves)</p>'
+      + '<table class="event-table"><thead><tr><th scope="col">Event / grouping</th>'
+      + (hasPrior?'<th scope="col" class="num">FY'+(state.fy-1)+'</th>':'')
+      + '<th scope="col" class="num">FY'+state.fy+'</th>'
+      + (hasPrior?'<th scope="col" class="num">Change</th>':'')
+      + '<th scope="col" class="num">FY'+state.fy+' txns</th></tr></thead><tbody>'+evRows+'</tbody></table>'
+    : '';
+  var txns = txnsFor(p.id, state.fy);
+  var showAll = state.showAll[p.id];
+  var shown = showAll ? txns : txns.slice(0,12);
+  var rows = shown.map(function(t){
+    var sub = codeSub(t.code);
+    var cleansed = t.raw!==t.code;
+    return '<tr>'
+      + '<td class="code-cell">'+esc(t.id)+'</td>'
+      + '<td>'+esc(t.date)+'</td>'
+      + '<td class="code-cell">'+esc(t.code)+(cleansed?'<span class="cleansed-note">cleansed from &ldquo;'+esc(t.raw)+'&rdquo;</span>':'')+'</td>'
+      + '<td>'+(sub?esc(sub.name):'&mdash;')+'</td>'
+      + '<td>'+(t.dr!==null&&t.dr!==undefined?'DR-'+esc(t.dr):'&mdash;')+'</td>'
+      + '<td>'+esc(t.typ)+'</td>'
+      + '<td class="num">'+fmtUSD(t.amt)+'</td>'
+      + '</tr>';
+  }).join('');
+  return '<div class="txn-block" id="txn-'+p.id+'">'
+    + evTable
+    + '<p class="ev-level-label" style="margin-top:14px">Evidence &middot; level 3 &mdash; the transactions themselves ('+fmtInt(txns.length)+' rows sum exactly to the '+fmtUSD(s.total)+' above'+(showAll?'':'; largest first')+')</p>'
+    + '<div class="txn-scroll"><table class="txn-table"><thead><tr>'
+    + '<th scope="col">Transaction</th><th scope="col">Date</th><th scope="col">Financial code</th><th scope="col">Sub-grouping</th><th scope="col">DR</th><th scope="col">Type</th><th scope="col" class="num">Amount</th>'
+    + '</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    + (!showAll && txns.length>shown.length
+        ? '<div style="margin-top:8px"><button class="btn" data-action="show-all-txns" data-prog="'+p.id+'">Show all '+fmtInt(txns.length)+' transactions</button></div>'
+        : '')
+    + '<p class="lineage-note">Lineage: each row came off the FY extract, was cleansed where the source system wrote the code in a legacy or dirty format (noted inline), mapped to its sub-grouping by a governed rule, and rolled up into the totals above. The aggregate and this list are computed from the same rows in this page &mdash; they cannot disagree.</p>'
+    + '</div>';
+}
+
+/* ---- 7e. Exception-queue card ---- */
+function renderExceptionCard(){
+  var exc = exceptionsFor(state.fy);
+  var un = rawFor(state.fy).un;
+  var lvl = state.expanded['EXC']||0;
+  var head, cls, chip;
+  if(!exc.length){
+    cls='ok'; chip='<span class="chip chip-ok">Queue clear</span>';
+    head = 'Every financial code in the FY'+state.fy+' extract maps to a known program &mdash; the exception queue is empty for this year.';
+  } else {
+    cls='flagged'; chip='<span class="chip chip-flag">'+exc.length+' codes in exception queue</span>';
+    head = exc.length+' financial codes arrived in the FY'+state.fy+' extract that no governed rule recognizes &mdash; '
+      + fmtUSD(un.total)+' across '+fmtInt(un.count)+' transactions is not yet attributable to any program. '
+      + 'The matching engine has a guess for each, but none clears the confidence bar, so they wait in the exception queue for a human.';
+  }
+  var body='';
+  if(lvl>=1 && exc.length){
+    var rows = exc.map(function(m){
+      var sub = subById[m.sub_program_id];
+      var prog = progById[m.program_id];
+      return '<tr><td class="code-cell">'+esc(m.code)+'</td>'
+        + '<td>'+(sub?esc(sub.name):'&mdash;')+' <span style="color:var(--faint)">('+(prog?esc(prog.name):'?')+')</span></td>'
+        + '<td class="num">'+(m.confidence*100).toFixed(0)+'%</td>'
+        + '<td><span class="sim-tag">Simulated AI suggestion</span></td></tr>';
+    }).join('');
+    body = '<div class="evidence" id="evi-EXC">'
+      + '<p class="ev-level-label">Evidence &mdash; the six orphan codes and where the engine thinks they belong</p>'
+      + '<table class="pra-table"><thead><tr><th scope="col">Financial code</th><th scope="col">Suggested home (similarity match)</th><th scope="col" class="num">Confidence</th><th scope="col">Nature</th></tr></thead>'
+      + '<tbody>'+rows+'</tbody></table>'
+      + '<p class="lineage-note">Anything below the '+(D.meta.confidence_routing_threshold*100).toFixed(0)+'% confidence bar routes to human review by policy &mdash; the suggestion is a starting point, never a mapping. These suggestions are simulated (deterministic similarity scoring, illustrative of the intended AI assist). Dollars in this queue are excluded from every program total above until an analyst confirms a home for them.</p>'
+      + '</div>';
+  }
+  return '<article class="card '+cls+'" id="card-EXC" aria-labelledby="finding-EXC">'
+    + '<div class="card-top">'+chip+'<span class="card-meta">Code&rarr;program mapping governance</span></div>'
+    + '<h3 class="finding" id="finding-EXC">'+head+'</h3>'
+    + '<div class="card-actions">'
+    + (exc.length? '<button class="btn" data-action="toggle-evidence" data-prog="EXC" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-EXC" id="btn-evi-EXC">'+(lvl>=1?'Hide the queue':'Show me the queue')+'</button>':'')
+    + '<span class="spacer"></span>'
+    + (exc.length? decisionBar('EXC','the exception queue',{assignOnly:true}) : '')
+    + '</div>'
+    + editorPanel('EXC','the exception queue')
+    + body
+    + '</article>';
+}
+
+/* ---- 7f. PRA card (auto-population + human override with reason) ---- */
+function overrideKey(prog,q){ return 'pra|'+state.fy+'|'+prog+'|'+q; }
+function renderPraCard(){
+  var lvl = state.expanded['PRA']||0;
+  var resp = D.risk_responses.filter(function(r){ return r.fy===state.fy; });
+  var head, body='', chip;
+  if(!resp.length){
+    chip = '<span class="chip chip-neutral">Not yet drafted</span>';
+    head = 'The Preliminary Risk Assessment (PRA) &mdash; the ten-question instrument each program must complete &mdash; has not been drafted for FY'+state.fy+' in this extract. Drafting begins when the fiscal year closes; the FY'+MAXFY+' drafts are available under that year.';
+  } else {
+    var autoN = resp.filter(function(r){ return r.populated_by==='auto' && r.answer_value!==null; }).length;
+    var perProg = Math.round(autoN / D.programs.length);
+    var awaiting = resp.filter(function(r){ return r.answer_value===null; }).length;
+    chip = '<span class="chip chip-navy">'+perProg+' of 10 machine-drafted</span>';
+    head = 'The FY'+state.fy+' Preliminary Risk Assessment (PRA) is already '+(perProg*10)+'% drafted for every program: '
+      + perProg+' of the 10 questions are auto-populated from the same ledger shown above (simulated auto-population, each answer traceable to its source), '
+      + 'and '+(awaiting/D.programs.length)+' qualitative questions wait on program-office judgment. Nothing files without a human signature.';
+    if(lvl>=1){
+      var progOpts = D.programs.map(function(p){
+        return '<option value="'+p.id+'"'+(p.id===state.praProg?' selected':'')+'>'+esc(p.name)+'</option>';
+      }).join('');
+      var qById={};
+      D.risk_questions.forEach(function(q){ qById[q.id]=q; });
+      var rows = resp.filter(function(r){ return r.program_id===state.praProg; })
+        .sort(function(a,b){ return parseInt(a.question_id.slice(1),10)-parseInt(b.question_id.slice(1),10); })
+        .map(function(r){
+          var q = qById[r.question_id]||{text:r.question_id, qtype:''};
+          var key = overrideKey(r.program_id, r.question_id);
+          var ov = state.praOverrides[key];
+          var ansHtml, srcHtml;
+          if(ov){
+            ansHtml = '<b>'+esc(ov.value)+'</b><br><span style="font-size:11px;color:var(--gold)">Overridden &mdash; was: '+esc(fmtAnswer(r.answer_value))+'</span>';
+            srcHtml = '<span class="src-human">Human override</span><br><span style="font-size:11px;color:var(--muted)">&ldquo;'+esc(ov.reason)+'&rdquo;</span>';
+          } else if(r.answer_value===null){
+            ansHtml = '<em style="color:var(--muted)">Awaiting program-office input</em>';
+            srcHtml = '<span class="src-human">Human-only by design</span>';
+          } else {
+            ansHtml = esc(fmtAnswer(r.answer_value));
+            srcHtml = r.populated_by==='auto'
+              ? '<span class="src-auto">Auto-populated (simulated)</span><br><span style="font-size:11px;color:var(--muted)">confidence '+(r.confidence*100).toFixed(0)+'%</span>'
+              : '<span class="src-human">Human</span>';
+          }
+          var act = '';
+          if(r.answer_value!==null){
+            act = ov
+              ? '<button class="btn" data-action="undo-override" data-key="'+key+'">Undo</button>'
+              : '<button class="btn" data-action="open-override" data-key="'+key+'" data-subject="'+key+'" id="btn-ov-'+r.program_id+'-'+r.question_id+'">Override&hellip;</button>';
+          }
+          var edit = (state.editor && state.editor.type==='override' && state.editor.subject===key)
+            ? '<div class="editor" data-editor="override">'
+              + '<label for="editor-value">Corrected answer</label>'
+              + '<input type="text" id="editor-value" value="'+esc(fmtAnswer(r.answer_value))+'">'
+              + '<label for="editor-note" style="margin-top:8px">Reason for override (required &mdash; captured in the audit record)</label>'
+              + '<textarea id="editor-note" placeholder="e.g. Program office reports a corrected figure pending reconciliation."></textarea>'
+              + '<p class="err" id="editor-err" hidden>An override requires a reason before it can be recorded.</p>'
+              + '<div class="editor-buttons">'
+              + '<button class="btn btn-primary" data-action="confirm-override" data-key="'+key+'" data-q="'+r.question_id+'" data-progid="'+r.program_id+'">Record override</button>'
+              + '<button class="btn" data-action="cancel-editor">Cancel</button></div></div>'
+            : '';
+          return '<tr'+(ov?' class="overridden"':'')+'><td><b>'+r.question_id+'</b></td>'
+            + '<td class="pra-q">'+esc(scrubIds(q.text))+'</td>'
+            + '<td>'+ansHtml+'</td><td>'+srcHtml+'</td><td>'+act+edit+'</td></tr>';
+        }).join('');
+      body = '<div class="evidence" id="evi-PRA">'
+        + '<p class="ev-level-label">Evidence &mdash; the draft instrument, answer by answer</p>'
+        + '<p style="font:13px var(--sans);margin:0 0 10px"><label for="pra-prog-select" style="font-weight:600">Program:</label> '
+        + '<select id="pra-prog-select" data-bind="pra-program" style="font:13.5px var(--sans);padding:5px 8px;border:1px solid var(--rule);border-radius:4px">'+progOpts+'</select>'
+        + ' <span style="color:var(--muted);font-size:12px">All ten questions shown are an illustrative placeholder instrument, not FEMA&rsquo;s official PRA form. Status: draft &mdash; requires sign-off.</span></p>'
+        + '<table class="pra-table"><thead><tr><th scope="col">Q</th><th scope="col">Question (illustrative instrument)</th><th scope="col">Draft answer</th><th scope="col">Source</th><th scope="col">Action</th></tr></thead>'
+        + '<tbody>'+rows+'</tbody></table>'
+        + '<p class="lineage-note">Auto-populated answers are computed by the same deterministic engine as this page&rsquo;s totals and labeled with their source binding; the &ldquo;AI&rdquo; assist here is simulated. Overriding any answer requires a written reason and lands in the session decision record below. A comprehensive assessment &mdash; the deeper review a flagged program gets &mdash; is required at least once every three years regardless of triggers.</p>'
+        + '</div>';
+    }
+  }
+  return '<article class="card neutral" id="card-PRA" aria-labelledby="finding-PRA">'
+    + '<div class="card-top">'+chip+'<span class="card-meta">Preliminary Risk Assessment (PRA) drafting</span></div>'
+    + '<h3 class="finding" id="finding-PRA">'+head+'</h3>'
+    + '<div class="card-actions">'
+    + (resp.length? '<button class="btn" data-action="toggle-evidence" data-prog="PRA" aria-expanded="'+(lvl>=1?'true':'false')+'" aria-controls="evi-PRA" id="btn-evi-PRA">'+(lvl>=1?'Hide the draft answers':'Show the draft answers')+'</button>' : '')
+    + '</div>'
+    + body
+    + '</article>';
+}
+function fmtAnswer(v){
+  if(v===null||v===undefined) return '';
+  var n = Number(v);
+  if(!isNaN(n) && String(v).trim()!==''){
+    if(Math.abs(n)>=10000) return fmtUSD(n);
+    if(n===Math.trunc(n)) return fmtInt(n);
+    return String(v);
+  }
+  return String(v);
+}
+
+/* ---- 7g. Decision record (the session audit trail) ---- */
+function renderDecisionRecord(){
+  var items = state.decisions.map(function(d){
+    var verb = d.action==='concur' ? 'Concurred with the recommendation for'
+             : d.action==='send_back' ? 'Sent back the recommendation for'
+             : d.action==='assign' ? 'Assigned'
+             : d.action==='override_pra' ? 'Overrode a PRA draft answer for'
+             : d.action==='sme_request' ? 'Requested subject-matter-expert confirmation of'
+             : 'Recorded on';
+    return '<li><span class="when">'+esc(d.ts)+' &middot; FY'+d.fy+'</span>'
+      + '<span class="what">'+verb+' <b>'+esc(d.label)+'</b>'
+      + (d.assignee?' to '+esc(d.assignee):'')
+      + (d.q?' ('+esc(d.q)+')':'')
+      + (d.note?' &mdash; <span class="note-quote">&ldquo;'+esc(d.note)+'&rdquo;</span>':'')
+      + '</span>'
+      + '<button class="btn" data-action="undo-decision" data-id="'+d.id+'">Undo</button></li>';
+  }).join('');
+  return '<section id="decision-record" aria-labelledby="dr-title">'
+    + '<h2 class="section-title" id="dr-title"><span class="n">II.</span>Your decision record this session</h2>'
+    + (state.decisions.length
+        ? '<ul id="decision-log" aria-live="polite">'+items+'</ul>'
+        : '<p class="log-empty" id="decision-log-empty">No decisions recorded yet. Decisions you take on the cards above &mdash; concur, send back, assign, override &mdash; are captured here, become the audit trail, and ride along in the export.</p>')
+    + '<p class="lineage-note" style="margin-top:10px">This record lives only in this page&rsquo;s memory (nothing is stored or transmitted) and every entry is reversible while the session is open. In production it would post to the system of record.</p>'
+    + '</section>';
+}
+
+/* ---- 7h. Assumptions & open questions (SME transparency, plain language) ---- */
+function renderAssumptions(){
+  var inferred = RULES_INFERRED.map(function(r){
+    var d = decisionFor(r.rule_id);
+    return '<li><span class="tag">Inferred mapping rule &middot; awaiting SME confirmation &middot; confidence '+(r.confidence*100).toFixed(0)+'%</span>'
+      + 'Rule '+esc(r.rule_id)+' was <strong>inferred by the engine, not confirmed by a subject-matter expert</strong>. It reads: <code style="font:11.5px var(--mono);background:#f4f2ea;padding:1px 5px;border-radius:3px">'+esc(r.expression)+'</code>. '
+      + 'Totals that flow through it are correct <em>if</em> the inference is right &mdash; an SME should confirm or correct it. '
+      + (d ? '<span class="decision-status" style="font-size:12px">SME confirmation requested at '+esc(d.ts)+'</span> <button class="btn" data-action="undo-decision" data-id="'+d.id+'">Undo</button>'
+           : '<button class="btn" data-action="request-sme" data-rule="'+esc(r.rule_id)+'">Request SME confirmation (simulated)</button>')
+      + '</li>';
+  }).join('');
+  return '<section id="assumptions" aria-labelledby="as-title">'
+    + '<h2 class="section-title" id="as-title"><span class="n">III.</span>What the machine assumed &mdash; open questions for the subject-matter experts</h2>'
+    + '<ul class="assump-list">'
+    + inferred
+    + '<li><span class="tag">Structural trap, handled</span>Program segment <strong>55501 exists under both Individual Assistance and Homeland Security Grant Program fund families</strong> &mdash; the segment alone can never identify a program. Every mapping rule therefore reads the full code anatomy (fund&thinsp;&middot;&thinsp;segment&thinsp;&middot;&thinsp;event), not the segment in isolation.</li>'
+    + '<li><span class="tag">Definitional guardrail</span><strong>Sub-groupings are never presented as programs.</strong> Debris removal is a subset of Public Assistance; DR-4332 is an event within it. This page only ever reports the five reportable programs at the top level.</li>'
+    + '<li><span class="tag">Awaiting the program offices</span>PRA questions 9 and 10 are qualitative and <strong>deliberately left to human judgment</strong> &mdash; the machine drafts nothing for them.</li>'
+    + '<li><span class="tag">Upstream risk, honestly stated</span>The source financial system (WebFMIS) is being modernized around October&nbsp;1 and the transition is reportedly not going smoothly. The file-in/file-out extract contract below is designed so this brief keeps working across that change.</li>'
+    + '</ul>'
+    + '</section>';
+}
+
+/* ---- 7i. Provenance: how these numbers were produced (content, not navigation) ---- */
+function renderProvenance(){
+  var exc = exceptionsFor(MAXFY).length;
+  return '<section id="provenance" aria-labelledby="prov-title">'
+    + '<h2 class="section-title" id="prov-title"><span class="n">IV.</span>How these numbers were produced</h2>'
+    + '<p class="lede-sub" style="margin-top:0">Every figure above is computed live, in this page, from a single fiscal-year extract. The pipeline is provenance, not something you operate:</p>'
+    + '<div class="prov-steps">'
+    + '<div class="prov-step"><h4>1 &middot; Extract</h4><span class="big">'+fmtInt(TX.length)+'</span><p>transaction rows received from the financial system (WebFMIS) under a fixed file-in/file-out contract, FY'+MINFY+'&ndash;FY'+MAXFY+'. (Simulated data connection; this demo carries the extract inside the file.)</p></div>'
+    + '<div class="prov-step"><h4>2 &middot; Cleanse</h4><span class="big">'+fmtInt(DIRTY_N+LEGACY_N)+'</span><p>rows repaired: '+fmtInt(DIRTY_N)+' format-dirty codes normalized and '+fmtInt(LEGACY_N)+' retired legacy aliases recovered to canonical codes by cleansing rules.</p></div>'
+    + '<div class="prov-step"><h4>3 &middot; Map</h4><span class="big">'+fmtInt(CODES_TOTAL)+'</span><p>financial codes governed by '+fmtInt(RULES_TOTAL)+' mapping rules &mdash; '+fmtInt(RULES_CONFIRMED)+' confirmed by subject-matter experts, '+fmtInt(RULES_INFERRED.length)+' inferred and awaiting confirmation (section III).</p></div>'
+    + '<div class="prov-step"><h4>4 &middot; Review</h4><span class="big">'+fmtInt(exc)+'</span><p>codes below the '+(D.meta.confidence_routing_threshold*100).toFixed(0)+'% confidence bar sit in the exception queue for FY'+MAXFY+' &mdash; excluded from all totals until a human confirms them.</p></div>'
+    + '<div class="prov-step"><h4>5 &middot; Aggregate &amp; trigger</h4><span class="big">&plusmn;'+D.meta.trigger_default.threshold_pct+'%</span><p>roll-up to '+fmtInt(D.sub_programs.length)+' sub-groupings and '+fmtInt(D.programs.length)+' programs, then the dual-measure year-over-year trigger (dollars or transaction count, either direction) decides who needs a comprehensive assessment.</p></div>'
+    + '</div>'
+    + '<div class="accuracy-box"><strong>How good is the automated mapping?</strong> On a held-out grading year, the inference engine auto-mapped 47 of 47 codes correctly, routed 10 low-confidence codes to human review, and made 0 incorrect mappings. The grading answer key is never read by the inference process &mdash; it is used only to score it afterward.</div>'
+    + '<p class="prov-foot" style="margin-top:14px">Glossary in one breath: <strong>disbursements</strong> are paid-out dollars (never called obligations here); a <strong>fiscal year (FY)</strong> runs October&nbsp;1 to September&nbsp;30; <strong>YoY</strong> means year over year; a <strong>DR number</strong> is a federal disaster declaration; <strong>TAFS</strong> is a Treasury Appropriation Fund Symbol; the <strong>PRA</strong> (Preliminary Risk Assessment) is the first step of a lifecycle that can lead to a <strong>comprehensive assessment</strong>, required at least every three years per program; <strong>PIIA</strong> is the Payment Integrity Information Act that makes all of this mandatory.</p>'
+    + '</section>';
+}
+
+/* ---- 7j. Footer disclosure ---- */
+function renderFooter(){
+  document.getElementById('site-footer').innerHTML =
+    '<p><strong>'+esc(D.meta.watermark)+'.</strong> '+esc(D.meta.note)+' '
+    + 'Every &ldquo;AI&rdquo; behavior on this page (mapping suggestions, auto-populated draft answers) is simulated &mdash; precomputed or deterministic, always labeled, never the owner of a reportable number. '
+    + 'All computation happens inside this single offline file; there is no network activity and nothing is stored on this device.</p>'
+    + '<p>The Morning Brief &mdash; a design concept for FEMA OCFO program integrity. Prepared as a demonstration; not an official FEMA product.</p>';
+}
+
+/* ---- 7k. Export simulation overlay ---- */
+function pad(s, n){ s=String(s); while(s.length<n) s+=' '; return s; }
+function stripTags(h){ return h.replace(/<[^>]*>/g,'').replace(/&mdash;/g,'—').replace(/&plusmn;/g,'±').replace(/&minus;/g,'-').replace(/&thinsp;/g,'').replace(/&middot;/g,'·').replace(/&ldquo;|&rdquo;/g,'"').replace(/&rsquo;/g,"'").replace(/&amp;/g,'&').replace(/&ge;/g,'>=').replace(/&divide;/g,'/'); }
+function buildExportText(){
+  var st = currentStats();
+  var t = state.cfg.threshold;
+  var lines = [];
+  lines.push('==================== SYNTHETIC-DEMO ====================');
+  lines.push('THE MORNING BRIEF — PROGRAM INTEGRITY');
+  lines.push('FEMA Office of the Chief Financial Officer (demonstration)');
+  lines.push('Fiscal Year '+state.fy+'  ·  exported '+new Date().toLocaleString('en-US'));
+  lines.push('SIMULATED EXPORT — no file leaves this page; all data synthetic.');
+  lines.push('=========================================================');
+  lines.push('');
+  var flagged = st.filter(function(s){ return flagsOf(s,state.cfg).flagged; });
+  lines.push('HEADLINE');
+  lines.push('  '+flagged.length+' of '+D.programs.length+' programs breach the ±'+t+'% year-over-year');
+  lines.push('  trigger (dollars or transaction count, either direction).');
+  var grand = st.reduce(function(a,s){return a+s.total;},0);
+  lines.push('  Total FY'+state.fy+' disbursements: '+fmtUSD(grand));
+  lines.push('');
+  lines.push('PROGRAM STATUS');
+  st.forEach(function(s){
+    var f = flagsOf(s,state.cfg);
+    var status = f.countOnly?'FLAGGED (volume only — the count catch)':f.flagged?'FLAGGED':f.evaluable?'within threshold':'baseline year';
+    lines.push('  '+pad(s.prog.name,46)+pad(fmtUSD(s.total),20)+' $ '+pad(stripTags(fmtPct(s.yoyD)),8)+' vol '+pad(stripTags(fmtPct(s.yoyC)),8)+' '+status);
+  });
+  var un = rawFor(state.fy).un;
+  if(un.count>0) lines.push('  Exception queue (unattributed): '+fmtUSD(un.total)+' across '+un.count+' transactions');
+  lines.push('');
+  lines.push('DECISIONS CAPTURED THIS SESSION ('+state.decisions.length+')');
+  if(state.decisions.length){
+    state.decisions.forEach(function(d){
+      var what = d.action==='concur'?'CONCUR':d.action==='send_back'?'SEND BACK':d.action==='assign'?'ASSIGN → '+(d.assignee||''):d.action==='override_pra'?'PRA OVERRIDE'+(d.q?' ('+d.q+')':''):d.action==='sme_request'?'SME CONFIRMATION REQUESTED':d.action.toUpperCase();
+      lines.push('  ['+d.ts+' FY'+d.fy+'] '+what+' — '+d.label+(d.note?' — "'+d.note+'"':''));
+    });
+  } else {
+    lines.push('  (none — no decisions were taken before export)');
+  }
+  lines.push('');
+  lines.push('PROVENANCE');
+  lines.push('  '+fmtInt(TX.length)+' transactions extracted (WebFMIS, simulated connection)');
+  lines.push('  '+fmtInt(DIRTY_N+LEGACY_N)+' rows cleansed · '+CODES_TOTAL+' codes · '+RULES_TOTAL+' mapping rules ('+RULES_INFERRED.length+' inferred, awaiting SME)');
+  lines.push('  '+exceptionsFor(state.fy).length+' codes in the FY'+state.fy+' exception queue, excluded from totals');
+  lines.push('  Trigger config at export: ±'+t+'% on '+(state.cfg.dollars?'dollars ':'')+(state.cfg.dollars&&state.cfg.counts?'+ ':'')+(state.cfg.counts?'transaction count':'')+', either direction');
+  lines.push('');
+  lines.push('==================== SYNTHETIC-DEMO ====================');
+  return lines.join('\n');
+}
+function renderOverlay(){
+  var root = document.getElementById('overlay-root');
+  if(!state.exportOpen){ root.innerHTML=''; return; }
+  root.innerHTML =
+    '<div class="overlay-backdrop" data-action="close-export"></div>'
+    + '<div class="overlay-panel" role="dialog" aria-modal="true" aria-labelledby="export-title">'
+    + '<div class="overlay-head"><h3 id="export-title">Briefing export</h3>'
+    + '<span class="sim-tag">Simulated &mdash; nothing is written or transmitted</span>'
+    + '<button class="btn" data-action="close-export" id="btn-close-export" aria-label="Close export preview">Close</button></div>'
+    + '<div class="overlay-body"><pre id="export-body">'+esc(buildExportText())+'</pre></div>'
+    + '</div>';
+}
+
+/* ---- 7l. Master render ---- */
+function render(){
+  var focusId = document.activeElement && document.activeElement.id;
+  renderSituation();
+  var st = currentStats();
+  /* order: flagged (by severity of movement) → the rest → exception queue → PRA */
+  var ordered = st.slice().sort(function(a,b){
+    var fa=flagsOf(a,state.cfg), fb=flagsOf(b,state.cfg);
+    if(fa.flagged!==fb.flagged) return fa.flagged?-1:1;
+    function mag(s){ return Math.max(Math.abs(s.yoyD===null?0:s.yoyD), Math.abs(s.yoyC===null?0:s.yoyC)); }
+    return mag(b)-mag(a);
+  });
+  document.getElementById('app').innerHTML =
+    renderSummary()
+    + '<section id="cards" aria-labelledby="cards-title">'
+    + '<h2 class="section-title" id="cards-title"><span class="n">&nbsp;</span>The findings, one by one &mdash; expand any card for its evidence; decide on the card</h2>'
+    + ordered.map(renderProgramCard).join('')
+    + renderExceptionCard()
+    + renderPraCard()
+    + '</section>'
+    + renderDecisionRecord()
+    + renderAssumptions()
+    + renderProvenance();
+  renderFooter();
+  renderOverlay();
+  if(focusId){
+    var el = document.getElementById(focusId);
+    if(el && el.focus){ try{ el.focus(); }catch(_e){} }
+  }
+}
+
+/* ============================================================
+   SECTION 8 — Event wiring (delegated; survives re-renders).
+   ============================================================ */
+function showEditorError(){
+  var e = document.getElementById('editor-err');
+  if(e) e.hidden = false;
+}
+document.addEventListener('click', function(ev){
+  var el = ev.target.closest ? ev.target.closest('[data-action]') : null;
+  if(!el) return;
+  var a = el.getAttribute('data-action');
+  var subject = el.getAttribute('data-subject');
+  var label = el.getAttribute('data-label');
+  var progKey = el.getAttribute('data-prog');
+  switch(a){
+    case 'toggle-evidence':
+      state.expanded[progKey] = (state.expanded[progKey]||0) >= 1 ? 0 : 1;
+      render(); break;
+    case 'toggle-txns':
+      state.expanded[progKey] = state.expanded[progKey]===2 ? 1 : 2;
+      render(); break;
+    case 'show-all-txns':
+      state.showAll[progKey] = true; render(); break;
+    case 'toggle-config':
+      state.cfgOpen = !state.cfgOpen; render(); break;
+    case 'reset-config':
+      state.cfg = { threshold:D.meta.trigger_default.threshold_pct, dollars:true, counts:true };
+      render(); break;
+    case 'concur':
+      recordDecision(subject, label, 'concur');
+      render(); break;
+    case 'open-sendback':
+      state.editor = { type:'sendback', subject:subject }; render(); break;
+    case 'open-assign':
+      state.editor = { type:'assign', subject:subject }; render(); break;
+    case 'cancel-editor':
+      state.editor = null; render(); break;
+    case 'confirm-sendback': {
+      var ta = document.getElementById('editor-note');
+      var note = ta ? ta.value.trim() : '';
+      if(!note){ showEditorError(); return; }  /* reason is REQUIRED */
+      recordDecision(subject, label, 'send_back', {note:note});
+      state.editor = null; render(); break;
+    }
+    case 'confirm-assign': {
+      var sel = document.getElementById('editor-assignee');
+      var ta2 = document.getElementById('editor-note');
+      recordDecision(subject, label, 'assign', {
+        assignee: sel ? sel.value : ASSIGNEES[0],
+        note: ta2 ? ta2.value.trim() : ''
+      });
+      state.editor = null; render(); break;
+    }
+    case 'open-override':
+      state.editor = { type:'override', subject:el.getAttribute('data-key') }; render(); break;
+    case 'confirm-override': {
+      var key = el.getAttribute('data-key');
+      var vEl = document.getElementById('editor-value');
+      var rEl = document.getElementById('editor-note');
+      var reason = rEl ? rEl.value.trim() : '';
+      if(!reason){ showEditorError(); return; } /* reason is REQUIRED */
+      var val = vEl ? vEl.value.trim() : '';
+      state.praOverrides[key] = { value: val || '(cleared)', reason: reason };
+      var progId = el.getAttribute('data-progid');
+      recordDecision(key, (progById[progId]?progById[progId].name:progId), 'override_pra',
+        { note: reason, q: el.getAttribute('data-q') });
+      state.editor = null; render(); break;
+    }
+    case 'undo-override': {
+      var k2 = el.getAttribute('data-key');
+      delete state.praOverrides[k2];
+      state.decisions = state.decisions.filter(function(d){ return d.subject!==k2; });
+      render(); break;
+    }
+    case 'undo-decision': {
+      var id = el.getAttribute('data-id');
+      var gone = state.decisions.filter(function(d){ return d.id===id; });
+      gone.forEach(function(d){ if(d.action==='override_pra') delete state.praOverrides[d.subject]; });
+      state.decisions = state.decisions.filter(function(d){ return d.id!==id; });
+      render(); break;
+    }
+    case 'request-sme': {
+      var rid = el.getAttribute('data-rule');
+      recordDecision(rid, 'mapping rule '+rid, 'sme_request',
+        { note:'Confirmation requested from SME (simulated notification)' });
+      render(); break;
+    }
+    case 'open-export':
+      state.exportOpen = true; render(); break;
+    case 'close-export':
+      state.exportOpen = false; render(); break;
+  }
+});
+function onBindChange(ev){
+  var tgt = ev.target;
+  if(!tgt || !tgt.getAttribute) return;
+  var b = tgt.getAttribute('data-bind');
+  if(!b) return;
+  switch(b){
+    case 'fy': {
+      var fy = parseInt(tgt.value,10);
+      if(FYS.indexOf(fy)>=0){
+        state.fy = fy; state.expanded = {}; state.showAll = {}; state.editor = null;
+        render();
+      }
+      break;
+    }
+    case 'threshold': {
+      var v = parseInt(tgt.value,10);
+      if(!isNaN(v)) state.cfg.threshold = Math.min(50, Math.max(5, v));
+      render(); break;
+    }
+    case 'measure-dollars': state.cfg.dollars = !!tgt.checked; render(); break;
+    case 'measure-counts': state.cfg.counts = !!tgt.checked; render(); break;
+    case 'pra-program': state.praProg = tgt.value; render(); break;
+  }
+}
+document.addEventListener('change', onBindChange);
+document.addEventListener('input', function(ev){
+  /* live slider feedback only (avoid re-render storms on textareas) */
+  if(ev.target && ev.target.getAttribute && ev.target.getAttribute('data-bind')==='threshold'){
+    onBindChange(ev);
+  }
+});
+document.addEventListener('keydown', function(ev){
+  if(ev.key==='Escape'){
+    if(state.exportOpen){ state.exportOpen=false; render(); }
+    else if(state.editor){ state.editor=null; render(); }
+  }
+});
+
+/* ============================================================
+   SECTION 9 — SELF-TESTS (required by the shared QA harness).
+   window.__SELFTEST__ returns [{name, pass, detail}] and is
+   side-effect-safe: state is snapshotted and restored.
+   The planted dollar constants below are cross-check values
+   for testing only — the UI never displays hardcoded numbers.
+   ============================================================ */
+window.__SELFTEST__ = function(){
+  var results = [];
+  function T(name, pass, detail){ results.push({name:name, pass:!!pass, detail:detail||''}); }
+  var snapshot = JSON.parse(JSON.stringify(state));
+  function q(sel){ return document.querySelector(sel); }
+  try{
+    /* (1) payload loaded */
+    T('payload: 1,459 transactions embedded', D.transactions.length===1459,
+      'got '+D.transactions.length);
+
+    /* (2) computed FY2026 totals match planted values (cross-check constants) */
+    var PLANT = { 'PROG-PA':1094293204.80, 'PROG-HM':166280284.80, 'PROG-IA':422002008.00,
+                  'PROG-HS':469332864.00, 'PROG-UR':39617061.12 };
+    var st26 = statsFor(2026);
+    var okTotals = true, tdetail = [];
+    st26.forEach(function(s){
+      var want = PLANT[s.prog.id];
+      if(Math.abs(s.total-want)>1){ okTotals=false; tdetail.push(s.prog.id+'='+s.total); }
+    });
+    var grand = st26.reduce(function(a,s){return a+s.total;},0);
+    if(Math.abs(grand-2191525422.72)>1){ okTotals=false; tdetail.push('grand='+grand); }
+    T('FY2026 computed totals match planted values (±$1)', okTotals, tdetail.join('; '));
+
+    /* (3) dual-measure trigger at default config; IA is count-only */
+    var cfg = { threshold:20, dollars:true, counts:true };
+    var F = {};
+    st26.forEach(function(s){ F[s.prog.id]=flagsOf(s,cfg); });
+    T('default trigger: PA/HM/HS breach both, IA count-only, UR clear',
+      F['PROG-PA'].dollar && F['PROG-PA'].count &&
+      F['PROG-HM'].dollar && F['PROG-HM'].count &&
+      F['PROG-HS'].dollar && F['PROG-HS'].count &&
+      F['PROG-IA'].countOnly && !F['PROG-IA'].dollar &&
+      !F['PROG-UR'].flagged,
+      JSON.stringify({IA:F['PROG-IA'],UR:F['PROG-UR']}));
+
+    /* (4) FY selector re-derives the whole briefing */
+    state.fy = 2026; state.cfg = {threshold:20,dollars:true,counts:true}; render();
+    var sel = document.getElementById('fy-select');
+    sel.value = '2024';
+    sel.dispatchEvent(new Event('change', {bubbles:true}));
+    var lede = document.getElementById('headline-lede');
+    var exp24 = statsFor(2024).filter(function(s){ return flagsOf(s,cfg).flagged; }).length;
+    T('FY selector re-derives briefing (flag count recomputed for FY2024)',
+      state.fy===2024 && lede && parseInt(lede.getAttribute('data-flag-count'),10)===exp24,
+      'state.fy='+state.fy+' domFlags='+(lede?lede.getAttribute('data-flag-count'):'?')+' expected='+exp24);
+    state.fy = 2026; render();
+
+    /* (5) drill-down reaches transaction rows (lineage) */
+    state.expanded['PROG-PA'] = 2; render();
+    var rows = document.querySelectorAll('#card-PROG-PA table.txn-table tbody tr');
+    T('drill-down reaches transaction-level rows', rows.length>0, rows.length+' rows rendered');
+
+    /* (6) signature interaction: in-place evidence unfold on the hero card */
+    state.expanded['PROG-IA'] = 0; render();
+    var evBtn = q('#card-PROG-IA [data-action="toggle-evidence"]');
+    evBtn.click();
+    var evBtn2 = q('#card-PROG-IA [data-action="toggle-evidence"]');
+    var panel = q('#card-PROG-IA .evidence');
+    T('signature: evidence unfolds in place and shows the count-only math',
+      state.expanded['PROG-IA']===1 && evBtn2 && evBtn2.getAttribute('aria-expanded')==='true'
+        && panel && /37\.5/.test(panel.textContent),
+      'expanded='+state.expanded['PROG-IA']);
+
+    /* (6b) trigger threshold is live-configurable and re-derives flags */
+    state.cfgOpen = true; render();
+    var slider = document.getElementById('trigger-threshold');
+    slider.value = '40';
+    slider.dispatchEvent(new Event('change', {bubbles:true}));
+    var lede2 = document.getElementById('headline-lede');
+    var exp40 = statsFor(2026).filter(function(s){
+      return flagsOf(s,{threshold:40,dollars:true,counts:true}).flagged; }).length;
+    T('trigger threshold slider re-derives every flag live',
+      state.cfg.threshold===40 && parseInt(lede2.getAttribute('data-flag-count'),10)===exp40,
+      'domFlags='+lede2.getAttribute('data-flag-count')+' expected='+exp40);
+    state.cfg.threshold = 20; render();
+
+    /* (7) send-back decision enforces reason capture; reversible */
+    state.editor = { type:'sendback', subject:'PROG-PA' }; render();
+    var before = state.decisions.length;
+    q('[data-action="confirm-sendback"]').click();          /* no reason typed */
+    var errEl = document.getElementById('editor-err');
+    var blocked = state.decisions.length===before && errEl && errEl.hidden===false;
+    document.getElementById('editor-note').value = 'Need DR-4332 cost validation before concurrence.';
+    q('[data-action="confirm-sendback"]').click();
+    var rec = null;
+    state.decisions.forEach(function(d){ if(d.subject==='PROG-PA'&&d.action==='send_back') rec=d; });
+    T('send back requires a written reason, then records it',
+      blocked && rec && rec.note.length>10, blocked?'blocked then recorded':'not blocked');
+    var undoBtn = q('[data-action="undo-decision"][data-id="'+(rec?rec.id:'none')+'"]');
+    if(undoBtn) undoBtn.click();
+    var stillThere = state.decisions.some(function(d){ return rec && d.id===rec.id; });
+    T('decisions are reversible (undo removes the record)', rec && !stillThere);
+
+    /* (7b) PRA override also enforces reason capture */
+    state.fy = 2026; state.praProg='PROG-PA'; state.expanded['PRA']=1; state.editor=null; render();
+    var ovBtn = q('[data-action="open-override"]');
+    ovBtn.click();
+    var ovCountBefore = Object.keys(state.praOverrides).length;
+    q('[data-action="confirm-override"]').click();          /* no reason typed */
+    var ovBlocked = Object.keys(state.praOverrides).length===ovCountBefore;
+    document.getElementById('editor-note').value = 'Program office reports a corrected figure.';
+    q('[data-action="confirm-override"]').click();
+    T('PRA override requires a written reason before recording',
+      ovBlocked && Object.keys(state.praOverrides).length===ovCountBefore+1);
+
+    /* (8) export simulation carries SYNTHETIC-DEMO and captured decisions */
+    if(q('#card-PROG-HS [data-action="concur"]')) q('#card-PROG-HS [data-action="concur"]').click();
+    else recordDecision('PROG-HS', progById['PROG-HS'].name, 'concur');
+    state.exportOpen = true; render();
+    var body = document.getElementById('export-body');
+    T('export contains SYNTHETIC-DEMO watermark and the decision record',
+      body && body.textContent.indexOf('SYNTHETIC-DEMO')>=0
+        && /CONCUR/.test(body.textContent) && /Homeland Security/.test(body.textContent),
+      body?'export length '+body.textContent.length:'no export body');
+
+  } catch(err){
+    results.push({name:'self-test execution', pass:false, detail:String(err && err.stack || err)});
+  }
+  /* restore all state (side-effect-safe) */
+  Object.keys(state).forEach(function(k){ delete state[k]; });
+  Object.keys(snapshot).forEach(function(k){ state[k]=snapshot[k]; });
+  render();
+  return results;
+};
+
+/* ============================================================
+   SECTION 10 — Boot
+   ============================================================ */
+render();
+
+})();
+</script>
+</body>
+</html>
