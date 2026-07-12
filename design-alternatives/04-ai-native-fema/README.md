@@ -27,6 +27,7 @@ Three-pane workspace, no screens, no pipeline:
 - **Right rail** — decision log and assumption register (plain-language SME transparency).
 - **Ask dock** (bottom) — free-text input, suggested-question chips, honesty label, and the full question catalog behind a modal.
 - Tablet/narrow widths collapse the rails into toggleable drawers (header buttons).
+- Accessibility structure: a skip link jumps to the main thread pane; the active thread's question is the pane's `h2` (card headings sit below it in order); each inquiry-rail item exposes a clean accessible name with separators ("…title — examiner-initiated, open", `aria-current` on the active item) while the visual status chips are hidden from the accessible name.
 
 ## Major functionality
 

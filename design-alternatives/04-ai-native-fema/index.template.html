@@ -201,6 +201,8 @@ details.drill .drill-body{padding:.5rem .7rem;max-height:340px;overflow:auto}
 .note-box{background:var(--paper);border:1px dashed var(--line);border-radius:4px;padding:.5rem .7rem;font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
 footer.app{border-top:1px solid var(--line);background:var(--card);padding:.7rem 1.25rem;font-size:.75rem;color:var(--ink-soft)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--navy);color:#fff;padding:.5rem 1rem;z-index:100;border-radius:0 0 5px 0;text-decoration:underline}
+.skip-link:focus{left:0}
 .toast{position:fixed;bottom:5.6rem;right:340px;background:var(--navy);color:#fff;border-radius:5px;padding:.5rem .9rem;font-size:.83rem;z-index:70;display:none}
 .toast.show{display:block}
 
@@ -227,6 +229,7 @@ footer.app{border-top:1px solid var(--line);background:var(--card);padding:.7rem
 </style>
 </head>
 <body>
+<a class="skip-link" href="#threadPane">Skip to main content</a>
 <!-- ================= GOV / SYNTHETIC BANNER ================= -->
 <div class="gov-banner">
   <span class="flag" aria-hidden="true"></span>
@@ -259,7 +262,7 @@ footer.app{border-top:1px solid var(--line);background:var(--card);padding:.7rem
   </nav>
 
   <!-- Main pane: active inquiry thread -->
-  <main class="thread-pane" id="threadPane" aria-live="polite"></main>
+  <main class="thread-pane" id="threadPane" aria-live="polite" tabindex="-1"></main>
 
   <!-- Right rail: decision log + assumption register -->
   <aside class="rail rail-right" id="railRight" aria-label="Decision log and assumption register">
@@ -1211,7 +1214,7 @@ BUILD['draft-pra'] = function(inq){
 
 /* ---------- unresolved ask (did-you-mean) ---------- */
 function dymView(text, suggestions){
-  return '<div class="thread-head"><p class="q">“'+esc(text)+'”</p><p class="meta"><span class="badge sys">Examiner</span> I don’t have a computation for that exact phrasing.</p></div>'
+  return '<div class="thread-head"><h2 class="q">“'+esc(text)+'”</h2><p class="meta"><span class="badge sys">Examiner</span> I don’t have a computation for that exact phrasing.</p></div>'
     + '<div class="dym"><p style="margin-bottom:.4rem"><strong>Did you mean one of these?</strong> (Everything I can answer is a deterministic computation — browse the full catalog for the complete list.)</p>'
     + suggestions.map(t=>'<button data-act="ask-text" data-q="'+esc(t.example)+'">→ '+esc(t.example)+'</button>').join('')
     + '<button data-act="open-catalog">→ Browse the full question catalog…</button></div>';
@@ -1222,11 +1225,16 @@ function dymView(text, suggestions){
    ============================================================ */
 function railItem(inq){
   const a = state.adj['inq:'+inq.id];
+  const statusWord = inq.status==='dismissed' ? 'dismissed' : (a ? a.status : 'open');
   const status = inq.status==='dismissed' ? '<span class="badge dismissed">dismissed</span>'
     : (a ? '<span class="badge resolved">'+a.status+'</span>' : '<span class="badge open">open</span>');
-  return '<button class="inq-item'+(inq.id===state.activeId?' active':'')+(inq.headline?' headline':'')+(inq.status==='dismissed'?' dismissed':'')+'" data-act="open-inq" data-inq="'+inq.id+'">'
-    + '<span class="t">'+esc(inq.title)+'</span>'
-    + '<span class="m"><span class="badge '+(inq.kind==='user'?'user':'sys')+'">'+(inq.kind==='user'?'you asked':'examiner')+'</span>'+status+'</span></button>';
+  /* Accessible name is a clean, separated sentence; the visual status chips are
+     hidden from the accessible name to avoid concatenated announcements. */
+  const aLabel = inq.title + ' — ' + (inq.kind==='user' ? 'you asked' : 'examiner-initiated') + ', ' + statusWord;
+  return '<button class="inq-item'+(inq.id===state.activeId?' active':'')+(inq.headline?' headline':'')+(inq.status==='dismissed'?' dismissed':'')
+    + '" data-act="open-inq" data-inq="'+inq.id+'" aria-label="'+esc(aLabel)+'"'+(inq.id===state.activeId?' aria-current="true"':'')+'>'
+    + '<span class="t" aria-hidden="true">'+esc(inq.title)+'</span>'
+    + '<span class="m" aria-hidden="true"><span class="badge '+(inq.kind==='user'?'user':'sys')+'">'+(inq.kind==='user'?'you asked':'examiner')+'</span>'+status+'</span></button>';
 }
 function renderRail(){
   const sys = state.inquiries.filter(i=>i.kind==='system');
@@ -1248,7 +1256,7 @@ function renderThread(){
   const dismissBtn = inq.status==='dismissed'
     ? '<button class="adj-btn" data-act="reopen-inq" data-inq="'+inq.id+'">Reopen inquiry</button>'
     : '<button class="adj-btn" data-act="dismiss-inq" data-inq="'+inq.id+'">Dismiss inquiry</button>';
-  const head = '<div class="thread-head"><p class="q">'+esc(inq.title)+'</p>'
+  const head = '<div class="thread-head"><h2 class="q">'+esc(inq.title)+'</h2>'
     + '<p class="meta"><span class="badge '+(inq.kind==='user'?'user':'sys')+'">'+openedBy+'</span>'
     + '<span>'+fmtWhen(inq.t)+'</span>' + dismissBtn + '</p></div>';
   const builder = BUILD[inq.tplId];
