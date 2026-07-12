@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Crosswalk Registry — FEMA OCFO Program-Integrity (SYNTHETIC-DEMO)</title>
+<!-- ============================================================
+     THE CROSSWALK REGISTRY
+     Concept 06 — rule stewardship, validation, and change control
+     Single-file offline demo. All data synthetic (SYNTHETIC-DEMO).
+     All AI-flavored capability is simulated / precomputed.
+     ============================================================ -->
+<style>
+/* ==================== DESIGN TOKENS ==================== */
+:root{
+  --paper:#f4f1ea;          /* archival paper */
+  --card:#fdfcf8;
+  --card-alt:#f8f5ee;
+  --ink:#1d242b;
+  --ink-soft:#3b444e;
+  --muted:#5b6470;
+  --line:#d9d2c3;
+  --line-strong:#b9b09c;
+  --navy:#1b3a5f;
+  --navy-deep:#12293f;
+  --seal:#5c4a23;           /* registry seal gold-brown */
+  --confirmed:#1e6b45;      --confirmed-bg:#e3efe7;   --confirmed-line:#a9cbb6;
+  --validated:#124a30;      --validated-bg:#d2e7da;
+  --inferred:#8a5800;       --inferred-bg:#f7ecd4;    --inferred-line:#dcc48d;
+  --exception:#963030;      --exception-bg:#f8e6e3;   --exception-line:#ddaea7;
+  --pending:#5b4a8a;        --pending-bg:#ece7f6;     --pending-line:#c3b7e0;
+  --focus:#b45309;
+  --mono:Consolas,"Courier New",monospace;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:600;margin:0;color:var(--ink)}
+button{font-family:inherit;font-size:13px;cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:2px}
+.mono{font-family:var(--mono)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}
+
+/* ==================== MASTHEAD ==================== */
+.masthead{background:var(--navy-deep);color:#eef1e9;border-bottom:4px double var(--seal);padding:14px 22px 12px}
+.masthead-row{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.masthead h1{color:#f5f2e6;font-size:21px;letter-spacing:.4px}
+.masthead .agency{font-size:12px;color:#b9c4cf;letter-spacing:.08em;text-transform:uppercase}
+.synthetic-tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:#12293f;background:#e9c46a;border:1px solid #b98a2e;
+  padding:2px 8px;border-radius:3px;letter-spacing:.06em;white-space:nowrap}
+.masthead .tagline{font-size:12.5px;color:#cfd8e0;font-style:italic;margin-top:2px}
+
+/* ==================== TRUST POSTURE STRIP ==================== */
+.posture{background:var(--navy);color:#f0f3ee;padding:10px 22px;display:flex;gap:26px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0d1f30}
+.posture .stat{display:flex;flex-direction:column;min-width:120px}
+.posture .stat .v{font-family:var(--mono);font-size:19px;font-weight:700;color:#fff}
+.posture .stat .l{font-size:11px;color:#c3cfda;letter-spacing:.04em;text-transform:uppercase}
+.posture .stat.warn .v{color:#f4cf7d}
+.posture .stat.alert .v{color:#f2b0a5}
+.posture-meter{flex:1 1 220px;min-width:180px;max-width:380px}
+.posture-meter .bar{height:10px;background:#0d2436;border:1px solid #34506d;border-radius:5px;overflow:hidden;display:flex}
+.posture-meter .seg-confirmed{background:#6fbf8f;height:100%}
+.posture-meter .seg-inferred{background:#e0b45c;height:100%}
+.posture-meter .seg-ungoverned{background:#d97f70;height:100%}
+.posture-meter .legend{display:flex;gap:12px;font-size:10.5px;color:#c3cfda;margin-top:3px;flex-wrap:wrap}
+.posture-meter .legend .k{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.posture .role-box{margin-left:auto;text-align:right}
+.posture .role-box label{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:#c3cfda;display:block}
+.posture select{font-family:var(--sans);font-size:12.5px;background:#0d2436;color:#f0f3ee;border:1px solid #46617e;border-radius:3px;padding:3px 6px}
+.posture .role-note{font-size:10px;color:#9fb0c1;font-style:italic}
+
+/* ==================== WORKSPACE TABS ==================== */
+.tabs{display:flex;gap:0;background:var(--card-alt);border-bottom:2px solid var(--line-strong);padding:0 22px}
+.tabs button{background:none;border:none;border-bottom:3px solid transparent;padding:11px 18px 9px;font-size:14px;color:var(--ink-soft);
+  font-family:var(--serif);letter-spacing:.03em;display:flex;align-items:center;gap:7px}
+.tabs button[aria-current="true"]{border-bottom-color:var(--seal);color:var(--ink);font-weight:700;background:var(--card)}
+.tabs button:hover{background:#efe9dc}
+.tab-badge{font-family:var(--mono);font-size:11px;background:var(--inferred-bg);color:var(--inferred);border:1px solid var(--inferred-line);
+  border-radius:9px;padding:0 7px;min-width:20px;text-align:center}
+.tab-badge.zero{background:var(--confirmed-bg);color:var(--confirmed);border-color:var(--confirmed-line)}
+
+/* ==================== LAYOUT ==================== */
+main{padding:16px 22px 40px;max-width:1500px;margin:0 auto}
+.view{display:none}
+.view.active{display:block}
+.view-head{display:flex;align-items:baseline;gap:14px;margin:6px 0 12px;flex-wrap:wrap}
+.view-head h2{font-size:18px}
+.view-head .sub{font-size:12.5px;color:var(--muted)}
+.split{display:grid;grid-template-columns:minmax(430px,7fr) minmax(360px,5fr);gap:16px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:0 1px 2px rgba(40,34,20,.06)}
+.card-h{padding:9px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card-alt);border-radius:4px 4px 0 0}
+.card-h h3{font-size:14.5px}
+.card-b{padding:12px 14px}
+.notice{border-radius:3px;padding:7px 10px;font-size:12.5px;margin:8px 0;border:1px solid}
+.notice.err{background:var(--exception-bg);color:var(--exception);border-color:var(--exception-line)}
+.notice.ok{background:var(--confirmed-bg);color:var(--confirmed);border-color:var(--confirmed-line)}
+.notice.info{background:#eaf0f6;color:var(--navy);border-color:#bfd0e2}
+
+/* ==================== CHIPS & STATUS ==================== */
+.chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:9px;border:1px solid;white-space:nowrap;font-family:var(--sans)}
+.chip.st-inferred{background:var(--inferred-bg);color:var(--inferred);border-color:var(--inferred-line)}
+.chip.st-sme_confirmed{background:var(--confirmed-bg);color:var(--confirmed);border-color:var(--confirmed-line)}
+.chip.st-sop_validated{background:var(--validated-bg);color:var(--validated);border-color:var(--confirmed)}
+.chip.st-exception{background:var(--exception-bg);color:var(--exception);border-color:var(--exception-line)}
+.chip.st-pending{background:var(--pending-bg);color:var(--pending);border-color:var(--pending-line)}
+.chip.type{background:#eef1f4;color:var(--ink-soft);border-color:#ccd4dc;font-family:var(--mono);font-size:10.5px}
+.chip.flag-on{background:var(--exception-bg);color:var(--exception);border-color:var(--exception-line);font-weight:600}
+.chip.flag-off{background:#eef2ee;color:#4a5c4f;border-color:#c8d4c9}
+.chip.flag-count{background:#fdf1dc;color:#7c4a03;border-color:#e3c68b;font-weight:700}
+.conf{font-family:var(--mono);font-size:12px}
+.conf.hi{color:var(--confirmed)} .conf.mid{color:var(--inferred)} .conf.lo{color:var(--exception)}
+
+/* status ladder */
+.ladder{display:flex;align-items:center;gap:0;margin:6px 0;flex-wrap:wrap}
+.ladder .rung{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border:1px solid var(--line);background:var(--card-alt);color:var(--muted)}
+.ladder .rung:first-child{border-radius:10px 0 0 10px}
+.ladder .rung:last-child{border-radius:0 10px 10px 0}
+.ladder .rung.done{background:var(--confirmed-bg);color:var(--confirmed);border-color:var(--confirmed-line);font-weight:600}
+.ladder .rung.here{background:var(--inferred-bg);color:var(--inferred);border-color:var(--inferred-line);font-weight:700}
+.ladder .rung .tick{font-size:10px}
+
+/* ==================== REGISTRY TABLE ==================== */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:10px 12px;background:var(--card-alt);border:1px solid var(--line);border-radius:4px;margin-bottom:10px}
+.toolbar .fld{display:flex;flex-direction:column;gap:2px}
+.toolbar label{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.toolbar select,.toolbar input[type=text],.toolbar input[type=search]{font-size:12.5px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:3px;background:#fff;color:var(--ink);font-family:var(--sans)}
+.toolbar .check{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-soft);padding-bottom:5px}
+table.ledger{width:100%;border-collapse:collapse;font-size:12.5px}
+table.ledger th{font-family:var(--sans);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  text-align:left;padding:6px 8px;border-bottom:2px solid var(--line-strong);background:var(--card-alt);position:sticky;top:0}
+table.ledger td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.ledger tr.rule-row{cursor:pointer}
+table.ledger tr.rule-row:hover{background:#f2ede1}
+table.ledger tr.rule-row.sel{background:#ece5d4;box-shadow:inset 3px 0 0 var(--seal)}
+table.ledger td.r,table.ledger th.r{text-align:right}
+.expr{font-size:12px;color:var(--ink-soft);max-width:340px}
+.rule-id{font-family:var(--mono);font-weight:700;color:var(--navy)}
+.registry-list-wrap{max-height:640px;overflow:auto;border-radius:0 0 4px 4px}
+
+/* ==================== RULE DETAIL ==================== */
+.detail-sec{margin-bottom:14px}
+.detail-sec h4{font-size:13px;border-bottom:1px solid var(--line);padding-bottom:3px;margin-bottom:6px;color:var(--seal);letter-spacing:.03em}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-size:12.5px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.evidence-box{background:var(--card-alt);border:1px dashed var(--line-strong);border-radius:3px;padding:9px 11px;font-size:12.5px}
+.evidence-box .provenance-tag{font-size:10.5px;color:var(--pending);font-style:italic}
+table.mini{width:100%;border-collapse:collapse;font-size:12px}
+table.mini th{font-size:10px;text-transform:uppercase;color:var(--muted);text-align:left;padding:3px 6px;border-bottom:1px solid var(--line-strong)}
+table.mini td{padding:3px 6px;border-bottom:1px solid var(--line)}
+table.mini td.r,table.mini th.r{text-align:right}
+table.mini tr.hl{background:var(--inferred-bg)}
+.code-chip{display:inline-block;font-family:var(--mono);font-size:11px;background:#eef1f4;border:1px solid #ccd4dc;border-radius:3px;padding:1px 6px;margin:1px 2px}
+.txn-table-wrap{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:3px}
+.history-item{border-left:3px solid var(--seal);padding:4px 10px;margin:5px 0;background:var(--card-alt);font-size:12px}
+.history-item .who{font-weight:600}
+.sig{font-family:var(--serif);font-style:italic;color:var(--navy)}
+
+/* ==================== BUTTONS ==================== */
+.btn{border:1px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:3px;padding:6px 12px}
+.btn:hover{background:var(--card-alt)}
+.btn.primary{background:var(--navy);border-color:var(--navy-deep);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--navy-deep)}
+.btn.confirm{background:var(--confirmed);border-color:#155236;color:#fff;font-weight:600}
+.btn.confirm:hover{background:#155236}
+.btn.danger{background:#fff;border-color:var(--exception-line);color:var(--exception)}
+.btn.danger:hover{background:var(--exception-bg)}
+.btn.ghost{background:none;border-color:transparent;color:var(--navy);text-decoration:underline;padding:4px 6px}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+
+/* ==================== FORMS ==================== */
+.frm{background:var(--card-alt);border:1px solid var(--line);border-radius:3px;padding:10px 12px;margin-top:8px}
+.frm .fld{margin-bottom:8px}
+.frm label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin-bottom:2px}
+.frm select,.frm textarea{width:100%;font-size:12.5px;padding:5px 7px;border:1px solid var(--line-strong);border-radius:3px;font-family:var(--sans);background:#fff;color:var(--ink)}
+.frm textarea{min-height:52px;resize:vertical}
+.req{color:var(--exception)}
+
+/* ==================== INBOX ==================== */
+.inbox-grid{display:grid;grid-template-columns:minmax(330px,4fr) minmax(420px,7fr);gap:16px;align-items:start}
+.queue-group{margin-bottom:14px}
+.queue-group h3{font-size:13px;color:var(--seal);letter-spacing:.04em;margin-bottom:6px;border-bottom:1px solid var(--line);padding-bottom:3px}
+.queue-item{border:1px solid var(--line);border-radius:4px;background:var(--card);padding:9px 12px;margin-bottom:7px;cursor:pointer;display:block;width:100%;text-align:left}
+.queue-item:hover{background:#f2ede1}
+.queue-item.sel{box-shadow:inset 3px 0 0 var(--seal);background:#ece5d4}
+.queue-item.resolved{opacity:.62}
+.queue-item .t{font-weight:600;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.queue-item .m{font-size:11.5px;color:var(--muted);margin-top:2px}
+.blast{font-family:var(--mono);font-size:12px;color:var(--navy);font-weight:700}
+
+/* ==================== REVIEW / DIFF ==================== */
+.change-card{border:1px solid var(--pending-line);border-radius:4px;background:var(--card);margin-bottom:14px}
+.change-card.applied{border-color:var(--confirmed-line)}
+.change-card.discarded,.change-card.changes_requested{border-color:var(--line)}
+.change-h{padding:9px 13px;background:var(--pending-bg);border-bottom:1px solid var(--pending-line);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;border-radius:4px 4px 0 0}
+.change-card.applied .change-h{background:var(--confirmed-bg);border-color:var(--confirmed-line)}
+.change-h .cid{font-family:var(--mono);font-weight:700;color:var(--pending)}
+.diff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0}
+.diff-cell{border:1px solid var(--line);border-radius:3px;padding:8px 10px;background:var(--card-alt)}
+.diff-cell .n{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--navy)}
+.diff-cell .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.delta-pos{color:var(--confirmed);font-weight:600}
+.delta-neg{color:var(--exception);font-weight:600}
+.flip{display:inline-block;font-size:11.5px;border:1px solid var(--inferred-line);background:var(--inferred-bg);color:var(--inferred);border-radius:3px;padding:2px 7px;margin:2px 3px 2px 0}
+.arrow{color:var(--muted);padding:0 4px}
+
+/* ==================== TRIGGER CARD / FLAG GRID ==================== */
+.flag-grid td .cellflag{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line-strong);vertical-align:middle}
+.cellflag.on{background:#d98a7d;border-color:#a85445}
+.cellflag.count-only{background:#e8b954;border-color:#a87c1f}
+.cellflag.off{background:#dfe7df;border-color:#b9c6b9}
+.hero-callout{border:1px solid var(--inferred-line);background:var(--inferred-bg);border-left:5px solid var(--inferred);border-radius:3px;padding:9px 12px;font-size:12.5px;margin-top:9px}
+.hero-callout b{color:var(--inferred)}
+input[type=range]{width:160px;accent-color:var(--navy)}
+
+/* ==================== OVERLAYS ==================== */
+.overlay-back{position:fixed;inset:0;background:rgba(24,28,32,.5);display:flex;align-items:flex-start;justify-content:center;padding:4vh 3vw;z-index:60}
+.overlay-panel{background:var(--card);border:1px solid var(--line-strong);border-top:5px solid var(--seal);border-radius:5px;max-width:940px;width:100%;
+  max-height:88vh;overflow:auto;box-shadow:0 12px 40px rgba(20,16,8,.35)}
+.overlay-h{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--card-alt);position:sticky;top:0;z-index:2}
+.overlay-h h3{font-size:16px;flex:1}
+.overlay-b{padding:14px 18px 20px}
+pre.export-pre{background:#20262c;color:#d9e2ea;padding:14px;border-radius:4px;font-size:11.5px;overflow:auto;max-height:52vh;font-family:var(--mono);line-height:1.5}
+.watermark-note{font-family:var(--mono);font-size:11px;color:var(--exception);border:1px dashed var(--exception-line);background:var(--exception-bg);padding:5px 9px;border-radius:3px;display:inline-block}
+
+/* ==================== FOOTER / PROVENANCE ==================== */
+footer{border-top:4px double var(--seal);background:var(--card-alt);padding:16px 22px;margin-top:26px;font-size:12px;color:var(--ink-soft)}
+footer .foot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:1500px;margin:0 auto}
+footer h4{font-size:12.5px;color:var(--seal);margin-bottom:4px}
+.sim-note{font-style:italic;color:var(--pending)}
+
+/* ==================== SVG SPARK ==================== */
+.spark{display:block}
+.spark .axis{stroke:var(--line-strong);stroke-width:1}
+.spark .barq{fill:#7d95ad}
+.spark .barq.cur{fill:var(--navy)}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width:1100px){
+  .split,.inbox-grid{grid-template-columns:1fr}
+  .registry-list-wrap{max-height:440px}
+  main{padding:12px 14px 32px}
+  .masthead,.posture,.tabs{padding-left:14px;padding-right:14px}
+}
+@media (max-width:820px){
+  body{font-size:13px}
+  .posture{gap:14px}
+  .posture .stat{min-width:96px}
+  .posture .stat .v{font-size:16px}
+  .tabs button{padding:9px 10px 7px;font-size:13px}
+  .expr{max-width:none}
+  .overlay-back{padding:2vh 2vw}
+  .toolbar{gap:7px}
+}
+</style>
+</head>
+
+<body>
+<a class="sr-only" href="#main-content">Skip to main content</a>
+
+<!-- ==================== MASTHEAD ==================== -->
+<header class="masthead">
+  <div class="masthead-row">
+    <div>
+      <div class="agency">FEMA · Office of the Chief Financial Officer · Payment-Integrity (PIIA) Support — Demonstration</div>
+      <h1>The Crosswalk Registry</h1>
+      <div class="tagline">Every mapping rule: what it claims, what supports it, who signed it, and what dollars ride on it.</div>
+    </div>
+    <span class="synthetic-tag" title="All data in this demonstration is synthetic.">SYNTHETIC-DEMO DATASET</span>
+  </div>
+</header>
+
+<!-- ==================== TRUST-POSTURE STRIP (persistent, recomputed live) ==================== -->
+<div class="posture" id="posture-strip" aria-label="Registry trust posture (recomputed live)">
+  <div class="stat"><span class="v num" id="tp-rules">–</span><span class="l">Rules on ledger</span></div>
+  <div class="stat" id="tp-governed-stat"><span class="v num" id="tp-governed">–</span><span class="l">FY2026 dollars under confirmed rules</span></div>
+  <div class="stat warn"><span class="v num" id="tp-awaiting">–</span><span class="l">Items awaiting validation</span></div>
+  <div class="stat alert"><span class="v num" id="tp-ungoverned">–</span><span class="l">FY2026 dollars not yet confirmed</span></div>
+  <div class="posture-meter" aria-hidden="false">
+    <div class="bar" id="tp-bar" role="img" aria-label="Share of fiscal year 2026 disbursement dollars by rule assurance"></div>
+    <div class="legend">
+      <span><span class="k" style="background:#6fbf8f"></span>Confirmed / signed</span>
+      <span><span class="k" style="background:#e0b45c"></span>Inferred, unconfirmed</span>
+      <span><span class="k" style="background:#d97f70"></span>Unmapped (exception queue)</span>
+    </div>
+  </div>
+  <div class="role-box">
+    <label for="role-select">Acting as (illustrative identity — sign-in simulated)</label>
+    <select id="role-select" data-field="role">
+      <option value="steward">D. Okafor — Finance-center Data Steward</option>
+      <option value="sme">L. Whitfield — Program SME (subject-matter expert)</option>
+      <option value="reviewer">M. Reyes — OCFO Reviewer / Approver</option>
+    </select>
+    <div class="role-note">Signatures recorded per action, session only</div>
+  </div>
+</div>
+
+<!-- ==================== WORKSPACE TABS ==================== -->
+<nav class="tabs" aria-label="Workspaces">
+  <button type="button" data-action="switch-view" data-arg="registry" id="tab-registry" aria-current="true">Registry <span class="small muted">— the rule ledger</span></button>
+  <button type="button" data-action="switch-view" data-arg="inbox" id="tab-inbox">Inbox <span class="small muted">— validation queue</span> <span class="tab-badge" id="badge-inbox">–</span></button>
+  <button type="button" data-action="switch-view" data-arg="review" id="tab-review">Review <span class="small muted">— staged changes</span> <span class="tab-badge" id="badge-review">–</span></button>
+</nav>
+
+<main id="main-content">
+
+  <!-- ==================== REGISTRY WORKSPACE ==================== -->
+  <section class="view active" id="view-registry" aria-labelledby="registry-title">
+    <div class="view-head">
+      <h2 id="registry-title">Rule Registry</h2>
+      <span class="sub">26 crosswalk rules govern how 57 financial codes roll up to 5 reportable programs. Sub-groupings are never presented as programs.</span>
+      <span style="margin-left:auto"></span>
+      <button type="button" class="btn sm" data-action="open-evidence">Why trust the mining? — accuracy record</button>
+      <button type="button" class="btn sm" data-action="open-bulk">Preview: fuller program list (simulated)</button>
+      <button type="button" class="btn sm primary" data-action="open-export">Export rule ledger &amp; validation record</button>
+    </div>
+
+    <div class="toolbar" role="search" aria-label="Filter and sort the rule ledger">
+      <div class="fld"><label for="f-type">Rule type</label>
+        <select id="f-type" data-field="fType"><option value="">All types</option><option value="code_to_subprogram">Code → sub-program</option><option value="rollup">Roll-up</option><option value="event_split">Event split</option><option value="cleansing">Cleansing</option></select></div>
+      <div class="fld"><label for="f-status">Status</label>
+        <select id="f-status" data-field="fStatus"><option value="">All statuses</option><option value="inferred">Inferred (awaiting SME)</option><option value="sme_confirmed">SME-confirmed</option><option value="sop_validated">SOP-validated</option></select></div>
+      <div class="fld"><label for="f-conf">Confidence band</label>
+        <select id="f-conf" data-field="fConf"><option value="">All bands</option><option value="hi">≥ 0.95</option><option value="mid">0.85 – 0.95</option><option value="lo">&lt; 0.85</option></select></div>
+      <div class="fld"><label for="f-prog">Program</label>
+        <select id="f-prog" data-field="fProg"><option value="">All programs</option></select></div>
+      <div class="fld"><label for="f-sort">Sort by</label>
+        <select id="f-sort" data-field="fSort"><option value="blast">Dollar blast radius (FY2026, high → low)</option><option value="id">Rule ID</option><option value="conf">Confidence (low → high)</option></select></div>
+      <div class="fld"><label for="f-search">Search</label>
+        <input type="search" id="f-search" data-field="fSearch" placeholder="Rule ID, code, program…"></div>
+      <div class="check"><input type="checkbox" id="f-pending" data-field="fPending"><label for="f-pending" style="text-transform:none;font-size:12px">Has pending change</label></div>
+    </div>
+
+    <div class="split">
+      <div>
+        <div class="card">
+          <div class="card-h"><h3>Ledger</h3><span class="small muted" id="ledger-count"></span></div>
+          <div class="registry-list-wrap">
+            <table class="ledger" aria-label="Crosswalk rule ledger">
+              <thead><tr>
+                <th scope="col">Rule</th><th scope="col">Type</th><th scope="col">Claim (plain language)</th>
+                <th scope="col">Conf.</th><th scope="col">Status</th><th scope="col" class="r">FY26 blast radius</th>
+              </tr></thead>
+              <tbody id="ledger-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Governed trigger policy: the 20% dual-measure threshold is itself a stewarded rule -->
+        <div class="card" style="margin-top:14px" id="trigger-card"></div>
+
+        <!-- FY-extract ingestion contract / provenance -->
+        <div class="card" style="margin-top:14px" id="ingest-card"></div>
+      </div>
+
+      <div>
+        <div class="card" id="rule-detail-card">
+          <div class="card-h"><h3 id="rule-detail-title">Rule detail</h3></div>
+          <div class="card-b" id="rule-detail"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== INBOX WORKSPACE ==================== -->
+  <section class="view" id="view-inbox" aria-labelledby="inbox-title">
+    <div class="view-head">
+      <h2 id="inbox-title">Validation Inbox</h2>
+      <span class="sub">Everything the machine assumed and a person has not yet signed. Resolve each item in place — every resolution is recorded with an (illustrative) signature.</span>
+    </div>
+    <div class="inbox-grid">
+      <div id="inbox-queue" aria-label="Validation queue"></div>
+      <div class="card" id="inbox-detail-card">
+        <div class="card-h"><h3 id="inbox-detail-title">Item detail</h3></div>
+        <div class="card-b" id="inbox-detail"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REVIEW WORKSPACE ==================== -->
+  <section class="view" id="view-review" aria-labelledby="review-title">
+    <div class="view-head">
+      <h2 id="review-title">Change Review</h2>
+      <span class="sub">Staged rule changes with their computed dollar blast-radius diff. Nothing applies to the ledger until an approver signs. Applied changes can be reverted.</span>
+    </div>
+    <div id="review-body"></div>
+  </section>
+
+</main>
+
+<!-- ==================== OVERLAY ROOT (export / evidence / bulk preview / PRA) ==================== -->
+<div id="overlay-root"></div>
+
+<!-- ==================== FOOTER / HONEST DISCLOSURE ==================== -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <h4>Synthetic-data disclosure</h4>
+      <p>Every figure in this demonstration is <strong>synthetic (SYNTHETIC-DEMO)</strong>, calibrated to public obligation envelopes. Program names and disaster-declaration (DR) numbers are real public identifiers; amounts, transactions, codes and TAFS (Treasury Appropriation Fund Symbol) values are stand-ins. Every export is watermarked.</p>
+    </div>
+    <div>
+      <h4>Simulated capabilities</h4>
+      <p class="sim-note">Rule mining, similarity suggestions, identities/signatures, exports, and the fuller-program-list preview are simulated for demonstration. Deterministic code computes every reportable number live from the embedded extract; the simulated "AI" only proposes, explains and scores — it never owns a number. Mapping confidence below 0.85 routes to the exception queue.</p>
+    </div>
+    <div>
+      <h4>Glossary</h4>
+      <p class="small">PIIA — Payment Integrity Information Act. PRA — Preliminary Risk Assessment ("preliminary" is a starting point in a lifecycle, not a terminal status). YoY — year over year. TAFS — Treasury Appropriation Fund Symbol. DR — major disaster declaration number. Fiscal year (FY) runs Oct 1 – Sep 30. Disbursements are payments made — never presented here as obligations.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================== EMBEDDED DATA PAYLOAD (injected by inject.py) ==================== -->
+<script>
+window.FEMA_DATA = /*__FEMA_DATA__*/null;
+</script>
+
+<script>
+/* ============================================================================
+   THE CROSSWALK REGISTRY — application code
+   Section 1: data preparation & indexes
+   Section 2: state
+   Section 3: deterministic computation engine (owns every reportable number)
+   Section 4: renderers (parts below)
+   Section 5: actions & event delegation
+   Section 6: embedded self-tests (window.__SELFTEST__)
+   All "AI" behavior (mining provenance, similarity suggestions) is SIMULATED:
+   precomputed/deterministic, labeled illustrative, and never owns a number.
+   ============================================================================ */
+(function () {
+  "use strict";
+  var D = window.FEMA_DATA;
+  if (!D) { document.body.insertAdjacentHTML("beforeend", "<p>Payload missing.</p>"); return; }
+
+  /* ---------------- Section 1: indexes ---------------- */
+  var FYS = D.meta.fiscal_years.slice();               // [2022..2026]
+  var CUR_FY = FYS[FYS.length - 1];                    // 2026 (reporting year)
+  var progById = {}, subById = {}, codeByCode = {}, ruleById = {};
+  D.programs.forEach(function (p) { progById[p.id] = p; });
+  D.sub_programs.forEach(function (s) { subById[s.id] = s; });
+  D.financial_codes.forEach(function (c) { codeByCode[c.code] = c; });
+  D.mapping_rules.forEach(function (r) { ruleById[r.rule_id] = r; });
+  var PROG_ORDER = ["PROG-PA", "PROG-HM", "PROG-IA", "PROG-HS", "PROG-UR"];
+
+  // transactions → objects
+  var TX = D.transactions.map(function (a) {
+    return { id: a[0], raw: a[1], code: a[2], dr: a[3], isDisaster: a[4], fy: a[5], amount: a[6], dtype: a[7], date: a[8] };
+  });
+
+  // base program_mapping index: code|fy -> row
+  var basePm = {};
+  D.program_mapping.forEach(function (r) { basePm[r.code + "|" + r.fy] = r; });
+
+  // exception-queue codes (base): code -> suggestion row (FY2026)
+  var EXC_CODES = {};
+  D.program_mapping.forEach(function (r) {
+    if (r.status === "exception_queue") EXC_CODES[r.code] = r;
+  });
+  var EXC_LIST = Object.keys(EXC_CODES).sort();
+
+  // strip internal requirement/assumption ID references from any display text
+  function sanitize(txt) {
+    return String(txt)
+      .replace(/\s*\(([^)]*\b(?:REQ|ASSUMP|SME|SRC)-\d+[^)]*)\)/g, "")
+      .replace(/,?\s*\b(?:REQ|ASSUMP|SME|SRC)-\d+\b/g, "").trim();
+  }
+
+  // plain-language claim per rule (translated from machine expression)
+  function ruleClaim(r) {
+    var m, e = r.expression;
+    if (r.rule_type === "rollup") {
+      m = e.match(/->\s*(PROG-\w+)/);
+      var subs = (e.match(/'(SUB-[\w-]+)'/g) || []).map(function (s) { return s.replace(/'/g, ""); });
+      var p = progById[m[1]];
+      return subs.length + " sub-grouping" + (subs.length > 1 ? "s" : "") + " roll up to the reportable program “" + p.name + "”. Sub-groupings are never reported as programs.";
+    }
+    if (r.rule_type === "event_split") {
+      return "The event segment of each financial code identifies the disaster declaration (DR number); “ND” marks non-disaster activity. Disaster vs non-disaster is a daily working distinction.";
+    }
+    if (r.rule_type === "cleansing") {
+      m = e.match(/alias\s+(\S+)\s+->\s+(\S+)/);
+      if (m) return "Retired legacy code " + m[1] + " in older extracts is the same money as canonical code " + m[2] + "; recover it before mapping.";
+      return "Normalize raw code formatting from the extract (case, spaces, separators) before any mapping is attempted.";
+    }
+    // code_to_subprogram
+    m = e.match(/fund_segment == '(\w+)'/);
+    var fund = m ? m[1] : "?";
+    var segs = (e.match(/program_segment in \[([^\]]*)\]/) || [, ""])[1].replace(/'/g, "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    var ev = (e.match(/event_segment in \[([^\]]*)\]/) || [, ""])[1].split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    var target = e.match(/->\s*(SUB-[\w-]+)/)[1];
+    var sub = subById[target], prog = progById[sub.program_id];
+    var s = "Codes in fund " + fund + " with program segment" + (segs.length > 1 ? "s " : " ") + segs.join(", ");
+    if (ev.length) s += " for DR-" + ev.join(", DR-");
+    s += " belong to sub-grouping “" + sub.name + "” under " + prog.name + ".";
+    return s;
+  }
+
+  // codes governed by each code_to_subprogram rule (from base mapping attribution)
+  var ruleCodes = {};
+  D.program_mapping.forEach(function (r) {
+    if (!r.rule_id) return;
+    (ruleCodes[r.rule_id] = ruleCodes[r.rule_id] || {})[r.code] = true;
+  });
+  Object.keys(ruleCodes).forEach(function (k) { ruleCodes[k] = Object.keys(ruleCodes[k]).sort(); });
+
+  /* SIMULATED mining provenance for the three inferred rules (labeled illustrative in UI). */
+  var MINED = {
+    "BR-012": { support: "20 of 20 period observations consistent (4 codes × 5 fiscal years); 0 counter-examples", fys: "FY2022–FY2026", basis: "Pattern-completion of the confirmed PA event family (BR-007…BR-011, BR-013): identical fund + program segments, new event segment 4341 (DR-4341, Hurricane Irma — Seminole Tribe)." },
+    "BR-018": { support: "10 of 10 period observations consistent (2 codes × 5 fiscal years); 0 counter-examples", fys: "FY2022–FY2026", basis: "Fund segment IA with program segment 61103 co-occurs exclusively with Mass Care disbursement descriptions in historical extracts." },
+    "BR-023": { support: "10 of 10 period observations consistent (2 codes × 5 fiscal years); 0 counter-examples", fys: "FY2022–FY2026", basis: "Fund segment HS with segments 61503/55501 matches Operation Stonegarden grant patterns. Note: program segment 55501 also exists under fund IA — the fund segment, not the program segment alone, decides the mapping." },
+  };
+
+  /* Open validation questions (ILLUSTRATIVE — plain-language restatements of real SME questions). */
+  var QUESTIONS = [
+    { id: "Q-TRIG", title: "Is the 20% trigger exactly right?", body: "Current build assumes 20%, either direction, on dollars or transaction count (any one breaching flags the program). Confirm threshold, direction and measures — the registry treats this as governed policy rule TRIG-01, changeable only through staged review." },
+    { id: "Q-55501", title: "Program segment 55501 appears under two funds.", body: "Segment 55501 exists under both the IA (Individual Assistance) and HS (Homeland Security) fund segments. The registry maps by fund + segment together (rules BR-019 and BR-023). Confirm that the segment alone must never decide a mapping." },
+    { id: "Q-LEG", title: "Are the four legacy aliases fully retired?", body: "Cleansing rules BR-003…BR-006 recover retired codes LEG-0001…LEG-0004 found in FY2022–FY2023 extracts. Confirm no legacy aliases will appear in post-modernization WebFMIS extracts, or extend the cleansing set." },
+    { id: "Q-LIFE", title: "PRA lifecycle: what advances a “preliminary” assessment?", body: "A Preliminary Risk Assessment is a starting point, not a terminal status; a comprehensive assessment is required at least every 3 years per program. Confirm the lifecycle states the registry should track after the PRA is populated." },
+  ];
+
+  /* ---------------- Section 2: state ---------------- */
+  function initialState() {
+    var ruleStatus = {};
+    D.mapping_rules.forEach(function (r) {
+      ruleStatus[r.rule_id] = { status: r.status, signatures: [], escalated: false };
+    });
+    return {
+      role: "steward", view: "registry", fyFocus: CUR_FY,
+      ruleStatus: ruleStatus,
+      exceptions: {},          // code -> {action:'accepted'|'assigned'|'not_mappable', target, reason, by, when}
+      appliedTargets: {},      // code -> subId | 'UNMAPPED'  (result of applied staged changes)
+      trigger: JSON.parse(JSON.stringify(D.meta.trigger_default)),
+      staged: [], changeSeq: 1,
+      questions: {},           // qid -> {note, by, when}
+      praOverrides: {},        // progId|qid -> {value, reason, by, when}
+      praHuman: {},            // progId|qid -> {value, by, when} for Q9/Q10
+      selRule: "BR-023", inboxSel: "rule:BR-023", reviewSel: null,
+      editor: null, trigEditor: null, trigPreview: null,
+      drafts: {}, notices: {}, overlay: null,
+      fType: "", fStatus: "", fConf: "", fProg: "", fSort: "blast", fSearch: "", fPending: false,
+      history: []              // session change-history entries {ruleId?, text, who, when}
+    };
+  }
+  var state = initialState();
+
+  var IDENTITY = {
+    steward: { name: "D. Okafor", role: "Finance-center Data Steward" },
+    sme: { name: "L. Whitfield", role: "Program SME" },
+    reviewer: { name: "M. Reyes", role: "OCFO Reviewer" },
+  };
+  var seq = 1;
+  function nowStamp() { return "Session +" + (seq++) + " · " + new Date().toISOString().slice(0, 10); }
+  function me() { return IDENTITY[state.role]; }
+
+  /* ---------------- Section 3: computation engine ---------------- */
+
+  // effective target map: code -> subId or 'UNMAPPED' (only overrides; absence = base mapping)
+  function effectiveTargets() {
+    var t = {};
+    Object.keys(state.appliedTargets).forEach(function (c) { t[c] = state.appliedTargets[c]; });
+    Object.keys(state.exceptions).forEach(function (c) {
+      var r = state.exceptions[c];
+      t[c] = (r.action === "not_mappable") ? "UNMAPPED" : r.target;
+    });
+    return t;
+  }
+
+  // resolve one code/fy under a target map. Returns {subId|null, progId|null, why}
+  function resolveCode(code, fy, targets) {
+    if (targets && Object.prototype.hasOwnProperty.call(targets, code)) {
+      var t = targets[code];
+      if (t === "UNMAPPED") return { subId: null, progId: null, why: "signed decision: not mappable" };
+      return { subId: t, progId: subById[t].program_id, why: "signed human decision" };
+    }
+    var row = basePm[code + "|" + fy];
+    if (!row) return { subId: null, progId: null, why: "no mapping row" };
+    if (row.status === "exception_queue") return { subId: null, progId: null, why: "exception queue (unresolved)" };
+    return { subId: row.sub_program_id, progId: row.program_id, why: row.rule_id };
+  }
+
+  // full model: totals/counts per program & sub per FY, plus unmapped bucket
+  function computeModel(targets, trigger) {
+    targets = targets || effectiveTargets(); trigger = trigger || state.trigger;
+    var progFy = {}, subFy = {}, unmapped = { total: 0, count: 0, byCode: {} };
+    TX.forEach(function (t) {
+      var r = resolveCode(t.code, t.fy, targets);
+      if (!r.subId) {
+        if (r.why.indexOf("not mappable") < 0) {
+          unmapped.total += t.amount; unmapped.count++;
+          var b = unmapped.byCode[t.code] = unmapped.byCode[t.code] || { total: 0, count: 0 };
+          b.total += t.amount; b.count++;
+        }
+        return;
+      }
+      var pk = r.progId + "|" + t.fy, sk = r.subId + "|" + t.fy;
+      var pe = progFy[pk] = progFy[pk] || { total: 0, count: 0 };
+      pe.total += t.amount; pe.count++;
+      var se = subFy[sk] = subFy[sk] || { total: 0, count: 0 };
+      se.total += t.amount; se.count++;
+    });
+    // trigger flags per program per FY (needs prior year)
+    var flags = {};
+    PROG_ORDER.forEach(function (p) {
+      FYS.forEach(function (fy, i) {
+        if (i === 0) return;
+        var cur = progFy[p + "|" + fy] || { total: 0, count: 0 };
+        var pri = progFy[p + "|" + FYS[i - 1]] || { total: 0, count: 0 };
+        var dY = pri.total ? (cur.total - pri.total) / pri.total * 100 : null;
+        var cY = pri.count ? (cur.count - pri.count) / pri.count * 100 : null;
+        flags[p + "|" + fy] = evalTrigger(dY, cY, trigger);
+        flags[p + "|" + fy].dYoY = dY; flags[p + "|" + fy].cYoY = cY;
+      });
+    });
+    return { progFy: progFy, subFy: subFy, unmapped: unmapped, flags: flags };
+  }
+
+  function breach(yoy, trig) {
+    if (yoy === null || yoy === undefined) return false;
+    var up = yoy >= trig.threshold_pct, dn = yoy <= -trig.threshold_pct;
+    if (trig.direction === "increase") return up;
+    if (trig.direction === "decrease") return dn;
+    return up || dn;
+  }
+  function evalTrigger(dYoY, cYoY, trig) {
+    var useD = trig.measures.indexOf("disbursements") >= 0;
+    var useC = trig.measures.indexOf("transaction_count") >= 0;
+    var d = useD && breach(dYoY, trig), c = useC && breach(cYoY, trig);
+    var parts = []; if (useD) parts.push(d); if (useC) parts.push(c);
+    var any = trig.combine === "all" ? (parts.length > 0 && parts.every(Boolean)) : parts.some(Boolean);
+    return { dollar: d, count: c, any: any, countOnly: any && c && !d };
+  }
+
+  var _model = null;
+  function model() { if (!_model) _model = computeModel(); return _model; }
+  function invalidate() { _model = null; }
+
+  // dollar blast radius of a rule per FY under the CURRENT applied state
+  function ruleBlast(ruleId) {
+    var r = ruleById[ruleId], out = {}; FYS.forEach(function (fy) { out[fy] = { total: 0, count: 0 }; });
+    var targets = effectiveTargets(), m;
+    if (r.rule_type === "code_to_subprogram") {
+      TX.forEach(function (t) {
+        if (Object.prototype.hasOwnProperty.call(targets, t.code)) return; // manually re-decided → no longer rides this rule
+        var row = basePm[t.code + "|" + t.fy];
+        if (row && row.rule_id === ruleId) { out[t.fy].total += t.amount; out[t.fy].count++; }
+      });
+    } else if (r.rule_type === "rollup") {
+      m = r.expression.match(/->\s*(PROG-\w+)/);
+      var prog = m[1], mo = model();
+      FYS.forEach(function (fy) {
+        var e = mo.progFy[prog + "|" + fy]; if (e) { out[fy].total = e.total; out[fy].count = e.count; }
+      });
+    } else if (r.rule_type === "event_split") {
+      TX.forEach(function (t) { if (t.isDisaster) { out[t.fy].total += t.amount; out[t.fy].count++; } });
+    } else { // cleansing
+      m = r.expression.match(/alias\s+(\S+)/);
+      TX.forEach(function (t) {
+        var hit = m ? (t.raw === m[1]) : (t.raw !== t.code && !/^LEG/i.test(t.raw));
+        if (hit) { out[t.fy].total += t.amount; out[t.fy].count++; }
+      });
+    }
+    return out;
+  }
+
+  // trust posture (FY2026): dollars by assurance bucket
+  function trustPosture() {
+    var targets = effectiveTargets();
+    var confirmed = 0, inferred = 0, unmapped = 0, excluded = 0;
+    TX.forEach(function (t) {
+      if (t.fy !== CUR_FY) return;
+      if (Object.prototype.hasOwnProperty.call(targets, t.code)) {
+        if (targets[t.code] === "UNMAPPED") excluded += t.amount; else confirmed += t.amount;
+        return;
+      }
+      var row = basePm[t.code + "|" + t.fy];
+      if (!row || row.status === "exception_queue") { unmapped += t.amount; return; }
+      var st = row.rule_id ? state.ruleStatus[row.rule_id].status : "sme_confirmed";
+      if (st === "inferred") inferred += t.amount; else confirmed += t.amount;
+    });
+    var denom = confirmed + inferred + unmapped;
+    var pendingCh = state.staged.filter(function (c) { return c.status === "pending"; }).length;
+    var openInferred = D.mapping_rules.filter(function (r) { return state.ruleStatus[r.rule_id].status === "inferred"; }).length;
+    var openExc = EXC_LIST.filter(function (c) { return !state.exceptions[c]; }).length;
+    var openQ = QUESTIONS.filter(function (q) { return !state.questions[q.id]; }).length;
+    return {
+      confirmed: confirmed, inferred: inferred, unmapped: unmapped, excluded: excluded,
+      governedPct: denom ? confirmed / denom * 100 : 0,
+      awaiting: openInferred + openExc + openQ + pendingCh,
+      inboxCount: openInferred + openExc + openQ, pendingCh: pendingCh,
+    };
+  }
+
+  // diff engine: compare current model to a hypothetical (targetsAfter, triggerAfter)
+  function computeDiff(targetsAfter, triggerAfter) {
+    var before = computeModel(effectiveTargets(), state.trigger);
+    var after = computeModel(targetsAfter, triggerAfter || state.trigger);
+    var remap = [];
+    TX.forEach(function (t) {
+      var a = resolveCode(t.code, t.fy, effectiveTargets()), b = resolveCode(t.code, t.fy, targetsAfter);
+      if (a.subId !== b.subId) remap.push({ t: t, from: a.subId, to: b.subId });
+    });
+    var progDelta = [], subDelta = [];
+    PROG_ORDER.forEach(function (p) {
+      FYS.forEach(function (fy) {
+        var b0 = before.progFy[p + "|" + fy] || { total: 0, count: 0 }, a0 = after.progFy[p + "|" + fy] || { total: 0, count: 0 };
+        if (Math.abs(b0.total - a0.total) > 0.005 || b0.count !== a0.count)
+          progDelta.push({ id: p, name: progById[p].name, fy: fy, before: b0, after: a0 });
+      });
+    });
+    D.sub_programs.forEach(function (s) {
+      FYS.forEach(function (fy) {
+        var b0 = before.subFy[s.id + "|" + fy] || { total: 0, count: 0 }, a0 = after.subFy[s.id + "|" + fy] || { total: 0, count: 0 };
+        if (Math.abs(b0.total - a0.total) > 0.005 || b0.count !== a0.count)
+          subDelta.push({ id: s.id, name: s.name, fy: fy, before: b0, after: a0 });
+      });
+    });
+    var flips = [];
+    PROG_ORDER.forEach(function (p) {
+      FYS.slice(1).forEach(function (fy) {
+        var b0 = before.flags[p + "|" + fy], a0 = after.flags[p + "|" + fy];
+        if (!b0 || !a0) return;
+        ["any", "dollar", "count"].forEach(function (k) {
+          if (b0[k] !== a0[k]) flips.push({ prog: p, fy: fy, measure: k, from: b0[k], to: a0[k] });
+        });
+      });
+    });
+    var excBefore = before.unmapped, excAfter = after.unmapped;
+    return {
+      remap: remap, progDelta: progDelta, subDelta: subDelta, flips: flips,
+      unmappedBefore: excBefore, unmappedAfter: excAfter,
+      remapDollars: remap.reduce(function (s, r) { return s + r.t.amount; }, 0),
+    };
+  }
+
+  /* ---------------- formatting helpers ---------------- */
+  function money(x) {
+    var neg = x < 0; x = Math.abs(x);
+    var s = x.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (neg ? "−$" : "$") + s;
+  }
+  function moneyC(x) { // compact
+    var neg = x < 0 ? "−" : ""; x = Math.abs(x);
+    if (x >= 1e9) return neg + "$" + (x / 1e9).toFixed(2) + "B";
+    if (x >= 1e6) return neg + "$" + (x / 1e6).toFixed(1) + "M";
+    if (x >= 1e3) return neg + "$" + (x / 1e3).toFixed(0) + "K";
+    return neg + "$" + x.toFixed(0);
+  }
+  function pct(x, dp) { if (x === null || x === undefined) return "—"; return (x > 0 ? "+" : "") + x.toFixed(dp === undefined ? 1 : dp) + "%"; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function statusLabel(st) { return st === "inferred" ? "Inferred (awaiting SME)" : st === "sme_confirmed" ? "SME-confirmed" : "SOP-validated"; }
+  function confBand(c) { return c >= 0.95 ? "hi" : c >= 0.85 ? "mid" : "lo"; }
+  function progShort(p) { return progById[p] ? progById[p].name.replace(/\s*\(.*\)$/, "") : p; }
+  function ruleProgram(r) { // program a rule pertains to (for filtering)
+    var m = r.expression.match(/->\s*(PROG-\w+)/); if (m) return m[1];
+    m = r.expression.match(/->\s*(SUB-[\w-]+)/); if (m && subById[m[1]]) return subById[m[1]].program_id;
+    m = r.expression.match(/alias\s+\S+\s+->\s+(\w\w)/); if (m) { var f = { PA: "PROG-PA", HM: "PROG-HM", IA: "PROG-IA", HS: "PROG-HS", UR: "PROG-UR" }[m[1]]; if (f) return f; }
+    return "";
+  }
+  function pendingChangeRules() { // ruleIds referenced by pending staged changes
+    var s = {};
+    state.staged.forEach(function (c) { if (c.status === "pending" && c.ruleId) s[c.ruleId] = true; });
+    return s;
+  }
+
+
+  /* ---------------- Section 4: renderers ---------------- */
+  function $(id) { return document.getElementById(id); }
+
+  function sparkBars(vals, w, h) { // tiny SVG bar series, explicit math (no layout APIs)
+    w = w || 150; h = h || 38;
+    var max = Math.max.apply(null, vals.map(Math.abs).concat([1]));
+    var bw = Math.floor((w - 8) / vals.length) - 4, x = 4, bars = "";
+    vals.forEach(function (v, i) {
+      var bh = Math.max(1, Math.round(Math.abs(v) / max * (h - 14)));
+      bars += '<rect class="barq' + (i === vals.length - 1 ? " cur" : "") + '" x="' + x + '" y="' + (h - 12 - bh) + '" width="' + bw + '" height="' + bh + '"><title>' + esc(FYS[i] + ": " + money(v)) + "</title></rect>";
+      x += bw + 4;
+    });
+    return '<svg class="spark" role="img" aria-label="Dollar blast radius by fiscal year" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' +
+      '<line class="axis" x1="2" y1="' + (h - 12) + '" x2="' + (w - 2) + '" y2="' + (h - 12) + '"></line>' + bars +
+      '<text x="4" y="' + (h - 2) + '" font-size="8" fill="#5b6470">FY' + String(FYS[0]).slice(2) + "–FY" + String(CUR_FY).slice(2) + "</text></svg>";
+  }
+
+  function renderHeader() {
+    var tp = trustPosture();
+    $("tp-rules").textContent = D.mapping_rules.length;
+    $("tp-governed").textContent = tp.governedPct.toFixed(1) + "%";
+    $("tp-awaiting").textContent = tp.awaiting;
+    $("tp-ungoverned").textContent = moneyC(tp.inferred + tp.unmapped);
+    var denom = tp.confirmed + tp.inferred + tp.unmapped || 1;
+    $("tp-bar").innerHTML =
+      '<div class="seg-confirmed" style="width:' + (tp.confirmed / denom * 100).toFixed(2) + '%" title="Confirmed: ' + money(tp.confirmed) + '"></div>' +
+      '<div class="seg-inferred" style="width:' + (tp.inferred / denom * 100).toFixed(2) + '%" title="Inferred: ' + money(tp.inferred) + '"></div>' +
+      '<div class="seg-ungoverned" style="width:' + (tp.unmapped / denom * 100).toFixed(2) + '%" title="Unmapped: ' + money(tp.unmapped) + '"></div>';
+    $("tp-bar").setAttribute("aria-label", "FY2026 disbursements: " + money(tp.confirmed) + " under confirmed rules, " + money(tp.inferred) + " under unconfirmed inferred rules, " + money(tp.unmapped) + " unmapped in the exception queue" + (tp.excluded ? ", " + money(tp.excluded) + " signed out as not mappable" : ""));
+    var bi = $("badge-inbox"); bi.textContent = tp.inboxCount; bi.className = "tab-badge" + (tp.inboxCount === 0 ? " zero" : "");
+    var br = $("badge-review"); br.textContent = tp.pendingCh; br.className = "tab-badge" + (tp.pendingCh === 0 ? " zero" : "");
+  }
+
+  function renderTabs() {
+    ["registry", "inbox", "review"].forEach(function (v) {
+      $("tab-" + v).setAttribute("aria-current", state.view === v ? "true" : "false");
+      $("view-" + v).classList.toggle("active", state.view === v);
+    });
+  }
+
+  /* ----- registry ledger ----- */
+  function filteredRules() {
+    var pend = pendingChangeRules();
+    var list = D.mapping_rules.filter(function (r) {
+      var st = state.ruleStatus[r.rule_id].status;
+      if (state.fType && r.rule_type !== state.fType) return false;
+      if (state.fStatus && st !== state.fStatus) return false;
+      if (state.fConf && confBand(r.confidence) !== state.fConf) return false;
+      if (state.fProg && ruleProgram(r) !== state.fProg) return false;
+      if (state.fPending && !pend[r.rule_id]) return false;
+      if (state.fSearch) {
+        var q = state.fSearch.toLowerCase();
+        var hay = (r.rule_id + " " + r.expression + " " + ruleClaim(r) + " " + progShort(ruleProgram(r))).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    var blastCache = {};
+    function b26(r) { if (!(r.rule_id in blastCache)) blastCache[r.rule_id] = ruleBlast(r.rule_id)[CUR_FY].total; return blastCache[r.rule_id]; }
+    if (state.fSort === "blast") list.sort(function (a, b) { return b26(b) - b26(a); });
+    else if (state.fSort === "conf") list.sort(function (a, b) { return a.confidence - b.confidence; });
+    else list.sort(function (a, b) { return a.rule_id < b.rule_id ? -1 : 1; });
+    return list;
+  }
+
+  function renderRegistry() {
+    // program filter options (once)
+    var fp = $("f-prog");
+    if (fp.options.length === 1) PROG_ORDER.forEach(function (p) {
+      var o = document.createElement("option"); o.value = p; o.textContent = progShort(p); fp.appendChild(o);
+    });
+    var pend = pendingChangeRules();
+    var rows = filteredRules();
+    $("ledger-count").textContent = rows.length + " of " + D.mapping_rules.length + " rules shown · sorted by " + ({ blast: "FY2026 dollar blast radius", id: "rule ID", conf: "confidence" })[state.fSort];
+    $("ledger-body").innerHTML = rows.map(function (r) {
+      var st = state.ruleStatus[r.rule_id].status;
+      var blast = ruleBlast(r.rule_id)[CUR_FY];
+      return '<tr class="rule-row' + (state.selRule === r.rule_id ? " sel" : "") + '" data-action="select-rule" data-arg="' + r.rule_id + '" tabindex="0" role="button" aria-label="Open rule ' + r.rule_id + '">' +
+        '<td><span class="rule-id">' + r.rule_id + "</span>" + (pend[r.rule_id] ? ' <span class="chip st-pending">change pending</span>' : "") + "</td>" +
+        '<td><span class="chip type">' + r.rule_type.replace(/_/g, " ") + "</span></td>" +
+        '<td class="expr">' + esc(ruleClaim(r)) + "</td>" +
+        '<td><span class="conf ' + confBand(r.confidence) + '">' + r.confidence.toFixed(2) + "</span></td>" +
+        '<td><span class="chip st-' + st + '">' + statusLabel(st) + "</span></td>" +
+        '<td class="r num">' + (blast.count ? money(blast.total) : '<span class="muted">—</span>') + '<div class="small muted">' + blast.count + " txns</div></td></tr>";
+    }).join("");
+    renderRuleDetail();
+    renderTriggerCard();
+    renderIngestCard();
+  }
+
+  function ladderHtml(rid) {
+    var st = state.ruleStatus[rid].status;
+    var steps = [["inferred", "Inferred by mining"], ["sme_confirmed", "SME-confirmed"], ["sop_validated", "SOP-validated"]];
+    var idx = { inferred: 0, sme_confirmed: 1, sop_validated: 2 }[st];
+    return '<div class="ladder" aria-label="Status lifecycle">' + steps.map(function (s, i) {
+      var cls = i < idx ? "done" : i === idx ? (i === 2 ? "done" : (i === 0 ? "here" : "done")) : "";
+      if (i === idx && i < 2) cls = i === 0 ? "here" : "done";
+      var mark = i <= idx ? (i === idx && st === "inferred" ? "◔" : "✓") : "○";
+      return '<span class="rung ' + cls + '"><span class="tick" aria-hidden="true">' + mark + "</span>" + s[1] + "</span>";
+    }).join("") + "</div>";
+  }
+
+  function txnRowsHtml(txns, limit) {
+    var shown = txns.slice(0, limit || 6);
+    return '<div class="txn-table-wrap"><table class="mini" aria-label="Transactions"><thead><tr><th>Txn</th><th>Raw code → canonical</th><th>FY</th><th>DR</th><th>Type</th><th class="r">Amount</th></tr></thead><tbody>' +
+      shown.map(function (t) {
+        return '<tr class="txn-row"><td class="mono">' + t.id + '</td><td class="mono">' + esc(t.raw) + (t.raw !== t.code ? ' <span class="arrow">→</span> ' + t.code : "") + "</td><td>" + t.fy + "</td><td>" + (t.dr ? "DR-" + t.dr : '<span class="muted">ND</span>') + "</td><td>" + esc(t.dtype) + '</td><td class="r num">' + money(t.amount) + "</td></tr>";
+      }).join("") + "</tbody></table></div>" +
+      (txns.length > (limit || 6) ? '<div class="small muted" style="margin-top:3px">' + txns.length + " transactions total — showing largest " + shown.length + ".</div>" : "");
+  }
+
+  function ruleTxns(rid) {
+    var targets = effectiveTargets();
+    var list = TX.filter(function (t) {
+      var r = ruleById[rid];
+      if (r.rule_type === "code_to_subprogram") {
+        if (Object.prototype.hasOwnProperty.call(targets, t.code)) return false;
+        var row = basePm[t.code + "|" + t.fy]; return row && row.rule_id === rid;
+      }
+      if (r.rule_type === "cleansing") {
+        var m = r.expression.match(/alias\s+(\S+)/);
+        return m ? t.raw === m[1] : (t.raw !== t.code && !/^LEG/i.test(t.raw));
+      }
+      if (r.rule_type === "event_split") return t.isDisaster;
+      var pm = r.expression.match(/->\s*(PROG-\w+)/);
+      return pm && resolveCode(t.code, t.fy, targets).progId === pm[1];
+    });
+    return list.sort(function (a, b) { return b.amount - a.amount; });
+  }
+
+  function renderRuleDetail() {
+    var el = $("rule-detail"), r = ruleById[state.selRule];
+    if (!r) { el.innerHTML = '<p class="muted">Select a rule from the ledger to see its full record.</p>'; return; }
+    var rs = state.ruleStatus[r.rule_id], st = rs.status;
+    $("rule-detail-title").innerHTML = 'Rule record — <span class="rule-id">' + r.rule_id + "</span>";
+    var blast = ruleBlast(r.rule_id);
+    var vals = FYS.map(function (fy) { return blast[fy].total; });
+    var h = "";
+    h += '<div class="detail-sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+      '<span class="chip type">' + r.rule_type.replace(/_/g, " ") + '</span>' +
+      '<span class="chip st-' + st + '">' + statusLabel(st) + "</span>" +
+      '<span class="conf ' + confBand(r.confidence) + '" title="Mapping confidence">confidence ' + r.confidence.toFixed(2) + "</span>" +
+      (rs.escalated ? '<span class="chip st-exception">escalated</span>' : "") + "</div>" + ladderHtml(r.rule_id) + "</div>";
+    h += '<div class="detail-sec"><h4>Claim</h4><p style="margin:2px 0">' + esc(ruleClaim(r)) + '</p>' +
+      '<div class="mono small muted" style="margin-top:4px">' + esc(sanitize(r.expression)) + "</div></div>";
+
+    // provenance
+    h += '<div class="detail-sec"><h4>Provenance</h4><div class="evidence-box">';
+    if (MINED[r.rule_id]) {
+      var mi = MINED[r.rule_id];
+      h += "<p style='margin:0 0 4px'><strong>Mined from historical extracts</strong> — " + esc(mi.basis) + "</p>" +
+        '<dl class="kv"><dt>Support</dt><dd>' + esc(mi.support) + "</dd><dt>Seasons observed</dt><dd>" + esc(mi.fys) + "</dd><dt>Counter-examples</dt><dd>None found</dd></dl>" +
+        '<div class="provenance-tag">Simulated rule-mining output — provenance detail is illustrative. The mining proposes; it never owns a reportable number.</div>';
+    } else {
+      h += "<p style='margin:0'>Captured from finance-center SME working sessions (previously undocumented tribal knowledge), then encoded as a deterministic rule.</p>" +
+        '<div class="provenance-tag">Session detail illustrative.</div>';
+    }
+    h += "</div></div>";
+
+    // scope
+    if (ruleCodes[r.rule_id]) {
+      h += '<div class="detail-sec"><h4>Codes governed (' + ruleCodes[r.rule_id].length + ')</h4>' +
+        ruleCodes[r.rule_id].map(function (c) { return '<span class="code-chip">' + c + "</span>"; }).join("") + "</div>";
+    }
+
+    // blast radius
+    h += '<div class="detail-sec"><h4>Dollar blast radius — what rides on this rule</h4>' + sparkBars(vals, 220, 46) +
+      '<table class="mini" style="margin-top:6px"><thead><tr><th>FY</th><th class="r">Disbursements</th><th class="r">Txns</th></tr></thead><tbody>' +
+      FYS.map(function (fy) {
+        return '<tr' + (fy === CUR_FY ? ' class="hl"' : "") + "><td>FY" + fy + '</td><td class="r num">' + money(blast[fy].total) + '</td><td class="r num">' + blast[fy].count + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+
+    // exemplar transactions (lineage to transaction level)
+    var txl = ruleTxns(r.rule_id);
+    h += '<div class="detail-sec"><h4>Exemplar transactions (lineage)</h4>' + txnRowsHtml(txl, 5) +
+      '<details style="margin-top:4px"><summary class="small" style="cursor:pointer;color:var(--navy)">Show all ' + txl.length + " governed transactions</summary>" + txnRowsHtml(txl, 500) + "</details></div>";
+
+    // signatures & session history
+    h += '<div class="detail-sec"><h4>Signatures &amp; change history (this session)</h4>';
+    var hist = rs.signatures.concat(state.history.filter(function (x) { return x.ruleId === r.rule_id; }));
+    if (!hist.length) h += '<p class="small muted" style="margin:2px 0">No session activity yet. Baseline status was loaded from the crosswalk build' + (st !== "inferred" ? " (confirmed in prior SME sessions — record illustrative)" : "") + ".</p>";
+    else h += hist.map(function (s) {
+      return '<div class="history-item"><span class="who sig">' + esc(s.by) + '</span> <span class="muted">(' + esc(s.roleTitle) + ")</span> — " + esc(s.text) + '<div class="small muted">' + esc(s.when) + " · signature illustrative</div></div>";
+    }).join("");
+    h += "</div>";
+
+    // actions
+    h += '<div class="detail-sec"><h4>Actions</h4><div class="btn-row">';
+    if (st === "inferred") h += '<button type="button" class="btn confirm sm" data-action="goto-inbox-rule" data-arg="' + r.rule_id + '">Open validation item in Inbox</button>';
+    if (st === "sme_confirmed") h += '<button type="button" class="btn sm" data-action="open-sop" data-arg="' + r.rule_id + '">Record SOP validation (SME signature)</button>';
+    if (r.rule_type === "code_to_subprogram") h += '<button type="button" class="btn primary sm" data-action="open-editor" data-arg="' + r.rule_id + '">Stage a change to this rule…</button>';
+    else h += '<span class="small muted">Roll-up, event-split and cleansing rules change through SOP (standard operating procedure) revision — out of scope for this demo.</span>';
+    h += "</div>";
+    h += noticeHtml("rule:" + r.rule_id);
+
+    // SOP validation mini-form
+    if (state.sopOpen === r.rule_id && st === "sme_confirmed") {
+      h += '<div class="frm" id="sop-form"><div class="fld"><label for="sop-note">SOP citation / note <span class="req">*</span></label>' +
+        '<textarea id="sop-note" data-draft="sop-note">' + esc((state.drafts["sop-note"] || "")) + "</textarea></div>" +
+        '<div class="btn-row"><button type="button" class="btn confirm sm" data-action="sign-sop" data-arg="' + r.rule_id + '">Sign SOP validation as ' + esc(me().name) + '</button>' +
+        '<button type="button" class="btn sm" data-action="close-sop">Cancel</button><span class="small muted">Requires SME role. Signature illustrative.</span></div></div>';
+    }
+
+    // staged-change editor
+    if (state.editor && state.editor.ruleId === r.rule_id) {
+      var ed = state.editor;
+      var codes = ruleCodes[r.rule_id] || [];
+      h += '<div class="frm" id="editor-form" aria-label="Stage a rule change">' +
+        '<p class="small" style="margin:0 0 6px"><strong>Stage a change (code re-assignment).</strong> Nothing applies until an approver signs in Review. The diff below recomputes live.</p>' +
+        '<div class="fld"><label for="ed-code">Code to re-assign</label><select id="ed-code" data-editor="code">' +
+        codes.map(function (c) { return '<option value="' + c + '"' + (ed.code === c ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></div>" +
+        '<div class="fld"><label for="ed-target">New sub-grouping (target)</label><select id="ed-target" data-editor="toSub">' +
+        D.sub_programs.map(function (s) {
+          return '<option value="' + s.id + '"' + (ed.toSub === s.id ? " selected" : "") + ">" + esc(progShort(s.program_id) + " · " + s.name) + "</option>";
+        }).join("") + '<option value="UNMAPPED"' + (ed.toSub === "UNMAPPED" ? " selected" : "") + ">— Not mappable (remove from reportable totals)</option></select></div>" +
+        '<div class="fld"><label for="ed-reason">Reason for change <span class="req">*</span></label><textarea id="ed-reason" data-editor="reason" placeholder="Required — becomes part of the audit record">' + esc(ed.reason || "") + "</textarea></div>" +
+        editorPreviewHtml(ed) +
+        '<div class="btn-row"><button type="button" class="btn primary sm" data-action="stage-change">Stage this change for review</button>' +
+        '<button type="button" class="btn sm" data-action="close-editor">Cancel</button></div></div>';
+    }
+    h += "</div>";
+    el.innerHTML = h;
+  }
+
+  function editorPreviewHtml(ed) {
+    if (!ed.code || !ed.toSub) return "";
+    var targets = effectiveTargets(); targets[ed.code] = ed.toSub;
+    var d = computeDiff(targets, null);
+    var toName = ed.toSub === "UNMAPPED" ? "not mappable" : subById[ed.toSub].name;
+    return '<div class="evidence-box" style="margin:6px 0"><strong class="small">Live staged diff — ' + esc(ed.code) + " → " + esc(toName) + ":</strong> " +
+      '<span class="small">' + d.remap.length + " transactions re-map (" + money(d.remapDollars) + "); " +
+      d.progDelta.length + " program-FY totals change; " + d.flips.length + " trigger flag" + (d.flips.length === 1 ? "" : "s") + " would flip.</span></div>";
+  }
+
+  /* ----- governed trigger policy card ----- */
+  function renderTriggerCard() {
+    var card = $("trigger-card"), t = state.trigger;
+    var mo = model();
+    var previewT = state.trigPreview !== null ? state.trigPreview : t.threshold_pct;
+    var pm = state.trigPreview !== null ? computeModel(effectiveTargets(), { threshold_pct: previewT, direction: t.direction, measures: t.measures, combine: t.combine }) : mo;
+    var h = '<div class="card-h"><h3>Governed policy — <span class="rule-id">TRIG-01</span> · Year-over-year comprehensive-assessment trigger</h3>' +
+      '<span class="chip st-sme_confirmed">SME-confirmed (2024 rule change)</span></div><div class="card-b">';
+    h += '<p class="small" style="margin:0 0 8px">Current policy: flag a program for comprehensive assessment when YoY change breaches <strong class="num">' + t.threshold_pct + "%</strong> in <strong>" + (t.direction === "either" ? "either direction" : t.direction + " only") + "</strong> on <strong>" +
+      t.measures.map(function (m) { return m === "disbursements" ? "disbursement dollars" : "transaction count"; }).join(t.combine === "any" ? " OR " : " AND ") +
+      "</strong>. A Preliminary Risk Assessment (PRA) is the starting point either way; flagged programs proceed to comprehensive assessment (required at least every 3 years regardless).</p>";
+
+    // FY2026 table with per-measure detail + flag history grid
+    h += '<table class="mini flag-grid" aria-label="Trigger evaluation by program"><thead><tr><th>Program</th><th class="r">FY26 disbursements</th><th class="r">YoY $</th><th class="r">YoY txns</th><th>FY26 outcome</th>';
+    FYS.slice(1, 4).forEach(function (fy) { h += '<th style="text-align:center">FY' + String(fy).slice(2) + "</th>"; });
+    h += "<th>PRA</th></tr></thead><tbody>";
+    PROG_ORDER.forEach(function (p) {
+      var e = mo.progFy[p + "|" + CUR_FY] || { total: 0, count: 0 };
+      var f = pm.flags[p + "|" + CUR_FY] || {};
+      var out;
+      if (f.countOnly) out = '<span class="chip flag-count" title="Flagged by transaction volume alone">FLAG — count only</span>';
+      else if (f.any) out = '<span class="chip flag-on">FLAG — ' + (f.dollar && f.count ? "$ + count" : f.dollar ? "$" : "count") + "</span>";
+      else out = '<span class="chip flag-off">within threshold</span>';
+      h += "<tr><td><strong>" + esc(progShort(p)) + "</strong>" + (progById[p].is_disaster ? ' <span class="small muted">disaster</span>' : ' <span class="small muted">non-disaster</span>') + "</td>" +
+        '<td class="r num">' + money(e.total) + '</td><td class="r num">' + pct(f.dYoY) + '</td><td class="r num">' + pct(f.cYoY) + "</td><td>" + out + "</td>";
+      FYS.slice(1, 4).forEach(function (fy) {
+        var ff = pm.flags[p + "|" + fy] || {};
+        var cls = ff.countOnly ? "count-only" : ff.any ? "on" : "off";
+        h += '<td style="text-align:center"><span class="cellflag ' + cls + '" title="FY' + fy + " " + esc(progShort(p)) + ": YoY $ " + pct(ff.dYoY) + ", YoY txns " + pct(ff.cYoY) + '"></span></td>';
+      });
+      h += '<td><button type="button" class="btn ghost sm" data-action="open-pra" data-arg="' + p + '">PRA record</button></td></tr>';
+    });
+    h += "</tbody></table>";
+
+    // hero callout: count-only catch
+    var ia = mo.flags["PROG-IA|" + CUR_FY];
+    if (ia && ia.countOnly) {
+      h += '<div class="hero-callout"><b>The count-only catch.</b> Individual Assistance FY2026: dollars ' + pct(ia.dYoY) + " (under the " + t.threshold_pct + "% threshold) — but transaction count " + pct(ia.cYoY) + ". A dollars-only trigger would have missed it; the dual-measure policy (2024 rule change) flags it on volume alone.</div>";
+    }
+
+    // live what-if preview + staged change entry
+    h += '<div class="frm" style="margin-top:10px"><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">' +
+      '<label for="trig-preview" style="margin:0">What-if preview — threshold <strong class="num">' + previewT + "%</strong></label>" +
+      '<input type="range" id="trig-preview" min="5" max="50" step="1" value="' + previewT + '" data-field="trigPreview" aria-label="Preview trigger threshold percent">' +
+      (state.trigPreview !== null ? '<span class="small" style="color:var(--pending)">Preview only — the table above reflects ' + previewT + "%. To adopt, stage a change.</span><button type=\"button\" class=\"btn sm\" data-action=\"reset-preview\">Reset preview</button>" : '<span class="small muted">Drag to see which flags would flip. Preview never alters the governed policy.</span>') +
+      '<button type="button" class="btn primary sm" data-action="open-trig-editor" style="margin-left:auto">Stage a trigger-policy change…</button></div>';
+
+    if (state.trigEditor) {
+      var te = state.trigEditor;
+      h += '<div style="border-top:1px solid var(--line);margin-top:9px;padding-top:9px" id="trig-editor">' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
+        '<div class="fld"><label for="te-th">Threshold %</label><select id="te-th" data-trig="threshold_pct">' + [10, 15, 20, 25, 30, 35, 40].map(function (v) { return '<option value="' + v + '"' + (te.threshold_pct === v ? " selected" : "") + ">" + v + "%</option>"; }).join("") + "</select></div>" +
+        '<div class="fld"><label for="te-dir">Direction</label><select id="te-dir" data-trig="direction"><option value="either"' + (te.direction === "either" ? " selected" : "") + '>Either direction</option><option value="increase"' + (te.direction === "increase" ? " selected" : "") + '>Increases only</option><option value="decrease"' + (te.direction === "decrease" ? " selected" : "") + ">Decreases only</option></select></div>" +
+        '<div class="fld"><label for="te-meas">Measures</label><select id="te-meas" data-trig="measuresSel"><option value="both"' + (te.measures.length === 2 ? " selected" : "") + '>Dollars + transaction count</option><option value="disbursements"' + (te.measures.length === 1 && te.measures[0] === "disbursements" ? " selected" : "") + '>Dollars only</option><option value="transaction_count"' + (te.measures.length === 1 && te.measures[0] === "transaction_count" ? " selected" : "") + ">Transaction count only</option></select></div>" +
+        '<div class="fld"><label for="te-comb">Combine</label><select id="te-comb" data-trig="combine"><option value="any"' + (te.combine === "any" ? " selected" : "") + '>Any measure breaching flags</option><option value="all"' + (te.combine === "all" ? " selected" : "") + ">All measures must breach</option></select></div></div>" +
+        '<div class="fld"><label for="te-reason">Reason for policy change <span class="req">*</span></label><textarea id="te-reason" data-trig="reason" placeholder="Required — cite the policy basis">' + esc(te.reason || "") + "</textarea></div>" +
+        trigEditorPreviewHtml(te) +
+        '<div class="btn-row"><button type="button" class="btn primary sm" data-action="stage-trigger">Stage trigger change for review</button>' +
+        '<button type="button" class="btn sm" data-action="close-trig-editor">Cancel</button></div></div>';
+    }
+    h += noticeHtml("trigger") + "</div></div>";
+    card.innerHTML = h;
+  }
+
+  function trigEditorPreviewHtml(te) {
+    var d = computeDiff(effectiveTargets(), { threshold_pct: te.threshold_pct, direction: te.direction, measures: te.measures, combine: te.combine });
+    return '<div class="evidence-box" style="margin:6px 0"><strong class="small">Live staged diff:</strong> <span class="small">' +
+      (d.flips.length ? d.flips.length + " trigger flag" + (d.flips.length === 1 ? "" : "s") + " flip across FY2023–FY2026: " +
+        d.flips.slice(0, 8).map(function (f) { return progShort(f.prog) + " FY" + f.fy + " " + (f.measure === "any" ? "outcome" : f.measure) + " " + (f.from ? "flagged→clear" : "clear→flagged"); }).join("; ") + (d.flips.length > 8 ? " …" : "")
+        : "no flags flip anywhere in FY2023–FY2026.") + " Totals never change — the trigger reads them, it does not write them.</span></div>";
+  }
+
+  /* ----- FY-extract ingestion contract card ----- */
+  function renderIngestCard() {
+    var dirty = 0, legacy = 0;
+    TX.forEach(function (t) { if (t.raw !== t.code) { if (/^LEG/i.test(t.raw)) legacy++; else dirty++; } });
+    $("ingest-card").innerHTML = '<div class="card-h"><h3>Fiscal-year extract contract (file in → rules applied → outputs out)</h3></div><div class="card-b">' +
+      '<dl class="kv">' +
+      "<dt>Source</dt><dd>WebFMIS fiscal-year extract (simulated connection — the financial system is modernizing ~Oct 1; this contract is the stable interface). Synthetic dataset: SYNTHETIC-DEMO.</dd>" +
+      "<dt>Received</dt><dd><span class='num'>" + TX.length + "</span> transaction rows, FY2022–FY2026, 57 financial codes, 5 reportable programs, 7 disaster declarations.</dd>" +
+      "<dt>Cleansing applied</dt><dd><span class='num'>" + dirty + "</span> rows format-normalized (rule BR-002) · <span class='num'>" + legacy + "</span> rows recovered from retired legacy aliases (rules BR-003…BR-006) — computed live.</dd>" +
+      "<dt>Outputs</dt><dd>Program-by-FY disbursement rollups, trigger determinations, PRA drafts, rule ledger + validation record. Every export watermarked SYNTHETIC-DEMO.</dd></dl></div>";
+  }
+
+  function noticeHtml(key) {
+    var n = state.notices[key];
+    if (!n) return "";
+    return '<div class="notice ' + n.kind + '" role="status">' + esc(n.msg) + "</div>";
+  }
+
+
+  /* ----- inbox ----- */
+  function inferredRules() { return ["BR-012", "BR-018", "BR-023"].map(function (id) { return ruleById[id]; }); }
+  function excFyStats(code) {
+    var s = { total: 0, count: 0 };
+    TX.forEach(function (t) { if (t.code === code) { s.total += t.amount; s.count++; } });
+    return s;
+  }
+
+  function renderInbox() {
+    var q = $("inbox-queue");
+    var h = "";
+    h += '<div class="queue-group"><h3>Inferred rules awaiting SME confirmation (' + inferredRules().filter(function (r) { return state.ruleStatus[r.rule_id].status === "inferred"; }).length + " open)</h3>";
+    inferredRules().forEach(function (r) {
+      var rs = state.ruleStatus[r.rule_id];
+      var open = rs.status === "inferred";
+      var b = ruleBlast(r.rule_id)[CUR_FY];
+      var target = r.expression.match(/->\s*(SUB-[\w-]+)/)[1];
+      h += '<button type="button" class="queue-item' + (state.inboxSel === "rule:" + r.rule_id ? " sel" : "") + (open ? "" : " resolved") + '" data-action="select-inbox" data-arg="rule:' + r.rule_id + '">' +
+        '<span class="t"><span class="rule-id">' + r.rule_id + "</span> → " + esc(subById[target].name) + (open ? (rs.escalated ? ' <span class="chip st-exception">escalated</span>' : ' <span class="chip st-inferred">inferred 0.88</span>') : ' <span class="chip st-' + rs.status + '">' + statusLabel(rs.status) + "</span>") + "</span>" +
+        '<span class="m">Blast radius FY2026: <span class="blast">' + money(b.total) + "</span> · " + b.count + " txns</span></button>";
+    });
+    h += "</div>";
+    h += '<div class="queue-group"><h3>Exception queue — unmapped codes (' + EXC_LIST.filter(function (c) { return !state.exceptions[c]; }).length + " open)</h3>";
+    EXC_LIST.forEach(function (c) {
+      var res = state.exceptions[c], st = excFyStats(c), sug = EXC_CODES[c];
+      h += '<button type="button" class="queue-item' + (state.inboxSel === "exc:" + c ? " sel" : "") + (res ? " resolved" : "") + '" data-action="select-inbox" data-arg="exc:' + c + '">' +
+        '<span class="t"><span class="mono">' + c + "</span> " + (res ? '<span class="chip st-sme_confirmed">resolved — ' + res.action.replace(/_/g, " ") + '</span>' : '<span class="chip st-exception">unmapped</span>') + "</span>" +
+        '<span class="m">FY2026 <span class="blast">' + money(st.total) + "</span> · " + st.count + " txns · similarity suggestion: " + esc(subById[sug.sub_program_id].name) + " (" + sug.confidence.toFixed(2) + ", simulated)</span></button>";
+    });
+    h += "</div>";
+    h += '<div class="queue-group"><h3>Open validation questions — illustrative (' + QUESTIONS.filter(function (x) { return !state.questions[x.id]; }).length + " open)</h3>";
+    QUESTIONS.forEach(function (qq) {
+      var a = state.questions[qq.id];
+      h += '<button type="button" class="queue-item' + (state.inboxSel === "q:" + qq.id ? " sel" : "") + (a ? " resolved" : "") + '" data-action="select-inbox" data-arg="q:' + qq.id + '">' +
+        '<span class="t">' + esc(qq.title) + (a ? ' <span class="chip st-sme_confirmed">answered</span>' : "") + "</span></button>";
+    });
+    h += "</div>";
+    q.innerHTML = h;
+    renderInboxDetail();
+  }
+
+  function draft(key, dflt) { if (!(key in state.drafts)) state.drafts[key] = dflt; return state.drafts[key]; }
+
+  function renderInboxDetail() {
+    var el = $("inbox-detail"), sel = state.inboxSel;
+    if (!sel) { $("inbox-detail-title").textContent = "Item detail"; el.innerHTML = '<p class="muted">Choose an item from the queue.</p>'; return; }
+    var kind = sel.split(":")[0], id = sel.slice(sel.indexOf(":") + 1), h = "";
+
+    if (kind === "rule") {
+      var r = ruleById[id], rs = state.ruleStatus[id];
+      $("inbox-detail-title").innerHTML = "Validation item — inferred rule <span class='rule-id'>" + id + "</span>";
+      var blast = ruleBlast(id), mi = MINED[id], txl = ruleTxns(id);
+      h += '<div class="detail-sec">' + ladderHtml(id) + "<p style='margin:4px 0'><strong>Claim:</strong> " + esc(ruleClaim(r)) + "</p></div>";
+      h += '<div class="detail-sec"><h4>Why the mining believes this (simulated, illustrative)</h4><div class="evidence-box">' +
+        "<p style='margin:0 0 4px'>" + esc(mi.basis) + "</p><dl class='kv'><dt>Support</dt><dd>" + esc(mi.support) + "</dd><dt>Seasons observed</dt><dd>" + esc(mi.fys) + "</dd><dt>Confidence</dt><dd>0.88 (below 0.95 documentation bar; above 0.85 routing bar)</dd></dl>" +
+        '<div class="provenance-tag">Simulated rule-mining output. See the accuracy record for how mining performed against a held-out year.</div></div></div>';
+      h += '<div class="detail-sec"><h4>Blast radius — what your signature covers</h4>' +
+        '<p class="small" style="margin:2px 0">FY2026: <span class="blast">' + money(blast[CUR_FY].total) + "</span> across " + blast[CUR_FY].count + " transactions · all years: " +
+        FYS.map(function (fy) { return "FY" + String(fy).slice(2) + " " + moneyC(blast[fy].total); }).join(" · ") + "</p>" + txnRowsHtml(txl, 4) + "</div>";
+
+      if (rs.status !== "inferred") {
+        var sg = rs.signatures[rs.signatures.length - 1];
+        h += '<div class="detail-sec"><h4>Resolution</h4><div class="history-item"><span class="who sig">' + esc(sg.by) + "</span> — " + esc(sg.text) + '<div class="small muted">' + esc(sg.when) + " · signature illustrative</div></div>" +
+          '<div class="btn-row"><button type="button" class="btn sm" data-action="reopen-rule" data-arg="' + id + '">Reopen (undo confirmation)</button></div></div>';
+      } else {
+        var dk = "rule:" + id;
+        h += '<div class="detail-sec"><h4>Resolve</h4>' +
+          '<div class="frm"><div class="fld"><label for="ir-note">Note (optional for confirm; required to correct or escalate)</label>' +
+          '<textarea id="ir-note" data-draft="' + dk + ':note" placeholder="e.g., Verified against Mass Care grant records">' + esc(draft(dk + ":note", "")) + "</textarea></div>" +
+          '<div class="fld"><label for="ir-target">If correcting — the right sub-grouping is:</label><select id="ir-target" data-draft-sel="' + dk + ':target">' +
+          '<option value="">(choose only if correcting)</option>' +
+          D.sub_programs.map(function (s) { return '<option value="' + s.id + '"' + (draft(dk + ":target", "") === s.id ? " selected" : "") + ">" + esc(progShort(s.program_id) + " · " + s.name) + "</option>"; }).join("") + "</select></div>" +
+          '<div class="btn-row">' +
+          '<button type="button" class="btn confirm sm" data-action="confirm-rule" data-arg="' + id + '">Confirm rule — sign as ' + esc(me().name) + "</button>" +
+          '<button type="button" class="btn primary sm" data-action="correct-rule" data-arg="' + id + '">Correct → stage change for review</button>' +
+          '<button type="button" class="btn danger sm" data-action="escalate-rule" data-arg="' + id + '">Escalate</button></div>' +
+          '<p class="small muted" style="margin:6px 0 0">Confirming requires the SME or Reviewer role (switch “Acting as” above). Confirmation advances the rule to SME-confirmed and immediately raises the share of FY2026 dollars under confirmed rules.</p>' +
+          noticeHtml(dk) + "</div></div>";
+      }
+    }
+
+    if (kind === "exc") {
+      var code = id, info = codeByCode[code], sug = EXC_CODES[code], st2 = excFyStats(code), res = state.exceptions[code];
+      $("inbox-detail-title").innerHTML = "Exception — unmapped code <span class='mono'>" + code + "</span>";
+      h += '<div class="detail-sec"><h4>Code anatomy</h4><dl class="kv">' +
+        "<dt>Fund segment</dt><dd><span class='mono'>" + info.fund_segment + "</span> — not on the crosswalk (no rule covers it)</dd>" +
+        "<dt>Program segment</dt><dd><span class='mono'>" + info.program_segment + "</span></dd>" +
+        "<dt>Event segment</dt><dd>" + (info.event_segment === "ND" ? "ND (non-disaster)" : "DR-" + info.event_segment) + "</dd>" +
+        "<dt>TAFS</dt><dd>none on file</dd>" +
+        "<dt>FY2026 exposure</dt><dd><span class='blast'>" + money(st2.total) + "</span> across " + st2.count + " transactions — excluded from program totals until a person decides</dd></dl></div>";
+      h += '<div class="detail-sec"><h4>Similarity suggestion (simulated, illustrative — it proposes, you decide)</h4><div class="evidence-box">' +
+        "Closest confirmed pattern: <strong>" + esc(subById[sug.sub_program_id].name) + "</strong> under " + esc(progShort(sug.program_id)) +
+        " · similarity " + sug.confidence.toFixed(2) + " — below the 0.85 routing threshold, which is why this code is in the exception queue rather than auto-mapped.</div></div>";
+      h += '<div class="detail-sec"><h4>Transactions</h4>' + txnRowsHtml(TX.filter(function (t) { return t.code === code; }).sort(function (a, b) { return b.amount - a.amount; }), 4) + "</div>";
+      if (res) {
+        h += '<div class="detail-sec"><h4>Resolution</h4><div class="history-item"><span class="who sig">' + esc(res.by) + "</span> — " +
+          esc(res.action === "accepted" ? "Accepted suggestion → " + subById[res.target].name : res.action === "assigned" ? "Assigned → " + subById[res.target].name : "Marked not mappable (excluded from reportable totals)") +
+          (res.reason ? " · Reason: " + esc(res.reason) : "") + '<div class="small muted">' + esc(res.when) + " · signature illustrative</div></div>" +
+          '<div class="btn-row"><button type="button" class="btn sm" data-action="reopen-exc" data-arg="' + code + '">Reopen (undo resolution)</button></div></div>';
+      } else {
+        var dk2 = "exc:" + code, mode = draft(dk2 + ":mode", "accept");
+        h += '<div class="detail-sec"><h4>Resolve</h4><div class="frm">' +
+          '<div class="fld"><label for="ex-mode">Decision</label><select id="ex-mode" data-draft-sel="' + dk2 + ':mode">' +
+          '<option value="accept"' + (mode === "accept" ? " selected" : "") + ">Accept suggestion — " + esc(subById[sug.sub_program_id].name) + "</option>" +
+          '<option value="assign"' + (mode === "assign" ? " selected" : "") + ">Assign a different sub-grouping</option>" +
+          '<option value="not_mappable"' + (mode === "not_mappable" ? " selected" : "") + ">Not mappable — exclude from reportable totals</option></select></div>";
+        if (mode === "assign") {
+          h += '<div class="fld"><label for="ex-target">Sub-grouping</label><select id="ex-target" data-draft-sel="' + dk2 + ':target">' +
+            D.sub_programs.map(function (s) { return '<option value="' + s.id + '"' + (draft(dk2 + ":target", D.sub_programs[0].id) === s.id ? " selected" : "") + ">" + esc(progShort(s.program_id) + " · " + s.name) + "</option>"; }).join("") + "</select></div>";
+        }
+        h += '<div class="fld"><label for="ex-reason">Reason ' + (mode === "accept" ? "(optional note)" : '<span class="req">* required</span>') + '</label>' +
+          '<textarea id="ex-reason" data-draft="' + dk2 + ':reason" placeholder="Becomes part of the validation record">' + esc(draft(dk2 + ":reason", "")) + "</textarea></div>" +
+          '<div class="btn-row"><button type="button" class="btn confirm sm" data-action="resolve-exc" data-arg="' + code + '">Record decision — sign as ' + esc(me().name) + "</button></div>" +
+          noticeHtml(dk2) + "</div></div>";
+      }
+    }
+
+    if (kind === "q") {
+      var qq = QUESTIONS.filter(function (x) { return x.id === id; })[0];
+      $("inbox-detail-title").textContent = "Open question — " + qq.title;
+      h += '<div class="detail-sec"><div class="evidence-box"><p style="margin:0">' + esc(qq.body) + '</p><div class="provenance-tag">Illustrative restatement of an open SME question. Plain language; no internal ID badges.</div></div></div>';
+      var ans = state.questions[id];
+      if (ans) {
+        h += '<div class="detail-sec"><h4>Answer on record</h4><div class="history-item"><span class="who sig">' + esc(ans.by) + "</span> — " + esc(ans.note) + '<div class="small muted">' + esc(ans.when) + " · signature illustrative</div></div>" +
+          '<div class="btn-row"><button type="button" class="btn sm" data-action="reopen-q" data-arg="' + id + '">Reopen</button></div></div>';
+      } else {
+        var dk3 = "q:" + id;
+        h += '<div class="detail-sec"><h4>Record an answer</h4><div class="frm">' +
+          '<div class="fld"><label for="q-note">Answer / note <span class="req">*</span></label><textarea id="q-note" data-draft="' + dk3 + ':note">' + esc(draft(dk3 + ":note", "")) + "</textarea></div>" +
+          '<div class="btn-row"><button type="button" class="btn confirm sm" data-action="answer-q" data-arg="' + id + '">Record answer — sign as ' + esc(me().name) + "</button></div>" + noticeHtml(dk3) + "</div></div>";
+      }
+    }
+    el.innerHTML = h;
+  }
+
+  /* ----- review ----- */
+  function changePayloadTargets(ch) {
+    var t = effectiveTargets();
+    if (ch.kind === "reassign_code") {
+      (ch.multi && ch.codesAll ? ch.codesAll : [ch.code]).forEach(function (c) { t[c] = ch.toSub; });
+    }
+    return t;
+  }
+  function changeTrigger(ch) { return ch.kind === "trigger" ? ch.trigger : null; }
+
+  function renderReview() {
+    var el = $("review-body");
+    var pending = state.staged.filter(function (c) { return c.status === "pending" || c.status === "changes_requested"; });
+    var done = state.staged.filter(function (c) { return c.status === "applied" || c.status === "discarded" || c.status === "reverted"; });
+    var h = "";
+    if (!pending.length && !done.length) {
+      h += '<div class="card"><div class="card-b"><p class="muted">No staged changes. Stage one from a rule record in the Registry, from the trigger-policy card, or by correcting an inferred rule in the Inbox.</p></div></div>';
+    }
+    pending.concat(done).forEach(function (ch) {
+      var isPending = ch.status === "pending" || ch.status === "changes_requested";
+      h += '<div class="change-card ' + ch.status + '"><div class="change-h"><span class="cid">' + ch.id + "</span><strong>" + esc(ch.title) + "</strong>" +
+        '<span class="chip st-' + (ch.status === "applied" ? "sme_confirmed" : ch.status === "pending" ? "pending" : "exception") + '">' + ch.status.replace(/_/g, " ") + "</span>" +
+        '<span class="small muted" style="margin-left:auto">staged by <span class="sig">' + esc(ch.author) + "</span> (" + esc(ch.authorRole) + ") · " + esc(ch.when) + "</span></div>" +
+        '<div class="card-b">';
+      h += '<p class="small" style="margin:0 0 4px"><strong>Reason:</strong> ' + esc(ch.reason) + "</p>";
+      if (isPending) h += diffHtml(computeDiff(changePayloadTargets(ch), changeTrigger(ch)), ch);
+      else if (ch.frozenSummary) h += '<p class="small muted">' + esc(ch.frozenSummary) + "</p>";
+      if (ch.reviewNote) h += '<div class="notice info">Reviewer note: ' + esc(ch.reviewNote) + "</div>";
+      if (ch.decision) h += '<div class="history-item"><span class="who sig">' + esc(ch.decision.by) + "</span> — " + esc(ch.decision.text) + '<div class="small muted">' + esc(ch.decision.when) + " · signature illustrative</div></div>";
+      if (isPending) {
+        h += '<div class="frm"><div class="fld"><label for="rv-note-' + ch.id + '">Review note (required to request changes)</label>' +
+          '<textarea id="rv-note-' + ch.id + '" data-draft="rv:' + ch.id + '">' + esc(draft("rv:" + ch.id, "")) + "</textarea></div>" +
+          '<div class="btn-row"><button type="button" class="btn confirm sm" data-action="approve-change" data-arg="' + ch.id + '">Approve &amp; apply — sign as ' + esc(me().name) + "</button>" +
+          '<button type="button" class="btn sm" data-action="request-changes" data-arg="' + ch.id + '">Request changes</button>' +
+          '<button type="button" class="btn danger sm" data-action="discard-change" data-arg="' + ch.id + '">Discard</button>' +
+          '<span class="small muted">Approval requires the Reviewer role, and not the author of the change.</span></div>' + noticeHtml("ch:" + ch.id) + "</div>";
+      }
+      if (ch.status === "applied") {
+        h += '<div class="btn-row"><button type="button" class="btn sm" data-action="revert-change" data-arg="' + ch.id + '">Revert this change (undo, with record)</button></div>' + noticeHtml("ch:" + ch.id);
+      }
+      h += "</div></div>";
+    });
+    el.innerHTML = h;
+  }
+
+  function diffHtml(d, ch) {
+    var h = '<div class="diff-grid">' +
+      '<div class="diff-cell"><div class="n">' + d.remap.length + '</div><div class="l">transactions re-map</div><div class="small num">' + money(d.remapDollars) + "</div></div>" +
+      '<div class="diff-cell"><div class="n">' + d.progDelta.length + '</div><div class="l">program-FY totals change</div></div>' +
+      '<div class="diff-cell"><div class="n">' + d.flips.length + '</div><div class="l">trigger flags flip (FY23–26)</div></div>' +
+      '<div class="diff-cell"><div class="n">' + (Object.keys(d.unmappedAfter.byCode).length - Object.keys(d.unmappedBefore.byCode).length >= 0 ? "+" : "") + (Object.keys(d.unmappedAfter.byCode).length - Object.keys(d.unmappedBefore.byCode).length) + '</div><div class="l">unmapped codes (net)</div><div class="small num">' + money(d.unmappedAfter.total - d.unmappedBefore.total) + " Δ</div></div></div>";
+    if (d.progDelta.length) {
+      h += '<h4 class="small" style="margin:6px 0 3px;color:var(--seal)">PROGRAM TOTALS — BEFORE → AFTER</h4><table class="mini"><thead><tr><th>Program</th><th>FY</th><th class="r">Before</th><th class="r">After</th><th class="r">Δ</th></tr></thead><tbody>' +
+        d.progDelta.slice(0, 12).map(function (p) {
+          var delta = p.after.total - p.before.total;
+          return "<tr><td>" + esc(progShort(p.id)) + "</td><td>FY" + p.fy + '</td><td class="r num">' + money(p.before.total) + '</td><td class="r num">' + money(p.after.total) + '</td><td class="r num ' + (delta >= 0 ? "delta-pos" : "delta-neg") + '">' + money(delta) + "</td></tr>";
+        }).join("") + "</tbody></table>";
+    } else h += '<p class="small muted" style="margin:4px 0">Program-level totals unchanged' + (d.subDelta.length ? " — movement is within sub-groupings:" : ".") + "</p>";
+    if (d.subDelta.length) {
+      h += '<details><summary class="small" style="cursor:pointer;color:var(--navy)">Sub-grouping totals that change (' + d.subDelta.length + ')</summary><table class="mini"><thead><tr><th>Sub-grouping</th><th>FY</th><th class="r">Before</th><th class="r">After</th></tr></thead><tbody>' +
+        d.subDelta.slice(0, 20).map(function (s) { return "<tr><td>" + esc(s.name) + "</td><td>FY" + s.fy + '</td><td class="r num">' + money(s.before.total) + '</td><td class="r num">' + money(s.after.total) + "</td></tr>"; }).join("") + "</tbody></table></details>";
+    }
+    if (d.flips.length) {
+      h += '<h4 class="small" style="margin:8px 0 3px;color:var(--seal)">TRIGGER FLAGS THAT FLIP</h4>' +
+        d.flips.map(function (f) { return '<span class="flip">' + esc(progShort(f.prog)) + " FY" + f.fy + " · " + (f.measure === "any" ? "outcome" : f.measure === "dollar" ? "$ measure" : "count measure") + ": " + (f.from ? "flagged" : "clear") + ' <span class="arrow">→</span> ' + (f.to ? "flagged" : "clear") + "</span>"; }).join("");
+    } else h += '<p class="small muted" style="margin:6px 0 0">No trigger flags flip anywhere in FY2023–FY2026.</p>';
+    if (d.remap.length) {
+      h += '<details style="margin-top:6px"><summary class="small" style="cursor:pointer;color:var(--navy)">Re-mapped transactions (lineage, ' + d.remap.length + ')</summary>' +
+        '<table class="mini"><thead><tr><th>Txn</th><th>Code</th><th>FY</th><th class="r">Amount</th><th>From</th><th>To</th></tr></thead><tbody>' +
+        d.remap.slice(0, 25).map(function (m) {
+          return '<tr class="txn-row"><td class="mono">' + m.t.id + '</td><td class="mono">' + m.t.code + "</td><td>" + m.t.fy + '</td><td class="r num">' + money(m.t.amount) + "</td><td>" + (m.from ? esc(subById[m.from].name) : '<span class="muted">unmapped</span>') + "</td><td>" + (m.to ? esc(subById[m.to].name) : '<span class="muted">unmapped</span>') + "</td></tr>";
+        }).join("") + "</tbody></table></details>";
+    }
+    return h;
+  }
+
+
+  /* ----- overlays: export / accuracy evidence / bulk preview / PRA record ----- */
+  function renderOverlay() {
+    var root = $("overlay-root");
+    if (!state.overlay) { root.innerHTML = ""; return; }
+    var o = state.overlay, inner = "", title = "";
+    if (o.type === "export") { title = "Export — rule ledger & validation record (simulated download)"; inner = exportHtml(); }
+    if (o.type === "evidence") { title = "Why trust the mining? — historical accuracy record"; inner = evidenceHtml(); }
+    if (o.type === "bulk") { title = "Simulated preview — when FEMA's fuller program list arrives"; inner = bulkHtml(); }
+    if (o.type === "pra") { title = "Preliminary Risk Assessment (PRA) record — " + progById[o.prog].name + " · FY2026"; inner = praHtml(o.prog); }
+    root.innerHTML = '<div class="overlay-back" data-action="overlay-back-close"><div class="overlay-panel" role="dialog" aria-modal="true" aria-label="' + esc(title) + '">' +
+      '<div class="overlay-h"><h3>' + esc(title) + '</h3><button type="button" class="btn sm" data-action="close-overlay" aria-label="Close dialog">Close ✕</button></div>' +
+      '<div class="overlay-b">' + inner + "</div></div></div>";
+  }
+
+  function exportText() {
+    var tp = trustPosture(), lines = [];
+    lines.push("================ SYNTHETIC-DEMO — NOT REAL FEMA DATA ================");
+    lines.push("THE CROSSWALK REGISTRY — RULE LEDGER & VALIDATION RECORD");
+    lines.push("Generated (simulated export) · FY2022–FY2026 · watermark: SYNTHETIC-DEMO");
+    lines.push("");
+    lines.push("TRUST POSTURE (FY2026)");
+    lines.push("  Rules on ledger: " + D.mapping_rules.length + "  |  Dollars under confirmed rules: " + tp.governedPct.toFixed(1) + "%");
+    lines.push("  Confirmed: " + money(tp.confirmed) + "  Inferred(unconfirmed): " + money(tp.inferred) + "  Unmapped: " + money(tp.unmapped) + (tp.excluded ? "  Signed-out not-mappable: " + money(tp.excluded) : ""));
+    lines.push("  Items awaiting validation: " + tp.awaiting);
+    lines.push("");
+    lines.push("RULE LEDGER");
+    lines.push("rule_id,type,status,confidence,fy2026_blast_radius,txns,claim");
+    D.mapping_rules.forEach(function (r) {
+      var b = ruleBlast(r.rule_id)[CUR_FY];
+      lines.push([r.rule_id, r.rule_type, state.ruleStatus[r.rule_id].status, r.confidence.toFixed(2), b.total.toFixed(2), b.count, '"' + ruleClaim(r).replace(/"/g, "'") + '"'].join(","));
+    });
+    lines.push("");
+    lines.push("VALIDATION RECORD (session; identities illustrative)");
+    var any = false;
+    D.mapping_rules.forEach(function (r) {
+      state.ruleStatus[r.rule_id].signatures.forEach(function (s) { any = true; lines.push("  " + r.rule_id + " — " + s.text + " — signed " + s.by + " (" + s.roleTitle + ") " + s.when); });
+    });
+    Object.keys(state.exceptions).forEach(function (c) {
+      var e = state.exceptions[c]; any = true;
+      lines.push("  " + c + " — " + e.action + (e.target && e.target !== "UNMAPPED" ? " -> " + e.target : "") + (e.reason ? " — reason: " + e.reason : "") + " — signed " + e.by + " " + e.when);
+    });
+    QUESTIONS.forEach(function (q) { var a = state.questions[q.id]; if (a) { any = true; lines.push("  Q: " + q.title + " — answered by " + a.by + " " + a.when + " — " + a.note); } });
+    state.staged.forEach(function (c) { any = true; lines.push("  " + c.id + " [" + c.status + "] " + c.title + " — staged by " + c.author + (c.decision ? " — " + c.decision.text + " (" + c.decision.by + ")" : "")); });
+    if (!any) lines.push("  (no session validation activity yet)");
+    lines.push("");
+    lines.push("Answer-key isolation: the inference never read the grading key. Historical holdout grading: 47/47 auto-mapped correct, 10 routed to review, 0 incorrect.");
+    lines.push("================ SYNTHETIC-DEMO — NOT REAL FEMA DATA ================");
+    return lines.join("\n");
+  }
+  function exportHtml() {
+    return '<p class="small">This demonstration is fully offline — the download is <strong>simulated</strong>; the exact file contents appear below. ' +
+      '<span class="watermark-note">Watermarked SYNTHETIC-DEMO</span></p><pre class="export-pre" id="export-pre">' + esc(exportText()) + "</pre>" +
+      '<div class="btn-row"><button type="button" class="btn primary sm" data-action="regen-export">Regenerate from current state</button></div>';
+  }
+
+  function evidenceHtml() {
+    return '<p>Before anyone signs a mined rule, a fair question: <em>has the mining ever been graded?</em> Yes — against a held-out fiscal year whose correct mappings were locked away from the inference.</p>' +
+      '<div class="diff-grid"><div class="diff-cell"><div class="n">47 / 47</div><div class="l">auto-mapped codes correct</div></div>' +
+      '<div class="diff-cell"><div class="n">10</div><div class="l">low-confidence codes routed to human review (not guessed)</div></div>' +
+      '<div class="diff-cell"><div class="n">0</div><div class="l">incorrect mappings</div></div></div>' +
+      '<div class="evidence-box"><strong>Method.</strong> The graders held one fiscal year out as an answer key. The rule-mining ran on the remaining years and proposed mappings for the held-out year. The answer key was never read by the inference — it was only used afterward, to grade. Every code the mining was unsure about (confidence below 0.85) went to the exception queue for a person instead of being guessed.' +
+      '<div class="provenance-tag" style="margin-top:5px">Precomputed historical exhibit on synthetic data (SYNTHETIC-DEMO). This is why inferred rules arrive with evidence — and why they still wait for an SME signature before counting as confirmed.</div></div>' +
+      '<p class="small muted">Governance consequence: mining proposes rules and confidence; deterministic code computes every reportable number; people sign. The registry is the record of those signatures.</p>';
+  }
+
+  function bulkHtml() {
+    var newProgs = [
+      { name: "Emergency Management Performance Grants (EMPG)", rules: 3 },
+      { name: "Flood Mitigation Assistance (FMA)", rules: 3 },
+      { name: "Assistance to Firefighters Grants (AFG)", rules: 3 },
+    ];
+    return '<div class="notice info" style="margin-top:0"><strong>Simulated preview — nothing here applies.</strong> FEMA\'s fuller reportable-program list (8–10 programs) has not arrived; no synthetic transactions exist for these programs. This exhibit shows how the registry absorbs taxonomy growth through the same staged-change discipline.</div>' +
+      '<p>When the fuller list lands, the registry stages one <strong>bulk change (CH-SIM)</strong> rather than editing live rules:</p>' +
+      '<table class="mini"><thead><tr><th>New reportable program</th><th class="r">Draft rules</th><th>Arrival status</th><th class="r">Dollars mapped</th></tr></thead><tbody>' +
+      newProgs.map(function (p) {
+        return "<tr><td>" + esc(p.name) + '</td><td class="r">' + p.rules + ' (mined drafts)</td><td><span class="chip st-inferred">inferred — awaiting SME</span></td><td class="r num">$0.00 until confirmed</td></tr>';
+      }).join("") + "</tbody></table>" +
+      '<div class="diff-grid" style="margin-top:10px">' +
+      '<div class="diff-cell"><div class="n">+9</div><div class="l">draft rules enter the ledger</div></div>' +
+      '<div class="diff-cell"><div class="n">+9</div><div class="l">inbox items for SME confirmation</div></div>' +
+      '<div class="diff-cell"><div class="n">0</div><div class="l">existing rules touched</div></div>' +
+      '<div class="diff-cell"><div class="n">0</div><div class="l">reportable dollars moved before signature</div></div></div>' +
+      '<div class="evidence-box">The 26 existing rules, their signatures and their history are untouched; the trust-posture header simply reports a lower “dollars under confirmed rules” share until the new drafts are confirmed — growth is absorbed as <em>work in the inbox</em>, not as silent re-mapping. Existing programs keep their sub-groupings; new programs are never inferred from sub-groupings ("debris removal is a subset of Public Assistance", never a program).' +
+      '<div class="provenance-tag" style="margin-top:4px">Simulated — illustrative counts; the staged bulk change cannot be applied in this demo.</div></div>';
+  }
+
+  /* ----- PRA record (auto-population governed by registry rules) ----- */
+  var PRA_RULEDEPS = { Q1: "roll-up rule + code rules", Q2: "roll-up rule (two FYs)", Q3: "TRIG-01 + roll-up rule", Q4: "crosswalk scope", Q5: "event-split rule BR-001", Q6: "event-split rule BR-001", Q7: "exception queue", Q8: "TRIG-01 (prior FY)" };
+  function praAnswerLive(prog, qid) {
+    var mo = model(), e = mo.progFy[prog + "|" + CUR_FY] || { total: 0, count: 0 };
+    var f = mo.flags[prog + "|" + CUR_FY] || {};
+    switch (qid) {
+      case "Q1": return money(e.total);
+      case "Q2": return pct(f.dYoY);
+      case "Q3": return f.any ? ("Yes — flagged (" + (f.countOnly ? "count-only" : f.dollar && f.count ? "dollars + count" : f.dollar ? "dollars" : "count") + ")") : "No — within threshold";
+      case "Q4": {
+        var subs = {}, codes = {};
+        TX.forEach(function (t) { if (t.fy !== CUR_FY) return; var r = resolveCode(t.code, t.fy, effectiveTargets()); if (r.progId === prog) { subs[r.subId] = 1; codes[t.code] = 1; } });
+        return Object.keys(subs).length + " sub-groupings / " + Object.keys(codes).length + " financial codes";
+      }
+      case "Q5": {
+        var evs = {};
+        TX.forEach(function (t) { if (t.fy !== CUR_FY) return; var r = resolveCode(t.code, t.fy, effectiveTargets()); if (r.progId === prog && t.dr) evs[t.dr] = 1; });
+        var n = Object.keys(evs).length; return n ? n + " disaster declaration" + (n > 1 ? "s" : "") : "0 (non-disaster program)";
+      }
+      case "Q6": {
+        var by = {}, tot = 0;
+        TX.forEach(function (t) { if (t.fy !== CUR_FY) return; var r = resolveCode(t.code, t.fy, effectiveTargets()); if (r.progId === prog) { var k = t.dr || "ND"; by[k] = (by[k] || 0) + t.amount; tot += t.amount; } });
+        var mx = 0; Object.keys(by).forEach(function (k) { if (by[k] > mx) mx = by[k]; });
+        return tot ? (mx / tot * 100).toFixed(1) + "% in top event" : "—";
+      }
+      case "Q7": {
+        var n2 = 0;
+        EXC_LIST.forEach(function (c) { if (!state.exceptions[c] && EXC_CODES[c].program_id === prog) n2 += excFyStats(c).count; });
+        return n2 + " exception-queue transactions (suggested to this program, undecided)";
+      }
+      case "Q8": {
+        var pf = mo.flags[prog + "|" + (CUR_FY - 1)] || {};
+        return pf.any ? "Prior FY flagged — comprehensive assessment in cycle" : "Prior FY within threshold";
+      }
+    }
+    return "—";
+  }
+  function praHtml(prog) {
+    var h = '<p class="small">Eight of ten questions auto-populate from numbers this registry governs — every answer below traces to named rules, so the PRA is only as trustworthy as the rule ledger behind it. Question text is an <em>illustrative placeholder instrument</em>, not FEMA\'s real form. Status: <span class="chip st-pending">draft — nothing finalizes without human sign-off</span></p>' +
+      '<p class="small muted">Cycle note (illustrative): last comprehensive assessment simulated as FY2024; required at least every 3 years per program. “Preliminary” is a starting point in that lifecycle, not a terminal status.</p>';
+    h += '<table class="mini" aria-label="PRA questions"><thead><tr><th style="width:36%">Question (illustrative)</th><th>Answer</th><th>Populated by</th><th>Governed by</th><th></th></tr></thead><tbody>';
+    D.risk_questions.forEach(function (q) {
+      var key = prog + "|" + q.id, ov = state.praOverrides[key], hu = state.praHuman[key];
+      var auto = q.auto_populatable;
+      var ansCell, byCell;
+      if (auto) {
+        var live = praAnswerLive(prog, q.id);
+        if (ov) { ansCell = "<strong>" + esc(ov.value) + "</strong><div class='small muted'>was: " + esc(live) + " · reason: " + esc(ov.reason) + "</div>"; byCell = '<span class="chip st-pending">human override</span><div class="small sig">' + esc(ov.by) + "</div>"; }
+        else { ansCell = esc(live); byCell = '<span class="chip st-sme_confirmed">auto (deterministic)</span>'; }
+      } else {
+        if (hu) { ansCell = esc(hu.value); byCell = '<span class="chip st-pending">human</span><div class="small sig">' + esc(hu.by) + "</div>"; }
+        else { ansCell = '<span class="muted">awaiting program-office input</span>'; byCell = '<span class="chip st-exception">human-only</span>'; }
+      }
+      h += "<tr><td>" + esc(sanitize(q.text)) + "</td><td>" + ansCell + "</td><td>" + byCell + '</td><td class="small muted">' + (auto ? esc(PRA_RULEDEPS[q.id] || "registry") : "program office") + "</td>" +
+        '<td>' + (auto ? '<button type="button" class="btn ghost sm" data-action="pra-edit" data-arg="' + prog + "|" + q.id + '">' + (ov ? "Edit override" : "Override…") + "</button>" : '<button type="button" class="btn ghost sm" data-action="pra-edit" data-arg="' + prog + "|" + q.id + '">' + (hu ? "Edit" : "Answer…") + "</button>") + "</td></tr>";
+      if (state.praEdit === key) {
+        var dk = "pra:" + key;
+        h += '<tr><td colspan="5"><div class="frm">' +
+          '<div class="fld"><label for="pra-val">' + (auto ? "Corrected answer" : "Answer") + ' <span class="req">*</span></label><textarea id="pra-val" data-draft="' + dk + ':value">' + esc(draft(dk + ":value", "")) + "</textarea></div>" +
+          (auto ? '<div class="fld"><label for="pra-reason">Override reason <span class="req">*</span> (overrides never silently replace the computed value — both are kept)</label><textarea id="pra-reason" data-draft="' + dk + ':reason">' + esc(draft(dk + ":reason", "")) + "</textarea></div>" : "") +
+          '<div class="btn-row"><button type="button" class="btn confirm sm" data-action="pra-save" data-arg="' + prog + "|" + q.id + '">Record — sign as ' + esc(me().name) + "</button>" +
+          '<button type="button" class="btn sm" data-action="pra-cancel">Cancel</button></div>' + noticeHtml(dk) + "</div></td></tr>";
+      }
+    });
+    h += "</tbody></table>";
+    return h;
+  }
+
+
+  /* ---------------- Section 5: actions & event delegation ---------------- */
+  function setNotice(key, msg, kind) { state.notices = {}; state.notices[key] = { msg: msg, kind: kind || "err" }; }
+  function clearNotices() { state.notices = {}; }
+  function sig(text, ruleId) {
+    var m = me();
+    return { by: m.name, roleTitle: m.role, text: text, when: nowStamp(), ruleId: ruleId };
+  }
+  function stagePush(title, kind, extra) {
+    var ch = { id: "CH-" + String(state.changeSeq++).padStart(3, "0"), title: title, kind: kind, status: "pending", author: me().name, authorRole: me().role, when: nowStamp() };
+    Object.keys(extra).forEach(function (k) { ch[k] = extra[k]; });
+    state.staged.unshift(ch);
+    return ch;
+  }
+  function findChange(id) { return state.staged.filter(function (c) { return c.id === id; })[0]; }
+  function currentSubOf(code) {
+    var t = effectiveTargets();
+    if (Object.prototype.hasOwnProperty.call(t, code)) return t[code];
+    var row = basePm[code + "|" + CUR_FY] || basePm[code + "|" + FYS[0]];
+    return row && row.status !== "exception_queue" ? row.sub_program_id : null;
+  }
+
+  var actions = {
+    "switch-view": function (arg) { state.view = arg; clearNotices(); },
+    "select-rule": function (arg) { state.selRule = arg; state.editor = null; state.sopOpen = null; },
+    "goto-inbox-rule": function (arg) { state.view = "inbox"; state.inboxSel = "rule:" + arg; },
+    "select-inbox": function (arg) { state.inboxSel = arg; clearNotices(); },
+
+    /* --- rule editor / staged changes --- */
+    "open-editor": function (arg) {
+      var codes = ruleCodes[arg] || [];
+      state.editor = { ruleId: arg, code: codes[0] || "", toSub: D.sub_programs[0].id, reason: "" };
+    },
+    "close-editor": function () { state.editor = null; },
+    "stage-change": function () {
+      var ed = state.editor; if (!ed) return;
+      if (!ed.reason || !ed.reason.trim()) { setNotice("rule:" + ed.ruleId, "A reason is required — it becomes part of the audit record.", "err"); return; }
+      if (currentSubOf(ed.code) === ed.toSub) { setNotice("rule:" + ed.ruleId, "That code already maps to the selected sub-grouping — nothing to change.", "err"); return; }
+      var toName = ed.toSub === "UNMAPPED" ? "not mappable" : subById[ed.toSub].name;
+      stagePush("Re-assign " + ed.code + " → " + toName, "reassign_code", { ruleId: ed.ruleId, code: ed.code, toSub: ed.toSub, reason: ed.reason.trim() });
+      state.editor = null;
+      setNotice("rule:" + ed.ruleId, "Change staged for review — see the Review workspace. Nothing has been applied.", "ok");
+    },
+    "open-sop": function (arg) { state.sopOpen = arg; },
+    "close-sop": function () { state.sopOpen = null; },
+    "sign-sop": function (arg) {
+      if (state.role !== "sme") { setNotice("rule:" + arg, "SOP validation must be signed by the Program SME role (switch “Acting as”).", "err"); return; }
+      var note = (state.drafts["sop-note"] || "").trim();
+      if (!note) { setNotice("rule:" + arg, "An SOP citation / note is required.", "err"); return; }
+      state.ruleStatus[arg].status = "sop_validated";
+      state.ruleStatus[arg].signatures.push(sig("SOP validation recorded: " + note, arg));
+      state.drafts["sop-note"] = ""; state.sopOpen = null;
+      setNotice("rule:" + arg, "SOP validation signed. Status advanced to SOP-validated.", "ok");
+    },
+
+    /* --- trigger policy --- */
+    "reset-preview": function () { state.trigPreview = null; },
+    "open-trig-editor": function () {
+      var t = state.trigger;
+      state.trigEditor = { threshold_pct: t.threshold_pct, direction: t.direction, measures: t.measures.slice(), combine: t.combine, reason: "" };
+    },
+    "close-trig-editor": function () { state.trigEditor = null; },
+    "stage-trigger": function () {
+      var te = state.trigEditor; if (!te) return;
+      if (!te.reason || !te.reason.trim()) { setNotice("trigger", "A reason is required for a policy change.", "err"); return; }
+      var t = state.trigger;
+      var same = te.threshold_pct === t.threshold_pct && te.direction === t.direction && te.combine === t.combine && te.measures.slice().sort().join() === t.measures.slice().sort().join();
+      if (same) { setNotice("trigger", "The staged configuration matches current policy — nothing to change.", "err"); return; }
+      stagePush("Trigger policy → " + te.threshold_pct + "% / " + te.direction + " / " + te.measures.join("+") + " / combine:" + te.combine, "trigger",
+        { trigger: { threshold_pct: te.threshold_pct, direction: te.direction, measures: te.measures.slice(), combine: te.combine }, reason: te.reason.trim() });
+      state.trigEditor = null;
+      setNotice("trigger", "Trigger-policy change staged for review. Current policy still governs until approved.", "ok");
+    },
+
+    /* --- inbox: inferred rules --- */
+    "confirm-rule": function (arg) {
+      var dk = "rule:" + arg;
+      if (state.role !== "sme" && state.role !== "reviewer") { setNotice(dk, "Confirmation is an SME (or Reviewer) signature — switch “Acting as” to a validating role.", "err"); return; }
+      var note = (state.drafts[dk + ":note"] || "").trim();
+      state.ruleStatus[arg].status = "sme_confirmed";
+      state.ruleStatus[arg].escalated = false;
+      state.ruleStatus[arg].signatures.push(sig("Confirmed inferred rule" + (note ? " — " + note : "") + ". Dollars under this rule now count as confirmed.", arg));
+      setNotice(dk, "Rule confirmed and signed. Trust posture updated.", "ok");
+    },
+    "correct-rule": function (arg) {
+      var dk = "rule:" + arg;
+      var target = state.drafts[dk + ":target"] || "";
+      var note = (state.drafts[dk + ":note"] || "").trim();
+      if (!target) { setNotice(dk, "Choose the correct sub-grouping to stage a correction.", "err"); return; }
+      if (!note) { setNotice(dk, "A reason is required to correct a rule — it becomes part of the audit record.", "err"); return; }
+      var codes = ruleCodes[arg] || [];
+      // correction stages a re-assignment of the rule's governed codes (demo: first governed code family)
+      var ch = stagePush("Correct " + arg + ": re-assign " + codes.join(", ") + " → " + subById[target].name, "reassign_code",
+        { ruleId: arg, code: codes[0], codesAll: codes.slice(), toSub: target, reason: note });
+      // multi-code corrections re-assign every governed code
+      ch.multi = true;
+      setNotice(dk, "Correction staged as " + ch.id + " — an approver must sign in Review before anything re-maps.", "ok");
+    },
+    "escalate-rule": function (arg) {
+      var dk = "rule:" + arg;
+      var note = (state.drafts[dk + ":note"] || "").trim();
+      if (!note) { setNotice(dk, "A note is required to escalate — say what needs checking.", "err"); return; }
+      state.ruleStatus[arg].escalated = true;
+      state.ruleStatus[arg].signatures.push(sig("Escalated for further review — " + note, arg));
+      setNotice(dk, "Escalated. The rule stays inferred (unconfirmed) and keeps its place in the queue.", "ok");
+    },
+    "reopen-rule": function (arg) {
+      state.ruleStatus[arg].status = "inferred";
+      state.ruleStatus[arg].escalated = false;
+      state.ruleStatus[arg].signatures.push(sig("Reopened — confirmation withdrawn.", arg));
+    },
+
+    /* --- inbox: exceptions --- */
+    "resolve-exc": function (arg) {
+      var dk = "exc:" + arg;
+      var mode = state.drafts[dk + ":mode"] || "accept";
+      var reason = (state.drafts[dk + ":reason"] || "").trim();
+      var target = null;
+      if (mode === "accept") target = EXC_CODES[arg].sub_program_id;
+      if (mode === "assign") {
+        target = state.drafts[dk + ":target"] || D.sub_programs[0].id;
+        if (!reason) { setNotice(dk, "A reason is required when assigning a different sub-grouping than suggested.", "err"); return; }
+      }
+      if (mode === "not_mappable") {
+        if (!reason) { setNotice(dk, "A reason is required to mark a code not mappable — its dollars leave the reportable totals.", "err"); return; }
+      }
+      var m = me();
+      state.exceptions[arg] = { action: mode === "accept" ? "accepted" : mode === "assign" ? "assigned" : "not_mappable", target: mode === "not_mappable" ? "UNMAPPED" : target, reason: reason, by: m.name, when: nowStamp() };
+      invalidate();
+      setNotice(dk, "Decision recorded and signed. Program totals and trust posture recomputed.", "ok");
+    },
+    "reopen-exc": function (arg) { delete state.exceptions[arg]; invalidate(); },
+
+    /* --- inbox: questions --- */
+    "answer-q": function (arg) {
+      var dk = "q:" + arg;
+      var note = (state.drafts[dk + ":note"] || "").trim();
+      if (!note) { setNotice(dk, "An answer note is required.", "err"); return; }
+      var m = me();
+      state.questions[arg] = { note: note, by: m.name + " (" + m.role + ")", when: nowStamp() };
+      setNotice(dk, "Answer recorded (illustrative signature).", "ok");
+    },
+    "reopen-q": function (arg) { delete state.questions[arg]; },
+
+    /* --- review --- */
+    "approve-change": function (arg) {
+      var ch = findChange(arg); if (!ch || ch.status === "applied" || ch.status === "discarded" || ch.status === "reverted") return;
+      var k = "ch:" + arg;
+      if (state.role !== "reviewer") { setNotice(k, "Approval requires the Reviewer role — switch “Acting as”.", "err"); return; }
+      if (ch.author === me().name) { setNotice(k, "A change cannot be approved by its author — second-person review required.", "err"); return; }
+      var d = computeDiff(changePayloadTargets(ch), changeTrigger(ch));
+      ch.frozenSummary = d.remap.length + " transactions re-mapped (" + money(d.remapDollars) + "); " + d.progDelta.length + " program-FY totals changed; " + d.flips.length + " trigger flags flipped.";
+      if (ch.kind === "reassign_code") {
+        var codes = ch.multi && ch.codesAll ? ch.codesAll : [ch.code];
+        ch.prevTargets = {};
+        codes.forEach(function (c) {
+          ch.prevTargets[c] = Object.prototype.hasOwnProperty.call(state.appliedTargets, c) ? state.appliedTargets[c] : null;
+          state.appliedTargets[c] = ch.toSub;
+        });
+      } else if (ch.kind === "trigger") {
+        ch.prevTrigger = state.trigger;
+        state.trigger = ch.trigger;
+      }
+      invalidate();
+      ch.status = "applied";
+      ch.decision = sig("Approved & applied. " + ch.frozenSummary, ch.ruleId);
+      if (ch.ruleId) state.history.push(sig("Change " + ch.id + " applied: " + ch.title, ch.ruleId));
+      setNotice(k, ch.id + " applied. All totals, flags and posture recomputed.", "ok");
+    },
+    "request-changes": function (arg) {
+      var ch = findChange(arg); if (!ch || ch.status !== "pending") return;
+      var note = (state.drafts["rv:" + arg] || "").trim();
+      if (!note) { setNotice("ch:" + arg, "A review note is required to request changes.", "err"); return; }
+      ch.status = "changes_requested"; ch.reviewNote = note;
+      ch.decision = sig("Requested changes — " + note, ch.ruleId);
+      setNotice("ch:" + arg, "Returned to the steward with your note.", "ok");
+    },
+    "discard-change": function (arg) {
+      var ch = findChange(arg); if (!ch || ch.status === "applied") return;
+      ch.status = "discarded";
+      ch.decision = sig("Discarded without applying.", ch.ruleId);
+    },
+    "revert-change": function (arg) {
+      var ch = findChange(arg); if (!ch || ch.status !== "applied") return;
+      if (ch.kind === "reassign_code" && ch.prevTargets) {
+        Object.keys(ch.prevTargets).forEach(function (c) {
+          if (ch.prevTargets[c] === null) delete state.appliedTargets[c];
+          else state.appliedTargets[c] = ch.prevTargets[c];
+        });
+      } else if (ch.kind === "trigger" && ch.prevTrigger) {
+        state.trigger = ch.prevTrigger;
+      }
+      invalidate();
+      ch.status = "reverted";
+      ch.decision = sig("Reverted — prior mapping restored, with record.", ch.ruleId);
+      if (ch.ruleId) state.history.push(sig("Change " + ch.id + " reverted.", ch.ruleId));
+      setNotice("ch:" + arg, ch.id + " reverted. Totals restored.", "ok");
+    },
+
+    /* --- overlays --- */
+    "open-export": function () { state.overlay = { type: "export" }; },
+    "regen-export": function () { /* re-render regenerates from current state */ },
+    "open-evidence": function () { state.overlay = { type: "evidence" }; },
+    "open-bulk": function () { state.overlay = { type: "bulk" }; },
+    "open-pra": function (arg) { state.overlay = { type: "pra", prog: arg }; state.praEdit = null; },
+    "close-overlay": function () { state.overlay = null; state.praEdit = null; },
+    "overlay-back-close": function (arg, el, ev) {
+      if (!ev || ev.target === el) { state.overlay = null; state.praEdit = null; }
+    },
+
+    /* --- PRA --- */
+    "pra-edit": function (arg) { state.praEdit = arg; },
+    "pra-cancel": function () { state.praEdit = null; },
+    "pra-save": function (arg) {
+      var parts = arg.split("|"), prog = parts[0], qid = parts[1], key = arg, dk = "pra:" + key;
+      var q = D.risk_questions.filter(function (x) { return x.id === qid; })[0];
+      var val = (state.drafts[dk + ":value"] || "").trim();
+      var reason = (state.drafts[dk + ":reason"] || "").trim();
+      if (!val) { setNotice(dk, "An answer value is required.", "err"); return; }
+      var m = me();
+      if (q.auto_populatable) {
+        if (!reason) { setNotice(dk, "An override reason is required — the computed value is never silently replaced.", "err"); return; }
+        state.praOverrides[key] = { value: val, reason: reason, by: m.name + " (" + m.role + ")", when: nowStamp() };
+      } else {
+        state.praHuman[key] = { value: val, by: m.name + " (" + m.role + ")", when: nowStamp() };
+      }
+      state.praEdit = null;
+      setNotice(dk, "Recorded with illustrative signature. PRA remains a draft until sign-off.", "ok");
+    },
+  };
+
+  function doAction(name, arg, el, ev) {
+    var fn = actions[name];
+    if (!fn) return;
+    fn(arg, el, ev);
+    render();
+  }
+
+  /* ----- event delegation ----- */
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest ? e.target.closest("[data-action]") : null;
+    if (!el) return;
+    doAction(el.getAttribute("data-action"), el.getAttribute("data-arg"), el, e);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      if (state.overlay) { state.overlay = null; state.praEdit = null; render(); }
+      else if (state.editor || state.trigEditor || state.sopOpen) { state.editor = null; state.trigEditor = null; state.sopOpen = null; render(); }
+      return;
+    }
+    if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("role") === "button" && e.target.getAttribute("data-action")) {
+      e.preventDefault();
+      doAction(e.target.getAttribute("data-action"), e.target.getAttribute("data-arg"), e.target, e);
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t || !t.getAttribute) return;
+    var field = t.getAttribute("data-field");
+    if (field) {
+      if (field === "fPending") state.fPending = !!t.checked;
+      else if (field === "trigPreview") state.trigPreview = parseInt(t.value, 10);
+      else state[field] = t.value;
+      render(); return;
+    }
+    var ds = t.getAttribute("data-draft-sel");
+    if (ds) { state.drafts[ds] = t.value; render(); return; }
+    var ed = t.getAttribute("data-editor");
+    if (ed && state.editor) { state.editor[ed] = t.value; render(); return; }
+    var tg = t.getAttribute("data-trig");
+    if (tg && state.trigEditor) {
+      if (tg === "threshold_pct") state.trigEditor.threshold_pct = parseInt(t.value, 10);
+      else if (tg === "measuresSel") state.trigEditor.measures = t.value === "both" ? ["disbursements", "transaction_count"] : [t.value];
+      else state.trigEditor[tg] = t.value;
+      render(); return;
+    }
+  });
+
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (!t || !t.getAttribute) return;
+    var dk = t.getAttribute("data-draft");
+    if (dk) { state.drafts[dk] = t.value; return; } // no re-render: keep focus while typing
+    var ed = t.getAttribute("data-editor");
+    if (ed === "reason" && state.editor) { state.editor.reason = t.value; return; }
+    var tg = t.getAttribute("data-trig");
+    if (tg === "reason" && state.trigEditor) { state.trigEditor.reason = t.value; return; }
+    var field = t.getAttribute("data-field");
+    if (field === "fSearch") { state.fSearch = t.value; render(); return; }
+    if (field === "trigPreview") { state.trigPreview = parseInt(t.value, 10); render(); return; }
+  });
+
+  /* ----- master render ----- */
+  function render() {
+    renderHeader(); renderTabs(); renderRegistry(); renderInbox(); renderReview(); renderOverlay();
+  }
+
+
+  /* ---------------- Section 6: embedded self-tests ----------------
+     window.__SELFTEST__ returns [{name, pass, detail}].
+     Side-effect-safe: snapshots state, runs against a fresh state, restores. */
+  var CHECK = { // planted cross-check constants (used ONLY for verification, never displayed)
+    PA: 1094293204.80, HM: 166280284.80, IA: 422002008.00, HS: 469332864.00, UR: 39617061.12,
+    GRAND: 2191525422.72, BR018_FY26: 13665276.03, XR88002: 950000.00,
+  };
+  function approx(a, b, tol) { return Math.abs(a - b) <= (tol === undefined ? 1 : tol); }
+
+  window.__SELFTEST__ = function () {
+    var out = [];
+    function T(name, pass, detail) { out.push({ name: name, pass: !!pass, detail: detail || "" }); }
+    var savedState = JSON.parse(JSON.stringify(state));
+    try {
+      state = initialState(); invalidate(); render();
+
+      // 1. payload loaded
+      T("payload loaded (1,459 transactions, 26 rules, 5 programs)",
+        TX.length === 1459 && D.mapping_rules.length === 26 && D.programs.length === 5,
+        "tx=" + TX.length);
+
+      // 2. FY2026 computed totals match planted values (±$1)
+      var m = computeModel(effectiveTargets(), state.trigger);
+      var g = ["PA", "HM", "IA", "HS", "UR"].reduce(function (s, k) { return s + m.progFy["PROG-" + k + "|2026"].total; }, 0);
+      T("FY2026 totals match planted values (±$1) incl. grand total",
+        approx(m.progFy["PROG-PA|2026"].total, CHECK.PA) && approx(m.progFy["PROG-HM|2026"].total, CHECK.HM) &&
+        approx(m.progFy["PROG-IA|2026"].total, CHECK.IA) && approx(m.progFy["PROG-HS|2026"].total, CHECK.HS) &&
+        approx(m.progFy["PROG-UR|2026"].total, CHECK.UR) && approx(g, CHECK.GRAND),
+        "grand=" + g.toFixed(2));
+
+      // 3. dual-measure trigger at default config; IA is the count-only catch
+      var fIA = m.flags["PROG-IA|2026"], fUR = m.flags["PROG-UR|2026"];
+      T("trigger fires PA/HM/IA/HS, not UR; IA flagged by count only",
+        m.flags["PROG-PA|2026"].any && m.flags["PROG-HM|2026"].any && m.flags["PROG-HS|2026"].any &&
+        fIA.any && fIA.count && !fIA.dollar && fIA.countOnly && !fUR.any,
+        "IA d=" + (fIA.dYoY && fIA.dYoY.toFixed(1)) + " c=" + (fIA.cYoY && fIA.cYoY.toFixed(1)));
+
+      // 4. primary navigation switches workspaces
+      doAction("switch-view", "inbox");
+      var navOk = $("view-inbox").classList.contains("active") && !$("view-registry").classList.contains("active") &&
+        $("tab-inbox").getAttribute("aria-current") === "true";
+      doAction("switch-view", "review");
+      navOk = navOk && $("view-review").classList.contains("active");
+      doAction("switch-view", "registry");
+      navOk = navOk && $("view-registry").classList.contains("active");
+      T("navigation switches Registry / Inbox / Review workspaces", navOk);
+
+      // 5. drill-down from a rule record reaches transaction rows
+      state.selRule = "BR-018"; render();
+      var rows = document.querySelectorAll("#rule-detail .txn-row");
+      var b18 = ruleBlast("BR-018")[2026];
+      T("rule record drills to transaction rows; BR-018 FY2026 blast radius matches (±$1)",
+        rows.length > 0 && approx(b18.total, CHECK.BR018_FY26),
+        "rows=" + rows.length + " blast=" + b18.total.toFixed(2));
+
+      // 6. signature interaction: SME confirms an inferred rule → posture recomputes
+      var tpBefore = trustPosture();
+      state.role = "steward";
+      doAction("confirm-rule", "BR-023");
+      var blockedNonSme = state.ruleStatus["BR-023"].status === "inferred";
+      state.role = "sme"; state.drafts["rule:BR-023:note"] = "Verified against Operation Stonegarden records.";
+      doAction("confirm-rule", "BR-023");
+      var tpAfter = trustPosture();
+      T("confirming inferred rule BR-023 requires validating role, records signature, raises governed % and shrinks queue",
+        blockedNonSme && state.ruleStatus["BR-023"].status === "sme_confirmed" &&
+        state.ruleStatus["BR-023"].signatures.length === 1 &&
+        tpAfter.governedPct > tpBefore.governedPct + 5 && tpAfter.awaiting === tpBefore.awaiting - 1,
+        tpBefore.governedPct.toFixed(1) + "% → " + tpAfter.governedPct.toFixed(1) + "%");
+
+      // 7. staged change: reason required → live diff correct → reviewer-only apply → revert restores
+      state.role = "steward";
+      doAction("open-editor", "BR-018");
+      state.editor.code = "IA-61103-4332"; state.editor.toSub = "SUB-IA-IHP"; state.editor.reason = "";
+      doAction("stage-change");
+      var reasonGate = state.staged.length === 0 && state.editor !== null;
+      state.editor.reason = "Historic Mass Care coding was corrected in the 2024 SOP.";
+      doAction("stage-change");
+      var ch = state.staged[0];
+      var codeTxns = TX.filter(function (t) { return t.code === "IA-61103-4332"; }).length;
+      var d = ch ? computeDiff(changePayloadTargets(ch), null) : null;
+      var diffOk = d && d.remap.length === codeTxns && d.progDelta.length === 0 && d.subDelta.length > 0;
+      doAction("approve-change", ch.id); // steward — must be blocked
+      var roleGate = ch.status === "pending";
+      state.role = "reviewer";
+      doAction("approve-change", ch.id);
+      var m2 = computeModel(effectiveTargets(), state.trigger);
+      var applied = ch.status === "applied" &&
+        approx(m2.progFy["PROG-IA|2026"].total, CHECK.IA) &&           // program total unchanged (moves within IA)
+        m2.subFy["SUB-IA-MC|2026"].total < CHECK.BR018_FY26 - 1;       // sub-grouping total moved
+      doAction("revert-change", ch.id);
+      var m3 = computeModel(effectiveTargets(), state.trigger);
+      var reverted = ch.status === "reverted" && approx(m3.subFy["SUB-IA-MC|2026"].total, CHECK.BR018_FY26);
+      T("staged change: reason gate, correct blast-radius diff, reviewer-only apply, revert restores",
+        reasonGate && diffOk && roleGate && applied && reverted,
+        "remap=" + (d ? d.remap.length : "-") + "/" + codeTxns);
+
+      // 8. exception resolution: reason enforced; accepting a suggestion moves real dollars
+      state.drafts["exc:NC-88101-4332:mode"] = "not_mappable"; state.drafts["exc:NC-88101-4332:reason"] = "";
+      doAction("resolve-exc", "NC-88101-4332");
+      var excGate = !state.exceptions["NC-88101-4332"];
+      state.drafts["exc:XR-88002-4340:mode"] = "accept";
+      doAction("resolve-exc", "XR-88002-4340");
+      var m4 = computeModel(effectiveTargets(), state.trigger);
+      T("exception queue: reason required to exclude; accepting XR-88002-4340 adds $950,000.00 to Public Assistance FY2026",
+        excGate && state.exceptions["XR-88002-4340"] && approx(m4.progFy["PROG-PA|2026"].total, CHECK.PA + CHECK.XR88002),
+        "PA'=" + m4.progFy["PROG-PA|2026"].total.toFixed(2));
+
+      // 9. export simulation carries the watermark and the ledger
+      var ex = exportText();
+      T("export simulation contains SYNTHETIC-DEMO watermark and the full rule ledger",
+        ex.indexOf("SYNTHETIC-DEMO") >= 0 && ex.indexOf("BR-018") >= 0 && ex.indexOf("BR-026") >= 0);
+
+      // 10. PRA override path enforces reason capture and records a signature
+      doAction("open-pra", "PROG-IA");
+      doAction("pra-edit", "PROG-IA|Q2");
+      state.drafts["pra:PROG-IA|Q2:value"] = "+9.0% (accrual-adjusted)"; state.drafts["pra:PROG-IA|Q2:reason"] = "";
+      doAction("pra-save", "PROG-IA|Q2");
+      var praGate = !state.praOverrides["PROG-IA|Q2"];
+      state.drafts["pra:PROG-IA|Q2:reason"] = "Known FY2026 accrual timing shift.";
+      doAction("pra-edit", "PROG-IA|Q2");
+      doAction("pra-save", "PROG-IA|Q2");
+      var praOv = state.praOverrides["PROG-IA|Q2"];
+      var praOk = !!(praOv && praOv.by && praOv.reason);
+      doAction("close-overlay");
+      T("PRA override requires a reason and records signer; computed value kept alongside", praGate && praOk);
+
+      // 11. live-configurable trigger: preview math flips the count-only catch at 40%
+      var m40 = computeModel(effectiveTargets(), { threshold_pct: 40, direction: "either", measures: ["disbursements", "transaction_count"], combine: "any" });
+      var mInc = computeModel(effectiveTargets(), { threshold_pct: 20, direction: "increase", measures: ["disbursements", "transaction_count"], combine: "any" });
+      T("trigger is live-configurable: at 40% IA clears; decreases-excluded config clears HM",
+        !m40.flags["PROG-IA|2026"].any && !mInc.flags["PROG-HM|2026"].any && mInc.flags["PROG-PA|2026"].any);
+
+      // 12. trust-posture header reflects state (DOM)
+      render();
+      var headerOk = $("tp-rules").textContent === "26" && /%$/.test($("tp-governed").textContent);
+      T("trust-posture header renders live values", headerOk, $("tp-governed").textContent);
+    } catch (e) {
+      T("self-test suite completes without exception", false, String(e && e.stack || e).slice(0, 300));
+    }
+    // restore pre-test state (side-effect safety)
+    state = savedState; invalidate(); render();
+    return out;
+  };
+
+  /* ---------------- init ---------------- */
+  render();
+})();
+</script>
+</body>
+</html>
