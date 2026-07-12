@@ -315,7 +315,7 @@ button{font-family:var(--sans)}
       <span class="glabel">Trigger</span>
       <label for="thNum">YoY threshold</label>
       <input type="number" id="thNum" min="1" max="60" step="1" value="20" aria-label="Year-over-year trigger threshold percent"><span class="small">%</span>
-      <input type="range" id="thRange" min="1" max="60" step="1" value="20" style="width:110px" aria-label="Threshold slider">
+      <input type="range" id="thRange" min="1" max="60" step="1" value="20" style="width:110px" aria-label="Year-over-year trigger threshold, percent">
       <label for="dirSel">Direction</label>
       <select id="dirSel" aria-label="Trigger direction">
         <option value="either" selected>Either direction</option>
@@ -342,6 +342,7 @@ button{font-family:var(--sans)}
           <span class="lg"><span class="arcsw"></span> 3-year comprehensive clock</span>
         </div>
         <div id="chronology" aria-label="Chronology canvas: one lane per program, fiscal years left to right"></div>
+        <div id="navAnnounce" class="visually-hidden" aria-live="polite" role="status"></div>
         <p class="norm-note">Normalization: each strand is indexed to its own FY2022 value = 100, per lane, so dollars and transaction counts share lane space honestly. Divergence between the two strands — not height — is the anomaly signal. Exact values: hover any point, or read the ledger below. Horizon note: this demo payload covers FY2022–FY2026; imagine the real canvas reaching back to 2018, where FEMA&rsquo;s actual assessment history begins.</p>
       </div>
 
@@ -719,7 +720,7 @@ APP.renderCanvas = function(){
   var oEdge = X(FY0 - 0.32), oW = oEdge - PL;
   if (oW > 4) {
     out.push('<rect class="origin-zone" x="' + PL + '" y="0" width="' + Math.max(0, oW) + '" height="' + H + '"></rect>');
-    out.push('<g data-act="drlist" role="button" tabindex="0" aria-label="Seven disaster declarations, DR-4332 through DR-4346, declared fiscal years 2017 to 2018, before this window. Open declaration list.">');
+    out.push('<g data-act="drlist" data-lane="-1" data-nx="0" role="button" tabindex="-1" aria-label="Seven disaster declarations, DR-4332 through DR-4346, declared fiscal years 2017 to 2018, before this window. Open declaration list.">');
     if (oW > 118) { /* room for the full annotation */
       out.push('<text class="origin-lab" x="' + (PL+6) + '" y="16">&#9668; 7 DRs declared FY2017&ndash;18</text>' +
         '<text class="origin-lab" x="' + (PL+6) + '" y="28">recovery spend runs through</text>' +
@@ -749,7 +750,7 @@ APP.renderCanvas = function(){
     if (gx > PL-1 && gx < PR+1){
       out.push('<line class="gridline major" x1="' + gx + '" y1="' + CTX_H + '" x2="' + gx + '" y2="' + (H-AXIS_H) + '"></line>');
       if (fy <= 2026 && APP.CALC[PROGS[0].id][fy]) {
-        out.push('<g class="extract-tick" data-act="extract" data-fy="' + fy + '" role="button" tabindex="0" aria-label="Fiscal year ' + fy + ' extract file ingested. Open ingestion provenance.">' +
+        out.push('<g class="extract-tick" data-act="extract" data-fy="' + fy + '" data-lane="-1" data-nx="' + gx + '" role="button" tabindex="-1" aria-label="Fiscal year ' + fy + ' extract file ingested. Open ingestion provenance.">' +
           '<rect x="' + (gx-6) + '" y="8" width="12" height="15" rx="1"></rect>' +
           '<line x1="' + (gx-3) + '" y1="13" x2="' + (gx+3) + '" y2="13" stroke="#9aa5ad" stroke-width="1"></line>' +
           '<line x1="' + (gx-3) + '" y1="16" x2="' + (gx+3) + '" y2="16" stroke="#9aa5ad" stroke-width="1"></line>' +
@@ -769,7 +770,7 @@ APP.renderCanvas = function(){
   /* modernization milestone at Oct 1 2026 (= FY2027 boundary) */
   var mx = X(2026.5);
   if (mx > PL && mx < PR){
-    out.push('<g class="modern-mark" data-act="modern" role="button" tabindex="0" aria-label="Financial system modernization milestone, October 1 2026. Contextual, simulated. Open details.">' +
+    out.push('<g class="modern-mark" data-act="modern" data-lane="-1" data-nx="' + mx + '" role="button" tabindex="-1" aria-label="Financial system modernization milestone, October 1 2026. Contextual, simulated. Open details.">' +
       '<line class="modern-line" x1="' + mx + '" y1="6" x2="' + mx + '" y2="' + (H-AXIS_H) + '"></line>' +
       '<path class="modern-diamond" d="M ' + mx + ' 10 l 7 8 l -7 8 l -7 -8 Z"></path>' +
       (mx > W - 230
@@ -795,9 +796,80 @@ APP.renderCanvas = function(){
   out.push('<text class="axis-label minor" x="' + (PL-170) + '" y="' + (ay+19) + '">federal FY: Oct 1 &ndash; Sep 30</text>');
   out.push('</svg>');
 
-  document.getElementById("chronology").innerHTML = out.join("");
+  var cvEl = document.getElementById("chronology");
+  var hadFocus = !!(document.activeElement && cvEl.contains(document.activeElement) && document.activeElement !== cvEl);
+  cvEl.innerHTML = out.join("");
+  applyRoving(hadFocus); /* roving tabindex: exactly one tab stop inside the canvas */
   var vn = document.getElementById("viewportNote");
   if (vn) vn.textContent = "viewing FY" + Math.max(2022, Math.ceil(x0()-0.01)) + " – FY" + Math.min(2027, Math.floor(x1()+0.01)) + (S.focused ? "  ·  lane focus: " + SHORT[S.focused] : "");
+};
+
+/* ---------- roving tabindex for the canvas ----------
+   The canvas exposes ONE tab stop; arrow keys walk the interactive
+   elements — left/right along a lane (ordered by x position), up/down
+   between lanes (nearest x in the target lane; lane -1 is the context
+   track). Enter/Space activates. Each move is announced through the
+   #navAnnounce aria-live region using the element's full aria-label.
+   The detail ledger below remains the linear screen-reader surface. */
+function navKeyOf(e){
+  return [e.getAttribute("data-act"), e.getAttribute("data-prog")||"", e.getAttribute("data-fy")||"",
+          e.getAttribute("data-m")||"", e.getAttribute("data-dr")||""].join("|");
+}
+APP.navKeyOf = navKeyOf;
+function navMap(){
+  var els = [].slice.call(document.querySelectorAll("#chronology [data-act]"));
+  var lanes = {};
+  els.forEach(function(e){ var l = e.getAttribute("data-lane") || "-1"; (lanes[l] = lanes[l] || []).push(e); });
+  Object.keys(lanes).forEach(function(l){
+    lanes[l].sort(function(a, b){ return (parseFloat(a.getAttribute("data-nx")) || 0) - (parseFloat(b.getAttribute("data-nx")) || 0); });
+  });
+  var order = Object.keys(lanes).map(Number).sort(function(a, b){ return a - b; });
+  return { els: els, lanes: lanes, order: order };
+}
+function announceNav(elm){
+  var a = document.getElementById("navAnnounce");
+  if (a && elm) a.textContent = elm.getAttribute("aria-label") || "";
+}
+function applyRoving(refocus){
+  var m = navMap();
+  if (!m.els.length) return;
+  var cur = null;
+  if (S.navKey) m.els.some(function(e){ if (navKeyOf(e) === S.navKey){ cur = e; return true; } return false; });
+  if (!cur) cur = (m.lanes["0"] && m.lanes["0"][0]) || m.els[0]; /* default entry: first program lane */
+  m.els.forEach(function(e){ e.setAttribute("tabindex", e === cur ? "0" : "-1"); });
+  S.navKey = navKeyOf(cur);
+  if (refocus && typeof cur.focus === "function"){ try { cur.focus(); } catch (err) {} }
+}
+APP.applyRoving = applyRoving;
+APP.moveRoving = function(dir){
+  var m = navMap();
+  if (!m.els.length) return null;
+  var cur = null;
+  m.els.some(function(e){ if (e.getAttribute("tabindex") === "0"){ cur = e; return true; } return false; });
+  if (!cur){ applyRoving(false); m = navMap(); m.els.some(function(e){ if (e.getAttribute("tabindex") === "0"){ cur = e; return true; } return false; }); }
+  if (!cur) return null;
+  var lane = cur.getAttribute("data-lane") || "-1";
+  var list = m.lanes[lane] || [cur], i = list.indexOf(cur), next = cur;
+  if (dir === "left") next = list[Math.max(0, i - 1)];
+  else if (dir === "right") next = list[Math.min(list.length - 1, i + 1)];
+  else if (dir === "up" || dir === "down"){
+    var li = m.order.indexOf(+lane);
+    var target = m.order[dir === "up" ? Math.max(0, li - 1) : Math.min(m.order.length - 1, li + 1)];
+    if (target !== +lane){
+      var tlist = m.lanes[String(target)] || [];
+      var x = parseFloat(cur.getAttribute("data-nx")) || 0, best = tlist[0], bd = Infinity;
+      tlist.forEach(function(e){ var d = Math.abs((parseFloat(e.getAttribute("data-nx")) || 0) - x); if (d < bd){ bd = d; best = e; } });
+      if (best) next = best;
+    }
+  }
+  if (next && next !== cur){
+    cur.setAttribute("tabindex", "-1");
+    next.setAttribute("tabindex", "0");
+    S.navKey = navKeyOf(next);
+    if (typeof next.focus === "function"){ try { next.focus(); } catch (err) {} }
+  }
+  announceNav(next); /* announce even on edge (repeats label = "you are at the edge") */
+  return next;
 };
 
 /* ---------- one lane ---------- */
@@ -815,7 +887,7 @@ function renderLane(p, li, top){
   out.push('<text class="lane-sub" x="10" y="' + (top+49) + '">FY26: ' + APP.fmt$c(fy26.total) + ' &middot; ' + fy26.count + ' txns</text>');
   var cyc = APP.CYCLES[pid];
   out.push('<text class="lane-sub" x="10" y="' + (top+63) + '"' + (cyc.due===2026 ? ' fill="#a52217" font-weight="bold"' : '') + '>comprehensive due FY' + cyc.due + (cyc.due===2026 ? ' &#9650;' : '') + '</text>');
-  out.push('<g class="lane-focus-btn" data-act="focus" data-prog="' + pid + '" role="button" tabindex="0" aria-label="' + (focused ? "Collapse" : "Expand") + ' ' + esc(p.name) + ' lane detail">' +
+  out.push('<g class="lane-focus-btn" data-act="focus" data-prog="' + pid + '" data-lane="' + li + '" data-nx="0" role="button" tabindex="-1" aria-label="' + (focused ? "Collapse" : "Expand") + ' ' + esc(p.name) + ' lane detail">' +
     '<rect x="10" y="' + (top+h-26) + '" width="86" height="18" rx="3"></rect>' +
     '<text x="18" y="' + (top+h-13) + '">' + (focused ? "&#9666; collapse" : "&#9656; focus lane") + '</text></g>');
 
@@ -860,7 +932,7 @@ function renderLane(p, li, top){
       var yoy = APP.yoy(pid, q.fy);
       var yv = m==="d" ? yoy.d : yoy.c;
       var tip = esc(SHORT[pid]) + ' — FY' + q.fy + ' ' + pair[2] + ': ' + exact + ' (index ' + q.idx.toFixed(1) + (yv!=null ? ', YoY ' + APP.fmtPct(yv) : ', first year on record') + ')';
-      out.push('<circle class="strand-pt ' + m + (sel ? ' sel' : '') + '" data-act="pt" data-prog="' + pid + '" data-fy="' + q.fy + '" data-m="' + m + '" role="button" tabindex="0" aria-label="' + tip + '. Open point detail." cx="' + q.x + '" cy="' + q.y + '" r="' + (sel?5:3.6) + '"><title>' + tip + '</title></circle>');
+      out.push('<circle class="strand-pt ' + m + (sel ? ' sel' : '') + '" data-act="pt" data-prog="' + pid + '" data-fy="' + q.fy + '" data-m="' + m + '" data-lane="' + li + '" data-nx="' + (q.x + (m==="c"?0.5:0)) + '" role="button" tabindex="-1" aria-label="' + tip + '. Open point detail." cx="' + q.x + '" cy="' + q.y + '" r="' + (sel?5:3.6) + '"><title>' + tip + '</title></circle>');
       if (focused) out.push('<text class="val-lab" x="' + (q.x+5) + '" y="' + (q.y + (m==="d"?-6:12)) + '">' + (m==="d" ? APP.fmt$c(q.raw) : q.raw) + '</text>');
     });
   });
@@ -874,7 +946,7 @@ function renderLane(p, li, top){
     var what = b.countOnly ? "VOLUME-ONLY breach: dollars " + APP.fmtPct(b.yoyD) + " but transaction volume " + APP.fmtPct(b.yoyC)
              : (b.dollar && b.count) ? "Breach on both measures: dollars " + APP.fmtPct(b.yoyD) + ", volume " + APP.fmtPct(b.yoyC)
              : "Dollar breach: " + APP.fmtPct(b.yoyD) + " (volume " + APP.fmtPct(b.yoyC) + ")";
-    out.push('<g class="flare ' + cls + '" data-act="flare" data-prog="' + pid + '" data-fy="' + fy + '" role="button" tabindex="0" aria-label="' + esc(SHORT[pid]) + ' fiscal year ' + fy + ' trigger flare. ' + esc(what) + '. Open trigger evidence.">' +
+    out.push('<g class="flare ' + cls + '" data-act="flare" data-prog="' + pid + '" data-fy="' + fy + '" data-lane="' + li + '" data-nx="' + (fx - 0.5) + '" role="button" tabindex="-1" aria-label="' + esc(SHORT[pid]) + ' fiscal year ' + fy + ' trigger flare. ' + esc(what) + '. Open trigger evidence.">' +
       (b.countOnly ? '<path class="flare-halo" d="M ' + fx + ' ' + (fyTop-11) + ' l 11 11 l -11 11 l -11 -11 Z"></path>' : '') +
       '<path class="fshape" d="M ' + fx + ' ' + (fyTop-7) + ' l 7 7 l -7 7 l -7 -7 Z"></path>' +
       '<title>' + esc(SHORT[pid]) + ' FY' + fy + ' — ' + esc(what) + '</title></g>');
@@ -884,7 +956,7 @@ function renderLane(p, li, top){
   /* 3-year comprehensive-cycle arc (illustrative history) */
   var cy2 = top + 12, ax1 = X(cyc.lastComprehensive), ax2 = X(Math.min(cyc.due, 2027.35));
   var due = cyc.due === 2026;
-  out.push('<g data-act="cycle" data-prog="' + pid + '" role="button" tabindex="0" aria-label="Comprehensive assessment cycle for ' + esc(p.name) + ': last comprehensive fiscal year ' + cyc.lastComprehensive + ', due fiscal year ' + cyc.due + (due ? ", due this year" : "") + '. Illustrative simulated history. Open assessment history.">' +
+  out.push('<g data-act="cycle" data-prog="' + pid + '" data-lane="' + li + '" data-nx="' + ((ax1+ax2)/2) + '" role="button" tabindex="-1" aria-label="Comprehensive assessment cycle for ' + esc(p.name) + ': last comprehensive fiscal year ' + cyc.lastComprehensive + ', due fiscal year ' + cyc.due + (due ? ", due this year" : "") + '. Illustrative simulated history. Open assessment history.">' +
     '<path class="cycle-arc' + (due ? " due" : "") + '" d="M ' + ax1 + ' ' + cy2 + ' Q ' + ((ax1+ax2)/2) + ' ' + (cy2-16) + ' ' + ax2 + ' ' + cy2 + '"></path>' +
     '<text class="cycle-lab' + (due ? " due" : "") + '" x="' + (((ax1+ax2)/2)-34) + '" y="' + (cy2-19) + '">3-yr clock &rarr; FY' + cyc.due + (due ? " DUE" : "") + '</text>' +
     '<title>3-year comprehensive cycle (illustrative history, simulated). Last comprehensive FY' + cyc.lastComprehensive + ' → due FY' + cyc.due + '</title></g>');
@@ -892,7 +964,7 @@ function renderLane(p, li, top){
   /* PRA milestone + exception chip at FY2026 */
   var px = X(2026);
   var signed = S.pra[pid] && S.pra[pid].signed;
-  out.push('<g class="pra-mark' + (signed ? " signed" : "") + '" data-act="pra" data-prog="' + pid + '" role="button" tabindex="0" aria-label="Preliminary Risk Assessment for ' + esc(p.name) + ', fiscal year 2026, status ' + (signed ? "signed off" : "draft") + '. Open PRA workspace.">' +
+  out.push('<g class="pra-mark' + (signed ? " signed" : "") + '" data-act="pra" data-prog="' + pid + '" data-lane="' + li + '" data-nx="' + (px + 1) + '" role="button" tabindex="-1" aria-label="Preliminary Risk Assessment for ' + esc(p.name) + ', fiscal year 2026, status ' + (signed ? "signed off" : "draft") + '. Open PRA workspace.">' +
     '<rect x="' + (px-19) + '" y="' + (top+h-22) + '" width="38" height="15" rx="2"></rect>' +
     '<text x="' + (px-14) + '" y="' + (top+h-11) + '">PRA' + (signed ? " &#10003;" : "&hellip;") + '</text>' +
     '<title>FY2026 Preliminary Risk Assessment — ' + (signed ? "signed off (this session)" : "draft, awaiting human sign-off") + '</title></g>');
@@ -900,7 +972,7 @@ function renderLane(p, li, top){
   var excs = APP.excForProg(pid);
   if (excs.length){
     var open = excs.filter(function(e){ return !S.excState[e.code]; }).length;
-    out.push('<g class="exc-chip" data-act="exc" data-prog="' + pid + '" role="button" tabindex="0" aria-label="' + excs.length + ' exception-queue codes suggest ' + esc(p.name) + ' in fiscal year 2026; ' + open + ' still unresolved. Open exception queue.">' +
+    out.push('<g class="exc-chip" data-act="exc" data-prog="' + pid + '" data-lane="' + li + '" data-nx="' + (px + 26) + '" role="button" tabindex="-1" aria-label="' + excs.length + ' exception-queue codes suggest ' + esc(p.name) + ' in fiscal year 2026; ' + open + ' still unresolved. Open exception queue.">' +
       '<rect x="' + (px+26) + '" y="' + (top+h-22) + '" width="' + (open ? 96 : 108) + '" height="15" rx="3"></rect>' +
       '<text x="' + (px+32) + '" y="' + (top+h-11) + '">' + (open ? "&#9670; " + open + " unmapped" : "&#10003; queue clear") + '</text>' +
       '<title>FY2026 exception queue: ' + excs.length + ' low-confidence codes suggested for this program (' + open + ' open)</title></g>');
@@ -957,7 +1029,7 @@ function measureRow(name, prior, cur, yoy, fired, fmt){
 }
 function txnTable(rows, note){
   var shown = rows.slice(0, 60);
-  var h = ['<div class="txn-table-wrap"><table class="txn-table" aria-label="Underlying transactions"><thead><tr><th>Txn</th><th>Raw code &rarr; canonical</th><th>Sub-program</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th></tr></thead><tbody>'];
+  var h = ['<div class="txn-table-wrap"><table class="txn-table" aria-label="Underlying transactions"><thead><tr><th scope="col">Txn</th><th scope="col">Raw code &rarr; canonical</th><th scope="col">Sub-program</th><th scope="col">Date</th><th scope="col">Type</th><th scope="col" style="text-align:right">Amount</th></tr></thead><tbody>'];
   shown.forEach(function(t){
     var dirty = t.raw !== t.code;
     var sub = APP.codeToSub[t.code] ? APP.subById[APP.codeToSub[t.code]].name : "(exception queue)";
@@ -978,7 +1050,7 @@ DRAWERS.flare = function(d){
   var cur = APP.CALC[d.prog][fy], pr = APP.CALC[d.prog][fy-1];
   var rows = APP.txnsFor(d.prog, fy);
   var h = ['<p style="margin:2px 0 6px"><strong>' + esc(p.name) + '</strong> — FY' + fy + ' trigger evaluation ' + verdictPill(b) + '</p>'];
-  h.push('<table class="evi-kv" aria-label="Trigger math"><tr><th style="text-align:left;font-size:10.5px;color:#5d6b76">Measure</th><th style="font-size:10.5px;color:#5d6b76">FY' + (fy-1) + '</th><th style="font-size:10.5px;color:#5d6b76">FY' + fy + '</th><th style="font-size:10.5px;color:#5d6b76">YoY</th><th style="font-size:10.5px;color:#5d6b76">Fired?</th></tr>' +
+  h.push('<table class="evi-kv" aria-label="Trigger math"><tr><th scope="col" style="text-align:left;font-size:10.5px;color:#5d6b76">Measure</th><th scope="col" style="font-size:10.5px;color:#5d6b76">FY' + (fy-1) + '</th><th scope="col" style="font-size:10.5px;color:#5d6b76">FY' + fy + '</th><th scope="col" style="font-size:10.5px;color:#5d6b76">YoY</th><th scope="col" style="font-size:10.5px;color:#5d6b76">Fired?</th></tr>' +
     measureRow("Disbursements", pr.total, cur.total, b.yoyD, b.dollar, fmt$) +
     measureRow("Transaction volume", pr.count, cur.count, b.yoyC, b.count, function(v){ return String(v); }) + '</table>');
   h.push('<div class="math-block">rule (live console): |YoY| &ge; ' + cfg.threshold + '% · direction: ' + cfg.direction + ' · measures: ' +
@@ -1276,9 +1348,9 @@ APP.renderLedger = function(){
   var head = el("ledgerHead"), body = el("ledgerBody");
   if (!head) return;
   head.innerHTML = LCOLS.map(function(c){
-    if (!c.k || c.k==="act") return "<th></th>";
+    if (!c.k || c.k==="act") return '<th scope="col"></th>';
     var cur = S.ledgerSort.key === c.k ? (S.ledgerSort.dir > 0 ? " ▲" : " ▼") : "";
-    return '<th><button class="sortbtn" data-sort="' + c.k + '" aria-label="Sort by ' + esc(c.label) + '">' + esc(c.label) + cur + '</button></th>';
+    return '<th scope="col"><button class="sortbtn" data-sort="' + c.k + '" aria-label="Sort by ' + esc(c.label) + '">' + esc(c.label) + cur + '</button></th>';
   }).join("");
   var rows = ledgerRows();
   body.innerHTML = rows.map(function(r){
@@ -1315,7 +1387,7 @@ APP.renderCompare = function(){
   var a = S.cmp.a, b = S.cmp.b, out = el("cmpOut");
   if (!out) return;
   if (a === b){ out.innerHTML = '<p class="small">Pick two different fiscal years to compare.</p>'; return; }
-  var h = ['<table class="cmp-table" aria-label="Comparison of two fiscal years"><thead><tr><th>Program</th><th>$ FY' + a + '</th><th>$ FY' + b + '</th><th>Δ$</th><th>vol Δ</th><th>verdict</th></tr></thead><tbody>'];
+  var h = ['<table class="cmp-table" aria-label="Comparison of two fiscal years"><thead><tr><th scope="col">Program</th><th scope="col">$ FY' + a + '</th><th scope="col">$ FY' + b + '</th><th scope="col">Δ$</th><th scope="col">vol Δ</th><th scope="col">verdict</th></tr></thead><tbody>'];
   APP.PROGS.forEach(function(p){
     var c = APP.compare(p.id, a, b);
     var v = c.any ? (c.countOnly ? '<span class="pill conly">vol-only</span>' : '<span class="pill breach">breach</span>') : '<span class="pill ok">within</span>';
@@ -1362,10 +1434,13 @@ function fillStatics(){
     '<p class="small">One lane per reportable program; time runs left to right (federal fiscal years, Oct 1 – Sep 30). Each lane carries two strands — solid blue = disbursement dollars, dashed teal = transaction volume — both indexed to FY2022 = 100 so shape, not magnitude, is what you read first. When the strands split apart, something changed shape: the amber-shaded wedge and a diamond flare mark it. Red diamonds = trigger breach; amber halo diamonds = volume-only breach (the kind a dollars-only rule misses). Arcs above a lane are each program&rsquo;s 3-year comprehensive-assessment clock. The top band holds context: extract ingestions, disaster declarations (before the window, left edge), and the Oct 2026 system-modernization milestone. Exact numbers live in the ledger below the canvas — the canvas is for shape, the ledger for lookup.</p>' +
     '<h3 style="font-size:13px;margin:10px 0 6px">Keyboard</h3>' +
     '<table class="evi-kv">' +
+    '<tr><td class="num">Tab</td><td>the whole canvas is <strong>one</strong> tab stop — Tab enters it at the current marker, Tab again leaves it (no walking through 100+ points)</td></tr>' +
+    '<tr><td class="num">&larr; / &rarr;</td><td>move along the lane: point &rarr; flare &rarr; milestone, in time order</td></tr>' +
+    '<tr><td class="num">&uarr; / &darr;</td><td>move between lanes (and up to the context track), landing on the nearest moment in time; each move is announced to screen readers</td></tr>' +
+    '<tr><td class="num">Enter / Space</td><td>activate the focused marker (open its evidence)</td></tr>' +
+    '<tr><td class="num">Shift+&larr; / Shift+&rarr;</td><td>pan the time window earlier / later</td></tr>' +
     '<tr><td class="num">+ / −</td><td>zoom in / out (canvas focused)</td></tr>' +
-    '<tr><td class="num">&larr; / &rarr;</td><td>pan earlier / later</td></tr>' +
     '<tr><td class="num">0</td><td>fit all fiscal years</td></tr>' +
-    '<tr><td class="num">Tab</td><td>walk every marker, flare, point, and control; Enter or Space activates</td></tr>' +
     '<tr><td class="num">Esc</td><td>close dialog, then evidence panel</td></tr></table>' +
     '<p class="small">Every canvas interaction has a keyboard path, and the detail ledger is the screen-reader-equivalent surface for the whole canvas.</p>';
 }
@@ -1384,6 +1459,7 @@ function pan(df){ S.view.c += df; APP.clampView(); el("scrubber").value = S.view
 function activate(t){
   var g = t.closest ? t.closest("[data-act]") : null;
   if (!g) return false;
+  if (APP.navKeyOf) S.navKey = APP.navKeyOf(g); /* roving stop follows the activated element */
   var a = g.getAttribute("data-act"), p = g.getAttribute("data-prog"), fy = g.getAttribute("data-fy");
   if (a === "focus"){ S.focused = (S.focused === p ? null : p); APP.renderCanvas(); return true; }
   if (a === "pt"){ S.selection = { prog: p, fy: +fy }; APP.openDrawer("pt", { prog: p, fy: +fy }); APP.renderCanvas(); APP.renderLedger(); return true; }
@@ -1428,16 +1504,24 @@ function wire(){
 
   /* canvas: delegation for click + keyboard + wheel + drag-compare */
   var cv = el("chronology");
-  cv.setAttribute("tabindex", "0");
+  /* Roving tabindex: the canvas itself is NOT a tab stop — exactly one
+     marker inside carries tabindex=0 (see applyRoving). Arrow keys move
+     the roving focus; Shift+Left/Right pans time; +/-/0 zoom and reset. */
   cv.setAttribute("role", "application");
   cv.setAttribute("aria-roledescription", "zoomable chronology canvas");
   cv.addEventListener("click", function(e){ activate(e.target); });
   cv.addEventListener("keydown", function(e){
     if ((e.key === "Enter" || e.key === " ") && activate(e.target)){ e.preventDefault(); return; }
-    if (e.key === "+" || e.key === "=") { zoom(1/1.45); e.preventDefault(); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"){
+      if (e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")){
+        pan((e.key === "ArrowLeft" ? -1 : 1) * Math.max(0.25, S.view.s/6));
+      } else {
+        APP.moveRoving(e.key === "ArrowLeft" ? "left" : e.key === "ArrowRight" ? "right" : e.key === "ArrowUp" ? "up" : "down");
+      }
+      e.preventDefault();
+    }
+    else if (e.key === "+" || e.key === "=") { zoom(1/1.45); e.preventDefault(); }
     else if (e.key === "-") { zoom(1.45); e.preventDefault(); }
-    else if (e.key === "ArrowLeft") { pan(-Math.max(0.25, S.view.s/6)); e.preventDefault(); }
-    else if (e.key === "ArrowRight") { pan(Math.max(0.25, S.view.s/6)); e.preventDefault(); }
     else if (e.key === "0") { S.view = { c: 2024.5, s: 5.9 }; APP.renderCanvas(); APP.renderLedger(); e.preventDefault(); }
   });
   cv.addEventListener("wheel", function(e){
@@ -1630,6 +1714,22 @@ window.__SELFTEST__ = function(){
       "span " + sBefore.toFixed(2) + "→" + S.view.s.toFixed(2) + " focused=" + S.focused);
     S.focused = null; S.view = { c: 2024.5, s: 5.9 }; APP.renderCanvas();
 
+    /* 4b — roving tabindex: the canvas is ONE tab stop; arrows move the roving focus */
+    var stops = document.querySelectorAll('#chronology [data-act][tabindex="0"]');
+    var allNav = document.querySelectorAll('#chronology [data-act]');
+    var keyBefore = APP.state.navKey;
+    var moved = APP.moveRoving("right");
+    var oneStop = document.querySelectorAll('#chronology [data-act][tabindex="0"]').length === 1;
+    var laneBefore = moved ? +moved.getAttribute("data-lane") : null;
+    var curNav = document.querySelector('#chronology [data-act][tabindex="0"]');
+    if (curNav) curNav.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    var afterDown = document.querySelector('#chronology [data-act][tabindex="0"]');
+    var laneChanged = !!afterDown && laneBefore != null && +afterDown.getAttribute("data-lane") === laneBefore + 1;
+    var announced = (document.getElementById("navAnnounce").textContent || "").length > 0;
+    t("roving tabindex: one canvas tab stop; ArrowRight/ArrowDown move roving focus with aria-live announcement",
+      stops.length === 1 && allNav.length > 40 && oneStop && APP.state.navKey !== keyBefore && laneChanged && announced,
+      "stops=" + stops.length + " nav=" + allNav.length + " moved=" + (APP.state.navKey !== keyBefore) + " laneChanged=" + laneChanged + " announced=" + announced);
+
     /* 5 — drill-down reaches transaction rows */
     var flare = document.querySelector('#chronology [data-act="flare"][data-prog="PROG-IA"][data-fy="2026"]');
     if (flare) flare.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
@@ -1697,6 +1797,7 @@ window.__SELFTEST__ = function(){
     ids.forEach(function(id){ var e = document.getElementById(id); if (e && snapVals[id] != null) e.value = snapVals[id]; });
     document.getElementById("mDollars").checked = snapChk.mDollars;
     document.getElementById("mCount").checked = snapChk.mCount;
+    document.getElementById("navAnnounce").textContent = "";
     APP.renderAll();
   } catch (e) {
     T.push({ name: "state restored after self-tests", pass: false, detail: String(e).slice(0, 200) });
