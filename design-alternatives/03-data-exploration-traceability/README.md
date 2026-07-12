@@ -15,20 +15,22 @@ Program-integrity questions are not a sequence of screens; they are one continuo
 1. **Enter through a flag, a preset, or search.** First run opens five preset investigations ("Why is IA flagged?", "What's in the exception queue?", "Trace HSGP's +21%", "Show unmapped/dirty records", "Which code sits under two funds?"). Each applies a filter+grouping state and seeds the trail. The universal search (`/`) accepts any code, program, sub-program, DR number, or rule.
 2. **Slice and compare.** Group by program / sub-program / disaster number / disbursement type / TAFS / financial code / fiscal year; compare any two fiscal years on both measures (disbursement dollars and transaction count) with per-row deltas and breach highlighting at the live-configurable threshold (percent, direction, measures).
 3. **Walk the lineage.** Select anything and the inspector shows its place in the crosswalk: total → sub-program → code → transaction, including code anatomy (FUND-SEGMENT-EVENT), the governing rule with confidence and status, per-FY sparkline, exemplar transactions, and the 55501 two-parent demonstration where applicable.
-4. **Decide, with reasons.** Exception codes carry a similarity suggestion (simulated AI); accepting or reassigning requires a written reason and lands in the session change log. The PRA (Preliminary Risk Assessment) section auto-populates 8 of 10 questions with evidence bindings; overrides and human answers require reasons; sign-off is blocked until every question has a human-accountable value.
+4. **Decide, with reasons.** Exception codes carry a similarity suggestion (simulated AI); accepting or reassigning requires a written reason and lands in the session change log. The PRA (Preliminary Risk Assessment) section is a read/evidence surface: it shows the drafted answers (8 of 10 auto-populated) with their evidence bindings and trace-to-records lineage, then hands findings to the assessment owner via a simulated "Send findings" action that requires a hand-off note — overrides and sign-off belong to the assessment owner's workflow, not this instrument. PRA evidence can be pinned to the pinboard like any other finding.
 5. **Prove it.** Pin views, code cards, and observations; export the pinboard as an evidence annex (simulated, watermarked SYNTHETIC-DEMO) that includes the full investigation trail.
 
 ## Navigation & interaction model
 
 Search-first, no page metaphor. Every view is a state of ONE workbench — filters + grouping + selection. There is no "back"; there is the investigation trail, an append-only breadcrumb of every pivot step. Clicking any step restores that exact state and appends a "return" step, so the audit record of the inquiry is never destroyed. Keyboard: `/` focuses search, `↑`/`↓` move through result rows, `Enter` opens the inspector, `Escape` closes overlays.
 
+Accessibility posture: a skip link jumps past the chrome to the workbench; a polite `aria-live` region announces every scope change ("Step N: … — X rows") and every inspection; all table headers carry `scope`; every expandable control (lineage tree summaries, record-grid toggle, pinboard, search combobox, resolution/hand-off disclosures) exposes `aria-expanded`; decorative glyphs are hidden from accessible names so controls read cleanly ("Pin program card", "Drill into Individual Assistance"); validation errors use `role=alert`.
+
 ## Major functionality
 
 - **Facet bar:** fiscal year, program, sub-program, disaster/non-disaster, disaster number (DR), TAFS, disbursement type, mapped/exception, raw-code cleanliness (clean / 88 format-dirty / 23 legacy-alias) — plus an always-visible exception-queue chip with live count.
 - **Pivot canvas:** seven grouping dimensions; dual measures side by side; FY-pair comparison with Δ% per measure per row; breach cells highlighted; count-only breaches get a distinct amber "# only — count catch" badge; totals row; share-of-scope distribution bars in single-FY mode.
 - **Trigger controls:** threshold slider (5–50%), direction (either/increase/decrease), measure toggles — all recompute the canvas and inspector live and are recorded on the trail.
-- **Inspector pane:** program cards (trigger status with count-only callout, per-FY trend, lineage tree, PRA), sub-program cards, code cards (anatomy, rule + confidence + inferred/SME-confirmed status, sparkline, exemplars, 55501 trap, exception resolution), transaction cards (raw→canonical cleansing explanation), rule cards, and group-slice cards (DR/type/TAFS/FY).
-- **Governance:** exception resolution (accept suggestion / reassign) with mandatory reason; PRA override and human input with mandatory reason; PRA sign-off gate; session change log.
+- **Inspector pane:** program cards (trigger status with count-only callout, per-FY trend, lineage tree, PRA evidence), sub-program cards, code cards (anatomy, rule + confidence + inferred/SME-confirmed status, sparkline, exemplars, 55501 trap, exception resolution), transaction cards (raw→canonical cleansing explanation), rule cards, and group-slice cards (DR/type/TAFS/FY).
+- **Governance:** exception resolution (accept suggestion / reassign) with mandatory reason; PRA read/evidence surface with a simulated hand-off to the assessment owner (note required, logged); session change log.
 - **Pinboard + annex export:** auto-captioned view pins, card pins with computed details, analyst observations (note required); export renders the watermarked annex with trail, pins, and decisions.
 - **Transparency:** provenance modal (ingestion contract, cleansing census, holdout-grading facts, synthetic-data disclosure), assumptions modal (plain-language open questions), honest footer with acronym glossary.
 
@@ -36,7 +38,7 @@ Search-first, no page metaphor. Every view is a state of ONE workbench — filte
 
 1. **Code→program mapping with confidence + human confirmation** — code cards show rule, confidence, and status; six exception codes carry sub-0.85 similarity suggestions and a human resolution workflow.
 2. **Dual-measure YoY trigger, live-configurable** — compare mode + trigger bar; IA FY2026 (+8.0% dollars, +37.5% count) surfaces as a distinct count-only breach in the flag board and as a narrative callout in its inspector card.
-3. **PRA auto-population with evidence + override** — 8/10 auto with source bindings and trace-to-records links; Q9/Q10 human-only; overrides need reasons; sign-off enforced.
+3. **PRA auto-population with evidence + human override** — 8/10 answers drafted with source bindings and trace-to-records links; Q9/Q10 explicitly held for program-office input. Override and sign-off are deliberately located with the assessment owner (nothing finalizes in this workbench); the analyst's reason-gated contribution is the hand-off note, recorded in the session log.
 4. **Lineage aggregate→transaction** — the inspector's whole purpose; also drill buttons and the record grid with raw→canonical code per row.
 5. **FY-extract ingestion contract** — provenance modal describes file-in/file-out and the cleansing census; cleanliness is a first-class facet.
 6. **Assumptions/SME transparency** — dedicated plain-language assumptions modal; inferred rules labeled in place.
@@ -70,7 +72,7 @@ The PoC walked presenters through four fixed pipeline screens (ingestion → map
 ## Simulated capabilities (explicit list)
 
 - Mapping suggestions on exception codes and the three "inferred" crosswalk rules — precomputed, deterministic, labeled "simulated AI"; they propose, never own a number.
-- Exception resolution, PRA overrides/answers, and sign-off — session-only simulated workflow; nothing persists (in-memory state only).
+- Exception resolution and the PRA hand-off to the assessment owner — session-only simulated workflow; nothing persists (in-memory state only).
 - The evidence annex export — rendered in place, watermarked SYNTHETIC-DEMO; no file is written or transmitted.
 - The ingestion contract / WebFMIS connection described in the provenance panel — illustrative framing of the file-in/file-out contract.
 - The PRA instrument wording — illustrative placeholder, not FEMA's real form.
@@ -80,4 +82,4 @@ The PoC walked presenters through four fixed pipeline screens (ingestion → map
 
 - Edit `index.template.html` (never the generated file). It contains `window.FEMA_DATA = /*__FEMA_DATA__*/null;` exactly once.
 - Build: `python "C:\dev\fema-id\design-alternatives\_qa\inject.py" index.template.html index.html`
-- Test: `node "C:\dev\fema-id\design-alternatives\_qa\test_harness.mjs" index.html` — currently **20/20 checks pass**, including the embedded `window.__SELFTEST__` suite (payload census, planted FY2026 totals ±$1, dual-measure trigger incl. IA count-only, navigation, drill-to-transaction, trail replay, reason-capture enforcement, watermarked export, cleansing census, 55501 two-fund proof). Self-tests are side-effect-safe (full state snapshot/restore).
+- Test: `node "C:\dev\fema-id\design-alternatives\_qa\test_harness.mjs" index.html` — currently **21/21 checks pass**, including the embedded `window.__SELFTEST__` suite (payload census, planted FY2026 totals ±$1, dual-measure trigger incl. IA count-only, navigation, drill-to-transaction, trail replay, reason-capture enforcement on exception resolution and PRA hand-off, watermarked export, cleansing census, 55501 two-fund proof, and an accessibility posture check: live region, skip link, `th scope`, `aria-expanded`). Self-tests are side-effect-safe (full state snapshot/restore).

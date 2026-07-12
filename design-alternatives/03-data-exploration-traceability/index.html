@@ -30,6 +30,9 @@ html{font-size:15px}
 body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.45}
 button{font:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.skiplink{position:absolute;left:-9999px;top:0;z-index:300;background:var(--navy);color:#fff;padding:9px 16px;border-radius:0 0 6px 0;font-size:.9rem;text-decoration:underline}
+.skiplink:focus{left:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .num,.code{font-family:var(--mono);font-size:.93em}
 .right{text-align:right}
 .muted{color:var(--ink-3)}
@@ -251,6 +254,10 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px
 </head>
 <body>
 
+<!-- Skip link + polite live region (screen-reader announcements for scope/trail changes) -->
+<a class="skiplink" href="#workbench">Skip to workbench content</a>
+<div id="live" class="sr-only" role="status" aria-live="polite"></div>
+
 <!-- ==================== TOP BAR: brand, universal search, global panels ==================== -->
 <header class="topbar">
   <div class="brand">
@@ -259,12 +266,12 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px
   </div>
   <div class="searchwrap">
     <span class="mag" aria-hidden="true">⌕</span>
-    <input id="q" type="text" autocomplete="off" placeholder="Search any code, program, sub-program, DR number, rule…  ( / )" aria-label="Universal search across codes, programs, sub-programs, disaster numbers, and rules">
+    <input id="q" type="text" autocomplete="off" placeholder="Search any code, program, sub-program, DR number, rule…  ( / )" aria-label="Universal search across codes, programs, sub-programs, disaster numbers, and rules" role="combobox" aria-expanded="false" aria-controls="qres" aria-autocomplete="list">
     <div id="qres" class="searchres" role="listbox" aria-label="Search results"></div>
   </div>
   <div class="topbtns">
-    <button data-action="open-presets" title="Preset investigations">▶ Presets</button>
-    <button data-action="open-pins" id="btn-pins" title="Pinboard: pinned evidence">📌 Pinboard <span class="num" id="pincount">0</span></button>
+    <button data-action="open-presets" title="Preset investigations" aria-label="Preset investigations"><span aria-hidden="true">▶</span> Presets</button>
+    <button data-action="open-pins" id="btn-pins" title="Pinboard: pinned evidence" aria-label="Open pinboard" aria-expanded="false" aria-controls="pindrawer"><span aria-hidden="true">📌</span> Pinboard <span class="num" id="pincount">0</span></button>
     <button data-action="open-log">Session log</button>
     <button data-action="open-assumptions">Assumptions</button>
     <button data-action="open-provenance">Provenance</button>
@@ -293,9 +300,9 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px
   <div class="facet"><label for="f-clean">Raw-code cleanliness</label>
     <select id="f-clean" data-facet="clean"></select></div>
   <button class="chip exc" data-action="chip-ex" aria-pressed="false" title="Codes awaiting mapping decision (confidence below 0.85 routes here)">
-    ⚠ Exception queue <span class="cnt" id="exc-count">6</span></button>
+    <span aria-hidden="true">⚠</span> Exception queue <span class="cnt" id="exc-count">6</span></button>
   <div class="chipbar" id="chipbar" aria-label="Active filters"></div>
-  <button class="chip" data-action="clear-filters" title="Reset all filters">✕ Clear filters</button>
+  <button class="chip" data-action="clear-filters" title="Reset all filters" aria-label="Clear all filters"><span aria-hidden="true">✕</span> Clear filters</button>
 </div>
 
 <!-- ==================== TRIGGER / COMPARE BAR ==================== -->
@@ -331,7 +338,7 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px
 <nav class="trail" id="trail" aria-label="Investigation trail — every pivot step is recorded; click a step to return to it"></nav>
 
 <!-- ==================== WORKBENCH ==================== -->
-<main class="work">
+<main class="work" id="workbench" tabindex="-1">
   <section class="canvas" aria-label="Pivot canvas">
     <div class="canvas-head">
       <div class="gbgroup" role="group" aria-label="Group results by">
@@ -345,8 +352,8 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px
         <button data-action="gb" data-gb="fy" aria-pressed="false">Fiscal year</button>
       </div>
       <div class="canvas-actions">
-        <button class="abtn" data-action="rec-toggle" id="rec-btn">☰ Records</button>
-        <button class="abtn pin" data-action="pin-view" title="Pin this view to the evidence pinboard">📌 Pin view</button>
+        <button class="abtn" data-action="rec-toggle" id="rec-btn" aria-label="Toggle record grid" aria-expanded="false" aria-controls="records"><span aria-hidden="true">☰</span> <span id="rec-btn-label">Records</span></button>
+        <button class="abtn pin" data-action="pin-view" title="Pin this view to the evidence pinboard" aria-label="Pin this view to the evidence pinboard"><span aria-hidden="true">📌</span> Pin view</button>
       </div>
     </div>
     <p class="scopeline" id="scopeline"></p>
@@ -374,7 +381,7 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px
 <!-- ==================== PINBOARD DRAWER ==================== -->
 <aside class="drawer" id="pindrawer" aria-label="Pinboard — pinned evidence" aria-hidden="true">
   <header>
-    <h2>📌 PINBOARD — evidence annex</h2>
+    <h2><span aria-hidden="true">📌</span> PINBOARD — evidence annex</h2>
     <div>
       <button class="toggle" data-action="export-annex" style="background:#e8c34f;color:#132430;border-color:#e8c34f;font-weight:700">Export annex (simulated)</button>
       <button class="toggle" data-action="close-pins" aria-label="Close pinboard">✕</button>
@@ -464,7 +471,7 @@ var state = {
   sel: { type:"program", id:"PROG-IA" },
   recordsOpen: false,
   rowIdx: -1,
-  ui: { resolveMode:null, praOpen:null, praMode:null, err:null, signErr:null }
+  ui: { resolveMode:null, handoffOpen:false, err:null }
 };
 /* Session workflow artifacts (all clearly simulated) */
 var session = {
@@ -472,9 +479,7 @@ var session = {
   trailCur: -1,
   pins: [],             // pinned evidence
   resolved: {},         // code -> {sub_program_id, action, reason, when}
-  praOverrides: {},     // "PROG|Q" -> {value, reason, when}
-  praHuman: {},         // "PROG|Q" -> {value, rationale, when}
-  praSignoff: {},       // program -> {when}
+  handoffs: {},         // program -> {note, when} — PRA findings sent to assessment owner (simulated)
   log: []               // session change log (simulated workflow)
 };
 
@@ -508,6 +513,10 @@ function plain(s){
     .replace(/\s*\(illustrative placeholder[^)]*\)/ig,"")
     .replace(/,?\s*(REQ|ASSUMP|SME|SRC)-\d+/g,"")
     .replace(/\(\s*\)/g,"").trim();
+}
+/* Strip decorative glyphs so accessible names stay clean */
+function stripG(s){
+  return String(s).replace(/[⚠☰▸↩✕⌕▶\u{1F4CC}]/gu,"").replace(/\s+/g," ").trim();
 }
 
 function filteredTxns(opts){
@@ -635,8 +644,8 @@ function restoreTrail(idx){
   var s = JSON.parse(JSON.stringify(step.snap));
   state.filters=s.filters; state.groupBy=s.groupBy; state.compare=s.compare;
   state.trigger=s.trigger; state.sel=s.sel; state.recordsOpen=s.recordsOpen;
-  state.rowIdx=-1; state.ui={resolveMode:null,praOpen:null,praMode:null,err:null,signErr:null};
-  pushTrail("↩ return to #"+step.n+" · "+step.label);
+  state.rowIdx=-1; state.ui={resolveMode:null,handoffOpen:false,err:null};
+  pushTrail("Return to #"+step.n+" · "+step.label);
   renderAll();
 }
 function commit(label){ // state already mutated by caller
@@ -668,6 +677,9 @@ function describeScope(){
    SECTION 6 — RENDERERS
    ============================================================ */
 var $=function(id){ return document.getElementById(id); };
+
+/* Screen-reader announcement (polite live region) */
+function announce(msg){ var el=$("live"); if(el) el.textContent=msg; }
 
 function opt(v,label,sel){ return "<option value=\""+esc(v)+"\""+(String(sel)===String(v)?" selected":"")+">"+esc(label)+"</option>"; }
 
@@ -715,18 +727,20 @@ function renderControls(){
   document.querySelectorAll("[data-action=gb]").forEach(function(b){
     b.setAttribute("aria-pressed",String(b.getAttribute("data-gb")===state.groupBy));
   });
-  $("rec-btn").textContent = state.recordsOpen ? "☰ Hide records" : "☰ Records";
+  $("rec-btn-label").textContent = state.recordsOpen ? "Hide records" : "Records";
+  $("rec-btn").setAttribute("aria-expanded",String(state.recordsOpen));
+  $("btn-pins").setAttribute("aria-expanded",String($("pindrawer").classList.contains("open")));
   $("pincount").textContent=String(session.pins.length);
   // active-filter chips
   var chips=[];
-  if(f.code) chips.push("<span class=\"fchip\">Code "+esc(f.code)+" <button data-action=\"clear-code\" aria-label=\"Remove code filter\">✕</button></span>");
+  if(f.code) chips.push("<span class=\"fchip\">Code "+esc(f.code)+" <button data-action=\"clear-code\" aria-label=\"Remove code filter\"><span aria-hidden=true>✕</span></button></span>");
   $("chipbar").innerHTML=chips.join("");
 }
 
 function renderTrail(){
   var h="<span class=\"tlabel\">Investigation trail</span>";
   session.trail.forEach(function(s,i){
-    h+="<button class=\"tstep"+(i===session.trailCur?" cur":"")+"\" data-action=\"trail-go\" data-i=\""+i+"\" title=\"Return to this step\"><span class=\"n\">"+s.n+"</span>"+esc(s.label)+"</button>";
+    h+="<button class=\"tstep"+(i===session.trailCur?" cur":"")+"\" data-action=\"trail-go\" data-i=\""+i+"\" title=\"Return to this step\" aria-label=\"Return to step "+s.n+": "+esc(stripG(s.label))+"\"><span class=\"n\" aria-hidden=\"true\">"+s.n+"</span>"+esc(s.label)+"</button>";
   });
   $("trail").innerHTML=h;
   // keep latest step visible
@@ -742,10 +756,10 @@ function renderPivot(){
   var head, body="", rows;
   if(cmp){
     rows = compareRows(txns,dim).sort(function(a,b){ return b.bTotal-a.bTotal; });
-    head="<tr><th>"+esc(d.hdr)+"</th>"
-      +"<th class=right>FY"+state.compare.a+" disb.</th><th class=right>FY"+state.compare.b+" disb.</th><th class=right>Δ $</th>"
-      +"<th class=right>FY"+state.compare.a+" txns</th><th class=right>FY"+state.compare.b+" txns</th><th class=right>Δ #</th>"
-      +"<th>Trigger</th><th></th></tr>";
+    head="<tr><th scope=col>"+esc(d.hdr)+"</th>"
+      +"<th scope=col class=right>FY"+state.compare.a+" disb.</th><th scope=col class=right>FY"+state.compare.b+" disb.</th><th scope=col class=right>Δ $</th>"
+      +"<th scope=col class=right>FY"+state.compare.a+" txns</th><th scope=col class=right>FY"+state.compare.b+" txns</th><th scope=col class=right>Δ #</th>"
+      +"<th scope=col>Trigger</th><th scope=col><span class=sr-only>Actions</span></th></tr>";
     var tA=0,tB=0,cA=0,cB=0;
     rows.forEach(function(r,i){
       tA+=r.aTotal;tB+=r.bTotal;cA+=r.aCount;cB+=r.bCount;
@@ -754,14 +768,14 @@ function renderPivot(){
       else if(r.dBreach) flags="<span class=\"badge dollar\">$ breach</span>";
       else if(r.cBreach) flags="<span class=\"badge conly\"># only — count catch</span>";
       else flags="<span class=\"badge none\">within</span>";
-      body+="<tr data-row=\""+i+"\" data-t=\""+esc(d.selType)+"\" data-key=\""+esc(r.key)+"\" tabindex=\"0\" aria-label=\""+esc(r.name)+"\">"
+      body+="<tr data-row=\""+i+"\" data-t=\""+esc(d.selType)+"\" data-key=\""+esc(r.key)+"\" tabindex=\"0\" aria-label=\""+esc(stripG(r.name))+"\">"
         +"<td>"+esc(r.name)+"</td>"
         +"<td class=\"right num\">"+fmt$(r.aTotal)+"</td><td class=\"right num\">"+fmt$(r.bTotal)+"</td>"
         +"<td class=\"right delta "+(r.dPct>0?"up":(r.dPct<0?"dn":""))+(r.dBreach?" breach":"")+"\">"+fmtPct(r.dPct)+"</td>"
         +"<td class=\"right num\">"+fmtN(r.aCount)+"</td><td class=\"right num\">"+fmtN(r.bCount)+"</td>"
         +"<td class=\"right delta "+(r.cPct>0?"up":(r.cPct<0?"dn":""))+(r.cBreach?" breach":"")+"\">"+fmtPct(r.cPct)+"</td>"
         +"<td><span class=flagcell>"+flags+"</span></td>"
-        +"<td>"+(d.drill?"<button class=drillbtn data-action=drill data-dim=\""+dim+"\" data-key=\""+esc(r.key)+"\">Drill ▸</button>":"")+"</td></tr>";
+        +"<td>"+(d.drill?"<button class=drillbtn data-action=drill data-dim=\""+dim+"\" data-key=\""+esc(r.key)+"\" aria-label=\"Drill into "+esc(stripG(r.name))+"\">Drill <span aria-hidden=true>▸</span></button>":"")+"</td></tr>";
     });
     body+="<tr class=total><td>Total in scope</td><td class=\"right num\">"+fmt$(tA)+"</td><td class=\"right num\">"+fmt$(tB)+"</td>"
       +"<td class=\"right delta\">"+fmtPct(pctChange(tA,tB))+"</td><td class=\"right num\">"+fmtN(cA)+"</td><td class=\"right num\">"+fmtN(cB)+"</td>"
@@ -772,14 +786,14 @@ function renderPivot(){
     rows.sort(dim==="fy" ? function(a,b){return a.key<b.key?-1:1;} : function(a,b){return b.total-a.total;});
     var tot=rows.reduce(function(s,r){return s+r.total;},0)||1;
     var cnt=rows.reduce(function(s,r){return s+r.count;},0);
-    head="<tr><th>"+esc(d.hdr)+"</th><th class=right>Disbursements</th><th class=right>Txns</th><th class=right>Share</th><th>Distribution</th><th></th></tr>";
+    head="<tr><th scope=col>"+esc(d.hdr)+"</th><th scope=col class=right>Disbursements</th><th scope=col class=right>Txns</th><th scope=col class=right>Share</th><th scope=col>Distribution</th><th scope=col><span class=sr-only>Actions</span></th></tr>";
     rows.forEach(function(r,i){
       var share=r.total/tot*100;
-      body+="<tr data-row=\""+i+"\" data-t=\""+esc(d.selType)+"\" data-key=\""+esc(r.key)+"\" tabindex=\"0\" aria-label=\""+esc(r.name)+"\">"
+      body+="<tr data-row=\""+i+"\" data-t=\""+esc(d.selType)+"\" data-key=\""+esc(r.key)+"\" tabindex=\"0\" aria-label=\""+esc(stripG(r.name))+"\">"
         +"<td>"+esc(r.name)+"</td><td class=\"right num\">"+fmt$(r.total)+"</td><td class=\"right num\">"+fmtN(r.count)+"</td>"
         +"<td class=\"right num\">"+share.toFixed(1)+"%</td>"
         +"<td><span class=sharebar aria-hidden=true><i style=\"width:"+Math.max(1,Math.min(100,share)).toFixed(1)+"%\"></i></span></td>"
-        +"<td>"+(d.drill?"<button class=drillbtn data-action=drill data-dim=\""+dim+"\" data-key=\""+esc(r.key)+"\">Drill ▸</button>":"")+"</td></tr>";
+        +"<td>"+(d.drill?"<button class=drillbtn data-action=drill data-dim=\""+dim+"\" data-key=\""+esc(r.key)+"\" aria-label=\"Drill into "+esc(stripG(r.name))+"\">Drill <span aria-hidden=true>▸</span></button>":"")+"</td></tr>";
     });
     body+="<tr class=total><td>Total in scope</td><td class=\"right num\">"+fmt$(rows.reduce(function(s,r){return s+r.total;},0))+"</td><td class=\"right num\">"+fmtN(cnt)+"</td><td class=\"right num\">100%</td><td></td><td></td></tr>";
   }
@@ -789,6 +803,10 @@ function renderPivot(){
   lastRows = rows.map(function(r){ return {t:d.selType,key:r.key}; });
   var n=filteredTxns({}).length;
   $("scopeline").textContent = describeScope()+" · "+fmtN(n)+" record"+(n===1?"":"s")+" in FY scope";
+  // announce the new state to assistive tech (scope + latest trail step)
+  var lastStep=session.trail[session.trail.length-1];
+  announce((lastStep?("Step "+lastStep.n+": "+stripG(lastStep.label)+". "):"")
+    +stripG(describeScope())+" — "+rows.length+" row"+(rows.length===1?"":"s")+".");
   highlightRow();
 }
 
@@ -806,10 +824,10 @@ function renderRecords(){
   var cap=150, show=txns.slice(0,cap);
   var h="<h3>Record grid — "+fmtN(txns.length)+" transaction"+(txns.length===1?"":"s")+" in scope"
       +(txns.length>cap?" (showing first "+cap+")":"")+" <span class=\"badge sim\">synthetic ledger</span></h3>";
-  h+="<div class=tblwrap><table class=rec aria-label=\"Transaction records\"><thead><tr><th>Txn ID</th><th>Date</th><th>FY</th><th>Raw code → canonical</th><th>Clean</th><th>DR</th><th>Program</th><th class=right>Amount</th><th>Disbursement type</th></tr></thead><tbody>";
+  h+="<div class=tblwrap><table class=rec aria-label=\"Transaction records\"><thead><tr><th scope=col>Txn ID</th><th scope=col>Date</th><th scope=col>FY</th><th scope=col>Raw code → canonical</th><th scope=col>Clean</th><th scope=col>DR</th><th scope=col>Program</th><th scope=col class=right>Amount</th><th scope=col>Disbursement type</th></tr></thead><tbody>";
   show.forEach(function(t){
     var pid=progOf(t.code);
-    h+="<tr data-t=txn data-key=\""+esc(t.txn_id)+"\" tabindex=0>"
+    h+="<tr data-t=txn data-key=\""+esc(t.txn_id)+"\" tabindex=0 aria-label=\"Transaction "+esc(t.txn_id)+"\">"
       +"<td>"+esc(t.txn_id)+"</td><td>"+esc(t.date)+"</td><td>"+t.fiscal_year+"</td>"
       +"<td class=rawfix>"+(t.clean==="clean"?"<b>"+esc(t.code)+"</b>":esc(t.raw_code)+" → <b>"+esc(t.code)+"</b>")+"</td>"
       +"<td><span class=\"cln "+t.clean+"\">"+t.clean+"</span></td>"
@@ -853,7 +871,7 @@ function chain(parts){
 }
 
 function fyTable(series){
-  var h="<table class=minitbl><thead><tr><th>FY</th><th style=\"text-align:right\">Disbursements</th><th style=\"text-align:right\">Txns</th><th style=\"text-align:right\">Δ $ YoY</th></tr></thead><tbody>";
+  var h="<table class=minitbl><thead><tr><th scope=col>FY</th><th scope=col style=\"text-align:right\">Disbursements</th><th scope=col style=\"text-align:right\">Txns</th><th scope=col style=\"text-align:right\">Δ $ YoY</th></tr></thead><tbody>";
   series.forEach(function(r,i){
     var p=i>0?pctChange(series[i-1].total,r.total):null;
     h+="<tr><td>FY"+r.fy+"</td><td style=\"text-align:right\">"+fmt$(r.total)+"</td><td style=\"text-align:right\">"+fmtN(r.count)+"</td><td style=\"text-align:right\">"+fmtPct(p)+"</td></tr>";
@@ -872,7 +890,7 @@ function triggerBadges(tr){
 
 function renderInspector(){
   var s=state.sel, h="";
-  var pinBtn=function(t,id,label){ return "<button class=\"abtn pin\" data-action=pin-card data-t=\""+esc(t)+"\" data-id=\""+esc(id)+"\">📌 Pin "+esc(label)+"</button>"; };
+  var pinBtn=function(t,id,label){ return "<button class=\"abtn pin\" data-action=pin-card data-t=\""+esc(t)+"\" data-id=\""+esc(id)+"\" aria-label=\"Pin "+esc(label)+" to the evidence pinboard\"><span aria-hidden=true>📌</span> Pin "+esc(label)+"</button>"; };
   if(!s){ h="<div class=icard><p class=muted>Select any row in the pivot, a search result, or a preset investigation. The inspector always shows lineage for the selection: total → sub-program → code → transaction.</p></div>"; }
   else if(s.type==="program") h=inspProgram(s.id,pinBtn);
   else if(s.type==="sub_program") h=inspSub(s.id,pinBtn);
@@ -880,7 +898,8 @@ function renderInspector(){
   else if(s.type==="txn") h=inspTxn(s.id);
   else if(s.type==="rule") h=inspRule(s.id);
   else h=inspGroup(s,pinBtn);
-  $("inspector").innerHTML="<h2>Inspector — lineage <span class=\"badge sim\">synthetic data</span></h2>"+h;
+  // heading kept separate from the status badge so accessible names don't concatenate
+  $("inspector").innerHTML="<h2>Inspector — lineage</h2><p class=\"small\" style=\"margin:-6px 0 10px\"><span class=\"badge sim\">synthetic data</span></p>"+h;
 }
 
 function inspProgram(pid,pinBtn){
@@ -912,7 +931,7 @@ function inspProgram(pid,pinBtn){
     var ss=subSeries(sub.id).filter(function(r){return r.fy===b;})[0]||{total:0,count:0};
     var codes=(CODES_BY_SUB[sub.id]||[]).concat(
       Object.keys(session.resolved).filter(function(c){return session.resolved[c].sub_program_id===sub.id;}).map(function(c){return CODE[c];}));
-    h+="<details class=tree><summary><span>"+esc(sub.name)+"</span><span class=num>"+fmt$(ss.total)+" · "+fmtN(ss.count)+" txns</span></summary>";
+    h+="<details class=tree><summary aria-expanded=\"false\" aria-label=\"Expand "+esc(stripG(sub.name))+"\"><span>"+esc(sub.name)+"</span><span class=num>"+fmt$(ss.total)+" · "+fmtN(ss.count)+" txns</span></summary>";
     codes.forEach(function(c){
       var cs=codeSeries(c.code).filter(function(r){return r.fy===b;})[0]||{total:0,count:0};
       h+="<div class=leaf><button data-action=sel data-t=code data-id=\""+esc(c.code)+"\">"+esc(c.code)+"</button><span class=num>"+fmt$(cs.total)+" · "+fmtN(cs.count)+"</span></div>";
@@ -920,19 +939,21 @@ function inspProgram(pid,pinBtn){
     if(!codes.length) h+="<div class=leaf><span class=muted>No codes mapped</span></div>";
     h+="</details>";
   });
-  h+="<div class=row style=\"display:flex;gap:7px;margin-top:8px\"><button class=abtn data-action=view-records data-prog=\""+esc(pid)+"\">☰ View this program's records</button>"+pinBtn("program",pid,"program card")+"</div></section>";
+  h+="<div class=row style=\"display:flex;gap:7px;margin-top:8px\"><button class=abtn data-action=view-records data-prog=\""+esc(pid)+"\" aria-label=\"View this program's records\"><span aria-hidden=true>☰</span> View this program's records</button>"+pinBtn("program",pid,"program card")+"</div></section>";
   h+=praSection(pid);
   h+="</div>";
   return h;
 }
 
-/* ---------- PRA (Preliminary Risk Assessment) section — auto-populated, human-governed ---------- */
+/* ---------- PRA (Preliminary Risk Assessment) section ----------
+   A READ/EVIDENCE surface, not a form: the workbench drafts answers
+   and proves them (evidence binding + lineage). Overrides and
+   sign-off belong to the assessment owner's workflow; from here the
+   analyst sends findings across with a required hand-off note
+   (simulated), which is captured in the session change log. */
 function praAnswer(pid,qid){
-  var k=pid+"|"+qid;
-  if(session.praOverrides[k]) return {value:session.praOverrides[k].value, by:"human override", conf:null, reason:session.praOverrides[k].reason};
-  if(session.praHuman[k]) return {value:session.praHuman[k].value, by:"human (program office)", conf:null, reason:session.praHuman[k].rationale};
   var rr=D.risk_responses.filter(function(r){return r.program_id===pid && r.question_id===qid && r.fy===2026;})[0];
-  if(rr) return {value:rr.answer_value, by:rr.populated_by, conf:rr.confidence, reason:null};
+  if(rr) return {value:rr.answer_value, by:rr.populated_by, conf:rr.confidence};
   return null;
 }
 function fmtAns(qid,v){
@@ -943,42 +964,36 @@ function fmtAns(qid,v){
 }
 function praSection(pid){
   var fy=focusFy();
-  var h="<section><h4>Preliminary Risk Assessment (PRA) — FY2026 <span class=\"badge sim\">illustrative instrument · auto-population simulated</span></h4>";
-  if(fy!==2026) h+="<p class=\"small muted\">PRA responses exist for FY2026 in this demo; showing FY2026. \"Preliminary\" is the start of a lifecycle — a breach routes the program to a comprehensive assessment (required at least every 3 years regardless).</p>";
-  else h+="<p class=\"small muted\">~8 of 10 questions auto-populated from the ledger, each with its evidence source. Nothing finalizes without human sign-off; overrides require a reason. Question wording is an illustrative placeholder, not FEMA's real form.</p>";
-  var signed=session.praSignoff[pid];
-  h+= signed ? "<p><span class=\"badge ok\">Signed off by analyst (simulated) — "+esc(signed.when)+"</span></p>"
-             : "<p><span class=\"badge inf\">Draft — awaiting human sign-off</span></p>";
+  var h="<section><h4>Preliminary Risk Assessment (PRA) — FY2026 drafted evidence <span class=\"badge sim\">illustrative instrument · auto-population simulated</span></h4>";
+  h+="<p class=\"small muted\">The workbench drafts ~8 of 10 answers straight from the ledger and shows each answer's evidence binding — this is a read surface. Overrides and sign-off happen with the assessment owner in the assessment workflow; nothing finalizes here. Question wording is an illustrative placeholder, not FEMA's real form."
+    +(fy!==2026?" PRA responses exist for FY2026 in this demo; showing FY2026.":"")+"</p>";
+  var sent=session.handoffs[pid];
+  h+= sent ? "<p><span class=\"badge ok\">Findings sent to assessment owner (simulated) — "+esc(sent.when)+"</span></p>"
+           : "<p><span class=\"badge inf\">Draft — not yet handed off</span></p>";
   D.risk_questions.forEach(function(q){
-    var ans=praAnswer(pid,q.id), k=pid+"|"+q.id;
-    var over=!!session.praOverrides[k], human=!!session.praHuman[k];
-    h+="<div class=\"qrow"+(over?" overridden":"")+"\"><div class=qhead><span class=qid>"+esc(q.id)+"</span><span class=small>"+(q.auto_populatable?"<span class=\"badge sim\">auto</span>":"<span class=\"badge inf\">human-only</span>")+"</span></div>";
+    var ans=praAnswer(pid,q.id);
+    h+="<div class=qrow><div class=qhead><span class=qid>"+esc(q.id)+"</span><span class=small>"+(q.auto_populatable?"<span class=\"badge sim\">auto-drafted</span>":"<span class=\"badge inf\">program-office input</span>")+"</span></div>";
     h+="<div>"+esc(plain(q.text))+"</div>";
     if(ans && ans.value!==null && ans.value!==undefined){
       h+="<div class=ans>"+esc(fmtAns(q.id,ans.value))+"</div>";
-      h+="<div class=src>Populated by: "+esc(ans.by)+(ans.conf!==null&&ans.conf!==undefined?" · confidence "+ans.conf.toFixed(2):"")
-        +(over||human?"":" · source: "+esc(plain(q.source_binding)))
-        +(ans.reason?" · reason: “"+esc(ans.reason)+"”":"")+"</div>";
-      if(q.auto_populatable && !over) h+="<div class=src>Evidence: <button class=linkbtn data-action=trace-q data-prog=\""+esc(pid)+"\">trace to FY2026 records</button></div>";
-      h+="<div style=\"margin-top:4px\"><button class=linkbtn data-action=pra-open data-q=\""+esc(q.id)+"\" data-mode=override>Override…</button></div>";
+      h+="<div class=src>Drafted by: "+esc(ans.by)+(ans.conf!==null&&ans.conf!==undefined?" · confidence "+ans.conf.toFixed(2):"")
+        +" · evidence: "+esc(plain(q.source_binding))+"</div>";
+      if(q.auto_populatable) h+="<div class=src>Lineage: <button class=linkbtn data-action=trace-q data-prog=\""+esc(pid)+"\">trace this answer to FY2026 records</button></div>";
     } else {
-      h+="<div class=\"ans muted\">— awaiting program-office input</div>";
-      h+="<div style=\"margin-top:4px\"><button class=linkbtn data-action=pra-open data-q=\""+esc(q.id)+"\" data-mode=answer>Provide answer…</button></div>";
-    }
-    if(state.ui.praOpen===q.id){
-      var mode=state.ui.praMode;
-      h+="<div class=iform><label for=pra-val>"+(mode==="override"?"New value (human override)":"Answer (program-office input)")+"</label>"
-        +"<input type=text id=pra-val>"
-        +"<label for=pra-reason>"+(mode==="override"?"Reason for override (required — recorded in the session log)":"Rationale (required — recorded in the session log)")+"</label>"
-        +"<textarea id=pra-reason></textarea>"
-        +(state.ui.err?"<div class=err>"+esc(state.ui.err)+"</div>":"")
-        +"<div class=row><button class=sbtn data-action=pra-confirm data-q=\""+esc(q.id)+"\" data-prog=\""+esc(pid)+"\">Save "+(mode==="override"?"override":"answer")+"</button>"
-        +"<button class=gbtn data-action=pra-cancel>Cancel</button></div></div>";
+      h+="<div class=\"ans muted\">— awaiting program-office input (collected by the assessment owner, not in this workbench)</div>";
     }
     h+="</div>";
   });
-  h+="<div class=row style=\"display:flex;gap:7px;margin-top:8px\"><button class=\"abtn primary\" data-action=pra-sign data-prog=\""+esc(pid)+"\">Sign off PRA (simulated)</button></div>";
-  if(state.ui.signErr) h+="<div class=err>"+esc(state.ui.signErr)+"</div>";
+  h+="<div class=row style=\"display:flex;gap:7px;margin-top:8px;flex-wrap:wrap\">"
+    +"<button class=\"abtn primary\" data-action=handoff-open data-prog=\""+esc(pid)+"\" aria-expanded=\""+String(!!state.ui.handoffOpen)+"\" aria-controls=\"handoff-form\">Send findings to assessment owner… <span class=\"badge sim\">simulated</span></button>"
+    +"<button class=\"abtn pin\" data-action=pin-pra data-prog=\""+esc(pid)+"\" aria-label=\"Pin PRA evidence to the pinboard\"><span aria-hidden=true>📌</span> Pin PRA evidence</button></div>";
+  if(state.ui.handoffOpen){
+    h+="<div class=iform id=handoff-form><label for=handoff-note>Hand-off note (required — recorded in the session change log)</label>"
+      +"<textarea id=handoff-note placeholder=\"What should the assessment owner look at first, and why?\"></textarea>"
+      +(state.ui.err?"<div class=err role=alert>"+esc(state.ui.err)+"</div>":"")
+      +"<div class=row><button class=sbtn data-action=handoff-confirm data-prog=\""+esc(pid)+"\">Send (simulated)</button>"
+      +"<button class=gbtn data-action=handoff-cancel>Cancel</button></div></div>";
+  }
   h+="</section>";
   return h;
 }
@@ -998,7 +1013,7 @@ function inspSub(sid,pinBtn){
     var last=cs[cs.length-1];
     h+="<div class=leaf style=\"padding-left:0\"><button class=linkbtn data-action=sel data-t=code data-id=\""+esc(c.code)+"\"><span class=code>"+esc(c.code)+"</span></button><span class=num>"+fmt$(last.total)+" FY"+last.fy+"</span></div>";
   });
-  h+="</section><div style=\"display:flex;gap:7px\"><button class=abtn data-action=view-sub-records data-sub=\""+esc(sid)+"\">☰ View records</button>"+pinBtn("sub_program",sid,"sub-program card")+"</div></div>";
+  h+="</section><div style=\"display:flex;gap:7px\"><button class=abtn data-action=view-sub-records data-sub=\""+esc(sid)+"\" aria-label=\"View records for this sub-program\"><span aria-hidden=true>☰</span> View records</button>"+pinBtn("sub_program",sid,"sub-program card")+"</div></div>";
   return h;
 }
 
@@ -1055,12 +1070,12 @@ function inspCode(code,pinBtn){
   h+="<section><h4>Per-FY spend</h4>"+spark(series.map(function(r){return r.total;}))+fyTable(series)+"</section>";
   // exemplar transactions
   var ex=(TXNS_BY_CODE[code]||[]).slice(0,5);
-  h+="<section><h4>Exemplar transactions ("+fmtN((TXNS_BY_CODE[code]||[]).length)+" total)</h4><table class=minitbl><thead><tr><th>Txn</th><th>FY</th><th style=\"text-align:right\">Amount</th><th>Raw code</th></tr></thead><tbody>";
+  h+="<section><h4>Exemplar transactions ("+fmtN((TXNS_BY_CODE[code]||[]).length)+" total)</h4><table class=minitbl><thead><tr><th scope=col>Txn</th><th scope=col>FY</th><th scope=col style=\"text-align:right\">Amount</th><th scope=col>Raw code</th></tr></thead><tbody>";
   ex.forEach(function(t){
     h+="<tr><td><button class=linkbtn data-action=sel data-t=txn data-id=\""+esc(t.txn_id)+"\">"+esc(t.txn_id)+"</button></td><td>"+t.fiscal_year+"</td><td style=\"text-align:right\">"+fmt$c(t.amount)+"</td><td>"+esc(t.raw_code)+(t.clean!=="clean"?" <span class=\"cln "+t.clean+"\">"+t.clean+"</span>":"")+"</td></tr>";
   });
   h+="</tbody></table>";
-  h+="<div style=\"display:flex;gap:7px;margin-top:8px\"><button class=abtn data-action=view-code-records data-code=\""+esc(code)+"\">☰ All records for this code</button>"+pinBtn("code",code,"code card")+"</div></section></div>";
+  h+="<div style=\"display:flex;gap:7px;margin-top:8px\"><button class=abtn data-action=view-code-records data-code=\""+esc(code)+"\" aria-label=\"View all records for this code\"><span aria-hidden=true>☰</span> All records for this code</button>"+pinBtn("code",code,"code card")+"</div></section></div>";
   return h;
 }
 
@@ -1078,11 +1093,11 @@ function renderResolveForm(code,sug){
       h+="<p class=small>Accept suggestion: <b>"+esc(SUB[sug.sub_program_id].name)+"</b> ("+esc(PROG[sug.program_id].name)+")</p>";
     }
     h+="<label for=res-reason>Reason (required — this decision is recorded in the session change log)</label><textarea id=res-reason></textarea>"
-      +(state.ui.err?"<div class=err>"+esc(state.ui.err)+"</div>":"")
+      +(state.ui.err?"<div class=err role=alert>"+esc(state.ui.err)+"</div>":"")
       +"<div class=row><button class=sbtn data-action=resolve-confirm data-code=\""+esc(code)+"\" data-mode=\""+esc(mode)+"\">Confirm decision</button>"
       +"<button class=gbtn data-action=resolve-cancel>Cancel</button></div></div>";
   } else {
-    h+="<div style=\"display:flex;gap:7px;margin-top:6px\"><button class=sbtn data-action=resolve-open data-mode=accept>Accept suggestion…</button><button class=gbtn data-action=resolve-open data-mode=reassign>Reassign…</button></div>";
+    h+="<div style=\"display:flex;gap:7px;margin-top:6px\"><button class=sbtn data-action=resolve-open data-mode=accept aria-expanded=\"false\">Accept suggestion…</button><button class=gbtn data-action=resolve-open data-mode=reassign aria-expanded=\"false\">Reassign…</button></div>";
   }
   return h;
 }
@@ -1190,19 +1205,23 @@ D.financial_codes.forEach(function(c){
 D.disaster_events.forEach(function(e){ SEARCH_IX.push({t:"dr",id:"DR-"+e.dr,label:"DR-"+e.dr+" — "+e.title+" ("+e.state+")",kw:("dr-"+e.dr+" "+e.dr+" "+e.title+" "+e.state+" "+e.incident_type).toLowerCase()}); });
 D.mapping_rules.forEach(function(r){ SEARCH_IX.push({t:"rule",id:r.rule_id,label:r.rule_id+" — "+plain(r.expression),kw:(r.rule_id+" "+r.rule_type+" "+r.expression).toLowerCase()}); });
 
+function setSearchOpen(open){
+  $("qres").classList.toggle("open",open);
+  $("q").setAttribute("aria-expanded",String(open));
+}
 function runSearch(qs){
   var box=$("qres");
   qs=(qs||"").trim().toLowerCase();
-  if(qs.length<2){ box.classList.remove("open"); box.innerHTML=""; return; }
+  if(qs.length<2){ setSearchOpen(false); box.innerHTML=""; return; }
   var hits=SEARCH_IX.filter(function(e){ return e.kw.indexOf(qs)>=0; }).slice(0,9);
-  if(!hits.length){ box.innerHTML="<button disabled class=muted>No matches for “"+esc(qs)+"”</button>"; box.classList.add("open"); return; }
+  if(!hits.length){ box.innerHTML="<button disabled class=muted>No matches for “"+esc(qs)+"”</button>"; setSearchOpen(true); return; }
   box.innerHTML=hits.map(function(e){
-    return "<button data-action=search-pick data-t=\""+esc(e.t)+"\" data-id=\""+esc(e.id)+"\" role=option><span class=stype>"+esc(e.t.replace("_"," "))+"</span> "+esc(e.label)+"</button>";
+    return "<button data-action=search-pick data-t=\""+esc(e.t)+"\" data-id=\""+esc(e.id)+"\" role=option aria-label=\""+esc(stripG(e.t.replace("_"," ")+" "+e.label))+"\"><span class=stype>"+esc(e.t.replace("_"," "))+"</span> "+esc(e.label)+"</button>";
   }).join("");
-  box.classList.add("open");
+  setSearchOpen(true);
 }
 function searchPick(t,id){
-  $("qres").classList.remove("open"); $("q").value="";
+  setSearchOpen(false); $("q").value="";
   var f=state.filters;
   if(t==="program"){ f.program=id; f.subProgram="all"; state.sel={type:"program",id:id}; commit("Search → "+(PROG[id]?PROG[id].name:id)); }
   else if(t==="sub_program"){ var s=SUB[id]; f.program=s?s.program_id:"all"; f.subProgram=id; state.sel={type:"sub_program",id:id}; commit("Search → "+(s?s.name:id)); }
@@ -1257,7 +1276,7 @@ var PRESETS=[
 ];
 function resetFilters(){
   state.filters={fy:"all",program:"all",subProgram:"all",disaster:"all",dr:"all",tafs:"all",dtype:"all",mapStatus:"all",clean:"all",code:null};
-  state.ui={resolveMode:null,praOpen:null,praMode:null,err:null,signErr:null};
+  state.ui={resolveMode:null,handoffOpen:false,err:null};
 }
 
 /* ============================================================
@@ -1275,7 +1294,7 @@ function modalPresets(){
   openModal("Preset investigations — the on-ramp",h);
 }
 function modalLog(){
-  var h="<p class=\"small muted\">Every decision made this session — exception resolutions, PRA overrides, sign-offs. <span class=\"badge sim\">Simulated workflow: in production this is a governed, attributed audit log.</span></p>";
+  var h="<p class=\"small muted\">Every decision made this session — exception resolutions and PRA hand-offs to the assessment owner. <span class=\"badge sim\">Simulated workflow: in production this is a governed, attributed audit log.</span></p>";
   if(!session.log.length) h+="<p class=muted style=\"margin-top:10px\">No decisions recorded yet.</p>";
   session.log.slice().reverse().forEach(function(e){
     h+="<div class=logrow><div class=lt>"+esc(e.when)+" · analyst (demo session)</div><div><b>"+esc(e.action)+"</b> — "+esc(e.detail)+"</div>"+(e.reason?"<div class=\"small muted\">Reason: “"+esc(e.reason)+"”</div>":"")+"</div>";
@@ -1288,7 +1307,7 @@ function modalAssumptions(){
     +"<li><b>The trigger rule follows the 2024 change:</b> 20% year-over-year on dollars OR transaction count, in either direction. The threshold, direction, and measures are live-configurable in the trigger bar so the rule itself can be interrogated.</li>"
     +"<li><b>Confidence below 0.85 never auto-maps.</b> It routes to the exception queue for a human decision with a recorded reason.</li>"
     +"<li><b>Three inferred crosswalk rules</b> (confidence 0.88) are pattern-proposed and clearly marked; they await SME confirmation. Inference proposes — it never owns a reportable number.</li>"
-    +"<li><b>The PRA instrument shown is an illustrative placeholder,</b> not FEMA's real form. Auto-population covers ~8 of 10 questions; two require program-office judgment. Nothing finalizes without human sign-off.</li>"
+    +"<li><b>The PRA instrument shown is an illustrative placeholder,</b> not FEMA's real form. Auto-population covers ~8 of 10 questions; two require program-office judgment. This workbench drafts and proves answers; overrides and sign-off belong to the assessment owner — nothing finalizes here, and the hand-off itself requires a recorded note.</li>"
     +"<li><b>Comprehensive assessments are due at least every 3 years per program</b> regardless of trigger status; \"preliminary\" is the start of a lifecycle, not a terminal status. Historical assessment records are not in this payload — where shown, they would be simulated and labeled.</li>"
     +"<li><b>WebFMIS is modernizing (~Oct 1) and the transition is rough.</b> The raw-code cleanliness facet exists precisely so extract quality is inspectable, not assumed.</li>"
     +"<li><b>Open question for SMEs:</b> who owns fund segments XR and NC (today's exception queue), and should segment 55501's two-fund split be formalized in the published crosswalk?</li>"
@@ -1376,8 +1395,8 @@ document.addEventListener("click",function(ev){
     else if(a==="open-log") modalLog();
     else if(a==="open-assumptions") modalAssumptions();
     else if(a==="open-provenance") modalProvenance();
-    else if(a==="open-pins"){ $("pindrawer").classList.add("open"); $("pindrawer").setAttribute("aria-hidden","false"); }
-    else if(a==="close-pins"){ $("pindrawer").classList.remove("open"); $("pindrawer").setAttribute("aria-hidden","true"); }
+    else if(a==="open-pins"){ $("pindrawer").classList.add("open"); $("pindrawer").setAttribute("aria-hidden","false"); $("btn-pins").setAttribute("aria-expanded","true"); }
+    else if(a==="close-pins"){ $("pindrawer").classList.remove("open"); $("pindrawer").setAttribute("aria-hidden","true"); $("btn-pins").setAttribute("aria-expanded","false"); }
     else if(a==="export-annex") modalExport();
     else if(a==="preset"){
       closeModal();
@@ -1401,7 +1420,7 @@ document.addEventListener("click",function(ev){
     else if(a==="sel"||a==="search-pick"){
       var t=btn.getAttribute("data-t"), id=btn.getAttribute("data-id");
       if(a==="search-pick") searchPick(t,id);
-      else { state.ui={resolveMode:null,praOpen:null,praMode:null,err:null,signErr:null}; state.sel={type:t,id:id}; commit("Inspect "+selLabel(t,id)); }
+      else { state.ui={resolveMode:null,handoffOpen:false,err:null}; state.sel={type:t,id:id}; commit("Inspect "+selLabel(t,id)); }
     }
     else if(a==="rec-toggle"){ state.recordsOpen=!state.recordsOpen; commit(state.recordsOpen?"Open record grid":"Close record grid"); }
     else if(a==="view-records"){ resetFilters(); state.filters.program=btn.getAttribute("data-prog"); state.filters.fy=state.compare.on?state.compare.b:state.filters.fy; state.compare=JSON.parse(JSON.stringify(state.compare)); state.compare.on=false; state.recordsOpen=true; commit("Records: "+(PROG[btn.getAttribute("data-prog")]||{}).name); }
@@ -1420,10 +1439,13 @@ document.addEventListener("click",function(ev){
     else if(a==="resolve-open"){ state.ui.resolveMode=btn.getAttribute("data-mode"); state.ui.err=null; renderInspector(); }
     else if(a==="resolve-cancel"){ state.ui.resolveMode=null; state.ui.err=null; renderInspector(); }
     else if(a==="resolve-confirm"){ resolveException(btn.getAttribute("data-code"),btn.getAttribute("data-mode")); }
-    else if(a==="pra-open"){ state.ui.praOpen=btn.getAttribute("data-q"); state.ui.praMode=btn.getAttribute("data-mode"); state.ui.err=null; renderInspector(); }
-    else if(a==="pra-cancel"){ state.ui.praOpen=null; state.ui.err=null; renderInspector(); }
-    else if(a==="pra-confirm") praConfirm(btn.getAttribute("data-prog"),btn.getAttribute("data-q"));
-    else if(a==="pra-sign") praSign(btn.getAttribute("data-prog"));
+    else if(a==="handoff-open"){ state.ui.handoffOpen=!state.ui.handoffOpen; state.ui.err=null; renderInspector(); }
+    else if(a==="handoff-cancel"){ state.ui.handoffOpen=false; state.ui.err=null; renderInspector(); }
+    else if(a==="handoff-confirm") praHandoff(btn.getAttribute("data-prog"));
+    else if(a==="pin-pra"){
+      var pp=btn.getAttribute("data-prog");
+      doPin("PRA evidence",(PROG[pp]||{name:pp}).name+" — FY2026 drafted PRA answers",null,praPinDetail(pp));
+    }
   }catch(e){ /* defensive: a click must never take the workbench down */ if(window.console&&console.warn) console.warn("action failed",a,e); }
 });
 
@@ -1472,30 +1494,28 @@ function resolveException(code,mode){
   commit("Resolve exception "+code);
 }
 
-function praConfirm(pid,qid){
-  var vEl=document.getElementById("pra-val"), rEl=document.getElementById("pra-reason");
-  var val=(vEl&&vEl.value||"").trim(), reason=(rEl&&rEl.value||"").trim();
-  var mode=state.ui.praMode;
-  if(!val){ state.ui.err="A value is required."; renderInspector(); return; }
-  if(!reason){ state.ui.err=(mode==="override"?"An override requires a reason":"A rationale is required")+" — it is recorded in the session log."; renderInspector(); return; }
-  var k=pid+"|"+qid;
-  if(mode==="override"){ session.praOverrides[k]={value:val,reason:reason,when:nowStr()}; logIt("PRA override",""+(PROG[pid]||{}).name+" "+qid+" → “"+val+"”",reason); }
-  else { session.praHuman[k]={value:val,rationale:reason,when:nowStr()}; logIt("PRA human answer",""+(PROG[pid]||{}).name+" "+qid+" → “"+val+"”",reason); }
-  delete session.praSignoff[pid]; // any change reopens the draft
-  state.ui.praOpen=null; state.ui.err=null;
-  renderInspector(); renderPins();
+/* PRA hand-off: the reason-gated decision on the PRA surface. The
+   workbench never completes or signs the PRA — it sends drafted,
+   evidence-bound findings to the assessment owner (simulated). */
+function praHandoff(pid){
+  var nEl=document.getElementById("handoff-note");
+  var note=(nEl&&nEl.value||"").trim();
+  if(!note){ state.ui.err="A hand-off note is required — it travels with the findings and is recorded in the session change log."; renderInspector(); return; }
+  session.handoffs[pid]={note:note,when:nowStr()};
+  logIt("PRA hand-off",(PROG[pid]||{name:pid}).name+" FY2026 drafted PRA sent to assessment owner (simulated)",note);
+  state.ui.handoffOpen=false; state.ui.err=null;
+  renderInspector();
 }
 
-function praSign(pid){
-  var missing=D.risk_questions.filter(function(q){ var a=praAnswer(pid,q.id); return !a || a.value===null || a.value===undefined; });
-  if(missing.length){
-    state.ui.signErr="Cannot sign off: "+missing.map(function(q){return q.id;}).join(", ")+" still awaiting input. Nothing finalizes without every answer having a human-accountable value.";
-    renderInspector(); return;
-  }
-  session.praSignoff[pid]={when:nowStr()};
-  logIt("PRA sign-off",(PROG[pid]||{}).name+" FY2026 PRA signed off (simulated)",null);
-  state.ui.signErr=null;
-  renderInspector();
+/* Summary lines for a pinned PRA-evidence card */
+function praPinDetail(pid){
+  var out=[];
+  ["Q1","Q2","Q3","Q7"].forEach(function(qid){
+    var a=praAnswer(pid,qid);
+    if(a && a.value!==null && a.value!==undefined) out.push(qid+": "+fmtAns(qid,a.value)+" (drafted by "+a.by+")");
+  });
+  out.push("Q9/Q10: awaiting program-office input via assessment owner");
+  return out;
 }
 
 /* ---------- static control bindings ---------- */
@@ -1520,8 +1540,17 @@ $("m-count").addEventListener("change",function(){ state.trigger.count=this.chec
 $("q").addEventListener("input",function(){ runSearch(this.value); });
 $("q").addEventListener("keydown",function(ev){
   if(ev.key==="Enter"){ var first=$("qres").querySelector("[data-action=search-pick]"); if(first) first.click(); }
-  if(ev.key==="Escape"){ $("qres").classList.remove("open"); this.blur(); }
+  if(ev.key==="Escape"){ setSearchOpen(false); this.blur(); }
 });
+
+/* Keep summary aria-expanded in sync with its <details> (toggle doesn't bubble → capture) */
+document.addEventListener("toggle",function(ev){
+  var d=ev.target;
+  if(d && d.tagName==="DETAILS"){
+    var sum=d.querySelector("summary");
+    if(sum) sum.setAttribute("aria-expanded",String(d.open));
+  }
+},true);
 
 /* pivot row click / keyboard selection */
 document.addEventListener("click",function(ev){
@@ -1535,8 +1564,9 @@ function rowSelect(t,key,rowIdx){
   if(t==="fy"){ state.sel={type:"fy",id:key}; }
   else if(key==="__EX__"){ state.filters.mapStatus="exception"; state.groupBy="code"; state.sel=null; commit("Focus exception queue"); return; }
   else state.sel={type:t,id:key};
-  state.ui={resolveMode:null,praOpen:null,praMode:null,err:null,signErr:null};
+  state.ui={resolveMode:null,handoffOpen:false,err:null};
   pushTrail("Inspect "+selLabel(t,key));
+  announce("Inspecting "+stripG(selLabel(t,key))+".");
   renderTrail(); renderInspector(); highlightRow(); renderControls();
 }
 
@@ -1546,8 +1576,8 @@ document.addEventListener("keydown",function(ev){
   if(ev.key==="/" && !typing){ ev.preventDefault(); $("q").focus(); return; }
   if(ev.key==="Escape"){
     if($("overlay").classList.contains("open")) closeModal();
-    else if($("pindrawer").classList.contains("open")){ $("pindrawer").classList.remove("open"); $("pindrawer").setAttribute("aria-hidden","true"); }
-    else { $("qres").classList.remove("open"); }
+    else if($("pindrawer").classList.contains("open")){ $("pindrawer").classList.remove("open"); $("pindrawer").setAttribute("aria-hidden","true"); $("btn-pins").setAttribute("aria-expanded","false"); }
+    else { setSearchOpen(false); }
     return;
   }
   if(typing) return;
@@ -1579,9 +1609,7 @@ window.__SELFTEST__ = function(){
     trail:JSON.parse(JSON.stringify(session.trail)), trailCur:session.trailCur,
     pins:JSON.parse(JSON.stringify(session.pins)),
     resolved:JSON.parse(JSON.stringify(session.resolved)),
-    praOverrides:JSON.parse(JSON.stringify(session.praOverrides)),
-    praHuman:JSON.parse(JSON.stringify(session.praHuman)),
-    praSignoff:JSON.parse(JSON.stringify(session.praSignoff)),
+    handoffs:JSON.parse(JSON.stringify(session.handoffs)),
     log:JSON.parse(JSON.stringify(session.log))
   };
   try{
@@ -1649,9 +1677,9 @@ window.__SELFTEST__ = function(){
       assert(session.trail.length===before+3,"return step not appended (append-only audit)");
       return "trail grew "+before+"→"+session.trail.length+", replay restored groupBy=program";
     });
-    // (7) decisions enforce reason capture
-    T("governance: exception resolution & PRA override both require a reason",function(){
-      // exception path (no DOM form → resolve with empty reason must refuse)
+    // (7) decisions enforce reason capture (exception resolution + PRA hand-off note)
+    T("governance: exception resolution & PRA hand-off both require a reason",function(){
+      // exception path (empty reason must refuse)
       var code="XR-88001-4339";
       state.sel={type:"code",id:code}; state.ui.resolveMode="accept"; renderInspector();
       var rEl=document.getElementById("res-reason"); assert(rEl,"resolution form missing");
@@ -1662,19 +1690,20 @@ window.__SELFTEST__ = function(){
       resolveException(code,"accept");
       assert(session.resolved[code],"resolution with reason failed");
       assert(session.log.some(function(e){return e.action.indexOf("Exception resolved")===0;}),"decision not logged");
-      // PRA override path
+      // PRA hand-off path (read/evidence surface: send to assessment owner, note required)
       state.sel={type:"program",id:"PROG-PA"}; state.compare.on=true; state.compare.b=2026;
-      state.ui.praOpen="Q2"; state.ui.praMode="override"; renderInspector();
-      var v=document.getElementById("pra-val"), rr=document.getElementById("pra-reason");
-      assert(v&&rr,"override form missing");
-      v.value="+30.5%"; rr.value=""; praConfirm("PROG-PA","Q2");
-      assert(!session.praOverrides["PROG-PA|Q2"],"override accepted without reason!");
-      state.ui.praOpen="Q2"; state.ui.praMode="override"; renderInspector();
-      v=document.getElementById("pra-val"); rr=document.getElementById("pra-reason");
-      v.value="+30.5%"; rr.value="Adjusting for a de-obligation reversal booked in FY2025.";
-      praConfirm("PROG-PA","Q2");
-      assert(session.praOverrides["PROG-PA|Q2"],"override with reason failed");
-      return "empty reason refused; reasoned decisions recorded in session log ("+session.log.length+" entries)";
+      state.ui.handoffOpen=true; state.ui.err=null; renderInspector();
+      var nEl=document.getElementById("handoff-note");
+      assert(nEl,"hand-off form missing");
+      nEl.value=""; praHandoff("PROG-PA");
+      assert(!session.handoffs["PROG-PA"],"hand-off accepted without a note!");
+      state.ui.handoffOpen=true; renderInspector();
+      nEl=document.getElementById("handoff-note");
+      nEl.value="Dual breach on dollars and count; start with DR-4332 concentration and the two unresolved NC exceptions.";
+      praHandoff("PROG-PA");
+      assert(session.handoffs["PROG-PA"],"hand-off with note failed");
+      assert(session.log.some(function(e){return e.action==="PRA hand-off";}),"hand-off not logged");
+      return "empty reason/note refused; reasoned decisions recorded in session log ("+session.log.length+" entries)";
     });
     // (8) export simulation carries the watermark
     T("export: evidence annex contains SYNTHETIC-DEMO watermark",function(){
@@ -1700,6 +1729,25 @@ window.__SELFTEST__ = function(){
       assert(Object.keys(funds).length>=2,"expected ≥2 distinct funds, got "+Object.keys(funds).join(","));
       return twins.map(function(c){return c.code;}).join(" vs ");
     });
+    // (bonus) accessibility posture: live region, skip link, th scope, aria-expanded
+    T("a11y: live region announces, skip link present, th scope + aria-expanded set",function(){
+      assert(document.getElementById("live") && document.getElementById("live").getAttribute("aria-live")==="polite","live region missing");
+      state.groupBy="program"; state.compare.on=true; renderPivot();
+      var msg=document.getElementById("live").textContent;
+      assert(msg && msg.indexOf("row")>=0,"live region not announcing scope changes: '"+msg+"'");
+      var skip=document.querySelector(".skiplink");
+      assert(skip && skip.getAttribute("href")==="#workbench" && document.getElementById("workbench"),"skip link/target missing");
+      var ths=document.querySelectorAll("th"), missing=0;
+      ths.forEach(function(th){ if(!th.getAttribute("scope")) missing++; });
+      assert(ths.length>0 && missing===0,missing+" of "+ths.length+" th lack scope");
+      state.sel={type:"program",id:"PROG-PA"}; renderInspector();
+      var sums=document.querySelectorAll("#inspector summary");
+      var bad=0; sums.forEach(function(s){ if(!s.hasAttribute("aria-expanded")) bad++; });
+      assert(sums.length>0 && bad===0,"summaries lack aria-expanded");
+      assert(document.getElementById("rec-btn").hasAttribute("aria-expanded"),"records toggle lacks aria-expanded");
+      assert(document.getElementById("q").getAttribute("role")==="combobox","search lacks combobox role");
+      return ths.length+" scoped th · "+sums.length+" summaries with aria-expanded · live: '"+msg.slice(0,60)+"…'";
+    });
   } finally {
     // restore all state and re-render
     state.filters=savedState.filters; state.groupBy=savedState.groupBy; state.compare=savedState.compare;
@@ -1707,8 +1755,7 @@ window.__SELFTEST__ = function(){
     state.rowIdx=savedState.rowIdx; state.ui=savedState.ui;
     session.trail=savedSession.trail; session.trailCur=savedSession.trailCur;
     session.pins=savedSession.pins; session.resolved=savedSession.resolved;
-    session.praOverrides=savedSession.praOverrides; session.praHuman=savedSession.praHuman;
-    session.praSignoff=savedSession.praSignoff; session.log=savedSession.log;
+    session.handoffs=savedSession.handoffs; session.log=savedSession.log;
     renderAll();
   }
   return results;
