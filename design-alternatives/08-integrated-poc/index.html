@@ -366,6 +366,22 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
 .esc-form{margin-top:6px}
 .esc-form textarea{min-height:44px}
 
+/* ============ wave-2 integration (INTEGRATION-DEBATE §2, items 7–13) ============ */
+/* 03-e — reason-gated exception resolution */
+.exc-form{margin-top:8px;background:var(--well);border:1px solid var(--grid);border-radius:8px;padding:8px 10px;max-width:430px}
+.exc-form textarea{min-height:56px}
+.exc-err{color:var(--critical-text);font-size:12px;font-weight:600;margin-top:4px}
+/* 07-d — per-figure "what could not be verified" disclosure */
+.cv{border:1px solid var(--line);border-radius:8px;background:var(--well);padding:7px 11px;margin-top:10px;font-size:12.4px;color:var(--ink2)}
+.cv summary{cursor:pointer;font-weight:600;font-size:12px;color:var(--ink)}
+.cv .cv-line{padding:5px 0;border-bottom:1px solid #e7e9ec}
+.cv .cv-line:last-child{border-bottom:0}
+.cv .cv-clean{color:var(--good-text);font-weight:600}
+/* 04-b — register exposure lines (screen 9) */
+.exp-row{margin:2px 0 10px 26px;font-size:12.3px;color:var(--ink2);background:var(--well);border-left:3px solid var(--blue-250);padding:6px 10px;border-radius:0 6px 6px 0}
+/* 04-e — session-modified drift marker on the topbar chip */
+#chip-drift{color:var(--warn-text)}
+
 @media (max-width:920px){
   .app{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
   .sidebar{grid-column:1;grid-row:2;height:auto;position:static;flex-direction:column}
@@ -421,7 +437,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
     <div class="ctl"><label for="fy-select">Fiscal year</label>
       <select id="fy-select" aria-label="Select fiscal year" title="FY2022 is the baseline year — it has no prior year for a year-over-year comparison, so it is not selectable"></select>
     </div>
-    <span class="chip-cfg" title="Comprehensive-assessment trigger currently in force — configure on screen 6">trigger <b id="chip-threshold">±20%</b> YoY &middot; <span id="chip-direction">either</span></span>
+    <span class="chip-cfg" title="Comprehensive-assessment trigger currently in force — configure on screen 6. When it differs from the shipped default, the session-modified marker appears here and on the PRA / JSON export headers.">trigger <b id="chip-threshold">±20%</b> YoY &middot; <span id="chip-direction">either</span><b id="chip-drift" hidden></b></span>
     <span class="chip-cfg" id="chip-trust" title="Trust posture: share of FY2026 dollars governed by SME-confirmed or SOP-validated mapping rules. Unmapped exception-queue dollars count against the denominator — the metric does not flatter itself. Confirm or escalate inferred rules on screen 3.">confirmed rules <b id="chip-trust-pct">—</b> of FY26 $</span>
   </div>
 
@@ -459,12 +475,14 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <th scope="col">Program</th><th scope="col">Listing</th><th scope="col" class="num">Disbursements</th>
           <th scope="col" class="num">Prior FY</th><th scope="col" class="num">YoY</th>
           <th scope="col" title="Paired five-year trends — disbursement dollars and transaction volume. Red dot = trigger breach on that measure that fiscal year; amber dot = the program was flagged that year by the other measure only (recomputed from the trigger in force).">5-yr trend ($ &middot; txns)</th>
+          <th scope="col" title="3-year comprehensive-assessment cycle (REQ-034): every program owes a comprehensive assessment at least every three fiscal years, trigger or no trigger.">Comprehensive cycle</th>
           <th scope="col">Assessment</th>
         </tr></thead><tbody></tbody></table></div>
         <p class="small sparklegend" style="margin:8px 0 0">Sparkline dots, recomputed from the trigger in force:
           <span class="dot" style="background:#d03b3b"></span>breach on that measure
           <span class="dot" style="background:#d98e04"></span>flagged that year by the other measure only (e.g. the count-only catch)
           <span class="dot" style="background:#1c5cab"></span>latest FY</p>
+        <p class="small" style="margin:6px 0 0">Comprehensive-cycle chips follow the 3-year rule (REQ-034). <b>Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.</b></p>
       </div>
     </section>
 
@@ -542,7 +560,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <th scope="col">Code</th><th scope="col">FY2026 spend</th><th scope="col">AI-suggested target</th>
           <th scope="col">Confidence</th><th scope="col">Status</th><th scope="col">Decision</th>
         </tr></thead><tbody></tbody></table></div>
-        <p class="note">Approving a suggestion maps the code in-session and its spend joins the rollups — the dashboard, variance and PRA totals update immediately. Reload to reset.</p>
+        <p class="note">Accepting the suggestion or reassigning maps the code in-session and its spend joins the rollups — the dashboard, variance and PRA totals update immediately. <b>Both require a rationale</b> (prefilled, editable, AI-SUGGESTED-labeled template text — recorded verbatim in the audit trail; screen-8 overrides are held to the same bar). Keep-in-queue is a recorded deferral and needs no rationale. Reload to reset.</p>
       </div>
       <div class="card">
         <h3>Code &rarr; sub-program &rarr; program mappings</h3>
@@ -559,7 +577,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       </div>
       <div class="card">
         <h3>Rule registry (rules-as-data)</h3>
-        <p class="hint">The executable mapping configuration — cleansing, code&rarr;sub-program, rollup and event-split rules, each with lifecycle status: inferred &rarr; sme_confirmed &rarr; sop_validated.</p>
+        <p class="hint">The executable mapping configuration — cleansing, code&rarr;sub-program, rollup and event-split rules, each with lifecycle status: inferred &rarr; sme_confirmed &rarr; sop_validated. Sorted by <b>FY2026 dollar exposure</b> — the blast radius if a rule is wrong.</p>
         <div class="filter-row">
           <label for="s3-filter-ruletype">Type</label>
           <select id="s3-filter-ruletype" class="inline">
@@ -569,7 +587,9 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <span class="small right" id="s3-rule-count"></span>
         </div>
         <div class="tblwrap"><table id="s3-rules"><thead><tr>
-          <th scope="col">Rule</th><th scope="col">Type</th><th scope="col">Expression</th><th scope="col">Confidence</th><th scope="col">Status</th>
+          <th scope="col">Rule</th><th scope="col">Type</th><th scope="col">Expression</th>
+          <th scope="col" class="num" title="FY2026 dollars and transaction count whose mapping is governed by this rule (program_mapping.rule_id → ledger join) — the blast radius if the rule is wrong. Default sort, high → low.">FY2026 $ exposure</th>
+          <th scope="col">Confidence</th><th scope="col">Status</th>
           <th scope="col" title="Session validation actions on inferred rules — confirming records an illustrative SME signature; escalation requires a note. Both feed the audit trail and the trust-posture tile.">Validation (session)</th>
         </tr></thead><tbody></tbody></table></div>
         <p class="note">Rules with status <b>inferred</b> can be <b>confirmed</b> here (records an illustrative SME signature, session only — the trust-posture tile on screen 1 and the top-bar chip rise immediately) or <b>escalated</b> with a required note. Both are audited; reload resets.</p>
@@ -722,8 +742,11 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <th scope="col">Program</th><th scope="col" class="num">Prior FY</th><th scope="col" class="num">Current FY</th>
           <th scope="col" class="num">YoY ($)</th><th scope="col" class="num" title="Year-over-year change in the number of disbursement transactions (2024 rule)">YoY (txn volume)</th>
           <th scope="col" title="Paired five-year trends — dollars and transaction volume. Red dot = breach on that measure; amber dot = flagged that year by the other measure only.">5-yr trend ($ &middot; txns)</th>
-          <th scope="col">Assessment path</th><th scope="col">Why (AI-suggested)</th>
+          <th scope="col" title="Trigger path plus the 3-year comprehensive cycle — a quiet program can still owe a comprehensive assessment.">Assessment path &middot; cycle</th>
+          <th scope="col" title="This program's flag state under the live configuration vs the immutable shipped default — the baseline never changes; only the comparison badge does.">vs shipped default</th>
+          <th scope="col">Why (AI-suggested)</th>
         </tr></thead><tbody></tbody></table></div>
+        <p class="small" style="margin:8px 0 0">Comprehensive-cycle chips follow the 3-year rule (REQ-034). <b>Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.</b></p>
       </div>
     </section>
 
@@ -776,9 +799,14 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <div id="s8-questions"></div>
       <div class="card">
         <h3>Session audit trail</h3>
-        <p class="hint">Every decision in this session — rule overrides, exception decisions, approvals, overrides, finalizations — is logged with actor, input refs and rule/model. In-memory; reload resets.</p>
+        <p class="hint">Every decision in this session — rule overrides, exception decisions, approvals, overrides, trigger-config changes, finalizations — logged with kind, date-bearing timestamp (real wall clock for live actions), actor and input refs. Seeded <b>system</b> entries record why each program was flagged at ingestion, against the config in force at ingestion — they are simulated provenance records with a deterministic stamp. In-memory; reload resets.</p>
+        <div class="filter-row">
+          <label for="s8-audit-prog">Program</label>
+          <select id="s8-audit-prog" class="inline"></select>
+          <span class="small right" id="s8-audit-count"></span>
+        </div>
         <div class="tblwrap"><table id="s8-audit"><thead><tr>
-          <th scope="col">#</th><th scope="col">Entity</th><th scope="col">Decision</th><th scope="col">Actor</th><th scope="col">Refs</th>
+          <th scope="col">#</th><th scope="col">Kind</th><th scope="col">Entity</th><th scope="col">Decision</th><th scope="col">Actor &middot; time</th><th scope="col">Refs</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
     </section>
@@ -1053,10 +1081,17 @@ function renderRail(holder){
   $$('.stp', el).forEach(b => b.addEventListener('click', () => setScreen(+b.dataset.rail)));
 }
 let auditN = 0;
-function logAudit(entity, decision, refs){
+/* 02-d — audit entries carry a kind ('system' | 'user' | 'gate') and a
+   date-bearing timestamp. Live user/gate actions use the REAL wall clock
+   (never fabricated); seeded 'system' provenance entries pass a deterministic
+   stamp derived from the dataset's seed date and are labeled simulated.
+   Fields are additive — the JSON export shape stays backward-compatible. */
+function logAudit(entity, decision, refs, kind, ts){
   auditN++;
-  state.audit.push({n: auditN, entity, decision, actor: 'Reviewer', refs,
-    ts: new Date().toLocaleTimeString()});
+  kind = kind || 'user';
+  state.audit.push({n: auditN, entity, decision,
+    actor: kind === 'system' ? 'System (simulated)' : 'Reviewer', refs, kind,
+    ts: ts || new Date().toLocaleString()});
 }
 
 /* ============================ deterministic engine ============================ */
@@ -1346,13 +1381,21 @@ function praAnswers(progId){
   A.push({qid: 'Q2', value: fmtPct(y.pct), conf: 1, spark: progId,
     evidence: `Dollars: FY${PRA_FY} ${fmtFull(y.cur)} vs FY${PRA_FY-1} ${fmtFull(y.prior || 0)}. Transaction volume: ${row.nCur.toLocaleString()} vs ${(row.nPrior || 0).toLocaleString()} rows (${fmtPct(row.cpct)}). Binding: <span class="mono">fiscal_year_spend_summary.yoy_pct_change / count_yoy_pct_change</span>.`,
     rationale: `Spend moved ${fmtPct(y.pct)} year over year (${fmtM(y.prior||0)} → ${fmtM(y.cur)}); transaction volume moved ${fmtPct(row.cpct)}. ${evs.length ? `The change is concentrated in the program's ${evs.length}-event mix — see screen 4.` : 'Non-disaster program — annual funding, no event mix.'}`});
-  A.push({qid: 'Q3', value: flag ? 'Yes — comprehensive assessment required from the start' : 'No — begins with the preliminary assessment', conf: 1,
-    evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). Dollars: |${fmtPct(y.pct)}| ${row.dflag ? '≥' : '<'} ${state.cfg.threshold}%. Txn volume: |${fmtPct(row.cpct)}| ${row.cflag ? '≥' : '<'} ${state.cfg.threshold}% — either measure breaching flags the program (2024 rule).`,
+  /* 02-c — Q3's assessment path has THREE states, not two: trigger breach,
+     no-breach-but-cycle-due (3-year rule), and preliminary-first. */
+  const cd3 = compDue(progId, PRA_FY);
+  const cycleDue3 = !flag && cd3 && cd3.state !== 'ok';
+  A.push({qid: 'Q3', value: flag ? 'Yes — comprehensive assessment required from the start'
+      : cycleDue3 ? `No trigger breach — but a comprehensive is due on the 3-year cycle (last comprehensive FY${cd3.last}; ${cd3.label})`
+      : 'No — begins with the preliminary assessment', conf: 1,
+    evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). Dollars: |${fmtPct(y.pct)}| ${row.dflag ? '≥' : '<'} ${state.cfg.threshold}%. Txn volume: |${fmtPct(row.cpct)}| ${row.cflag ? '≥' : '<'} ${state.cfg.threshold}% — either measure breaching flags the program (2024 rule).${cycleDue3 ? ` Comprehensive cycle: last comprehensive assessment FY${cd3.last}, 3-year rule (REQ-034) — ${cd3.label}. ${CYCLE_LABEL}` : ''}`,
     rationale: flag
       ? (row.dflag
           ? `${fmtPct(y.pct)} breaches the ±${state.cfg.threshold}% corridor on dollars${row.cflag ? ` (transaction volume ${fmtPct(row.cpct)} breaches too)` : ''}, so ${name} is flagged for a comprehensive risk assessment at data-land time — weeks-to-months earlier than the manual close.`
           : `Dollars moved only ${fmtPct(y.pct)} — inside the corridor — but transaction volume jumped ${fmtPct(row.cpct)}, so the count measure flags ${name} for a comprehensive assessment. This is exactly the case the 2024 rule change was written for.`)
-      : `${fmtPct(y.pct)} (dollars) and ${fmtPct(row.cpct)} (txn volume) both sit inside the ±${state.cfg.threshold}% corridor; this program begins with the preliminary assessment and nothing forces a comprehensive at the outset.`});
+      : cycleDue3
+        ? `${fmtPct(y.pct)} (dollars) and ${fmtPct(row.cpct)} (txn volume) both sit inside the ±${state.cfg.threshold}% corridor — no trigger fires — but ${name}'s last comprehensive assessment was FY${cd3.last}, so the 3-year cycle requires a comprehensive this cycle regardless of the trigger. The quiet program still owes an assessment. (${CYCLE_LABEL})`
+        : `${fmtPct(y.pct)} (dollars) and ${fmtPct(row.cpct)} (txn volume) both sit inside the ±${state.cfg.threshold}% corridor and the 3-year comprehensive cycle is not yet due; this program begins with the preliminary assessment and nothing forces a comprehensive at the outset.`});
   A.push({qid: 'Q4', value: `${subs.length} sub-programs; ${codes.size} financial codes`, conf: 1,
     evidence: `Distinct sub-programs and codes with FY${PRA_FY} spend after the mapping in force (screen 3): ${subs.map(s => esc(shortName(subById.get(s.subId).name))).join('; ') || '—'}.`,
     rationale: `The rollup hierarchy maps ${codes.size} codes through ${subs.length} sub-programs into ${name}; edit any mapping on screen 3 and this answer recomputes.`});
@@ -1768,7 +1811,7 @@ function finalizePra(progId, name){
   if (so.decided < so.total) return false;                 // same predicate that disables the button
   if (!name || !name.trim()) return false;                 // attestation name is required
   state.finalized[progId] = {by: name.trim(), at: new Date().toLocaleString()};
-  logAudit('gate', `${progId} FY${PRA_FY} PRA FINALIZED after human sign-off — attested by "${name.trim()}" (typed-name attestation; illustrative signature, simulated capability)`, progId + ';attestation');
+  logAudit('gate', `${progId} FY${PRA_FY} PRA FINALIZED after human sign-off — attested by "${name.trim()}" (typed-name attestation; illustrative signature, simulated capability)`, progId + ';attestation', 'gate');
   return true;
 }
 /* gate checklist + finalize button state — the SAME predicates, one place */
@@ -1792,14 +1835,239 @@ function s8GateSync(){
   $('#s8-finalize').disabled = (autoDone + humDone) < A.length || !attest || !!fin;
 }
 
+/* =====================================================================
+   WAVE-2 INTEGRATION ENGINE (design-alternatives/INTEGRATION-DEBATE.md §2,
+   items 7–13). Deterministic re-use of the engine above — every number is
+   recomputed from the embedded ledger, the mapping in force and the
+   configuration in force. 03-e reason-gated exceptions · 02-d audit
+   upgrade · 07-d cannot-verify blocks · 06-d blast radius · 04-e
+   diff-vs-default · 04-b register exposure · 02-c comprehensive cycle.
+   The only labeled-simulated elements are the seeded provenance records
+   (deterministic stamp, labeled simulated), the AI-SUGGESTED rationale
+   templates (editable, human owns the final wording) and the illustrative
+   comprehensive-assessment history.
+   ===================================================================== */
+
+/* ---- 04-e — the immutable shipped default config, reconstructed the same
+   way runParity does (never stored as a second mutable config) ---- */
+function shippedCfg(){
+  return {threshold: DATA.config.threshold_pct, direction: DATA.config.direction,
+    minPrior: DATA.config.min_prior_year_amount, minPriorCount: DATA.config.min_prior_year_count,
+    measures: DATA.config.measures.slice(), combine: DATA.config.combine};
+}
+function cfgIsDefault(){
+  const d = shippedCfg(), c = state.cfg;
+  return c.threshold === d.threshold && c.direction === d.direction &&
+    c.minPrior === d.minPrior && (c.minPriorCount || 0) === (d.minPriorCount || 0) &&
+    c.combine === d.combine && (c.measures || []).length === d.measures.length &&
+    d.measures.every(m => (c.measures || []).includes(m));
+}
+const DRIFT_TEXT = (() => {
+  const sign = DATA.config.direction === 'either' ? '±' : (DATA.config.direction === 'decrease_only' ? '−' : '+');
+  return `session-modified from default ${sign}${DATA.config.threshold_pct}% ${DATA.config.direction.replace('_', ' ')}`;
+})();
+function driftMarker(){ return cfgIsDefault() ? '' : DRIFT_TEXT; }
+
+/* ---- 02-d — boot-seeded ingestion provenance. One 'system' entry per program
+   flagged under the config in force AT INGESTION (the shipped default) — the
+   wording stays true even after the user drags the slider, because it cites
+   the ingestion-time config, not the live one. Deterministic stamp derived
+   from the dataset's seed date; labeled simulated. ---- */
+const SEED_STAMP = (() => {
+  const s = String(DATA.meta.seed);                       // 20260708 → 2026-07-08
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)} 00:00:00 (simulated)`;
+})();
+function seedProvenance(){
+  const cfg = shippedCfg();
+  const sign = cfg.direction === 'either' ? '±' : (cfg.direction === 'decrease_only' ? '−' : '+');
+  for (const r of allRows(PRA_FY, cfg)){
+    if (!r.flag) continue;
+    const parts = [];
+    if (cfg.measures.includes('disbursements')) parts.push(`dollars ${fmtPct(r.pct)}${r.dflag ? ' — BREACH' : ' — within corridor'}`);
+    if (cfg.measures.includes('transaction_count')) parts.push(`txn volume ${fmtPct(r.cpct)}${r.cflag ? ' — BREACH' : ' — within corridor'}`);
+    logAudit('trigger_flag',
+      `${shortName(progById.get(r.progId).name)} flagged at ingestion under the config in force at ingestion (${sign}${cfg.threshold}% ${cfg.direction.replace('_', ' ')}, ${cfg.measures.map(m => m === 'transaction_count' ? 'txn volume' : 'dollars').join(' or ')}): ${parts.join(' · ')} — simulated ingestion-time provenance record`,
+      r.progId + ';ingestion', 'system', SEED_STAMP);
+  }
+}
+
+/* ---- 02-c — 3-year comprehensive-assessment cycle (REQ-034). One labeled
+   constant, one 10-line state function. History is ILLUSTRATIVE — see
+   CYCLE_LABEL, mandatory wherever these dates surface, including exports. ---- */
+const CYCLE_LABEL = 'Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.';
+/* last comprehensive-assessment FY per program (illustrative history; PROG-UR
+   is deliberately unflagged-but-overdue — the quiet program still owes one) */
+const LAST_COMPREHENSIVE = {
+  'PROG-PA': 2025, 'PROG-HM': 2024, 'PROG-IA': 2023, 'PROG-HS': 2025, 'PROG-UR': 2022
+};
+function compDue(progId, fy){
+  fy = fy || PRA_FY;
+  const last = LAST_COMPREHENSIVE[progId];
+  if (last == null) return null;
+  const due = last + 3;
+  if (fy < due) return {last, due, state: 'ok', label: `due FY${due}`};
+  if (fy === due) return {last, due, state: 'due', label: 'due this FY'};
+  return {last, due, state: 'overdue', label: `OVERDUE — was due FY${due}`};
+}
+function cycleChip(progId, fy){
+  const cd = compDue(progId, fy);
+  if (!cd) return '<span class="small">—</span>';
+  const cls = cd.state === 'overdue' ? 'crit' : cd.state === 'due' ? 'warn' : 'gray';
+  return `<span class="badge ${cls}" title="Last comprehensive assessment FY${cd.last} — 3-year cycle (REQ-034). ${esc(CYCLE_LABEL)}">${esc(cd.label)}</span>`;
+}
+
+/* ---- shared FY2026 rule ↔ dollar join — ONE helper feeding 06-d (blast
+   radius), 07-d (inferred-rule caveats) and 04-b (register exposure).
+   byRule: dollars/txns whose mapping each rule governs at the mapping in
+   force (session-override rules govern their own code's rows; codes decided
+   by a human this session never count as inferred-rule dependence).
+   inferredByProg: dollars in each program's totals attributed through rules
+   whose status — after the session state.ruleStatus map — is still inferred. ---- */
+function ruleJoin(){
+  const byRule = new Map(), inferredByProg = new Map();
+  const acc = (m, k, t) => { let e = m.get(k); if (!e) m.set(k, e = {amt: 0, n: 0}); e.amt += t.amt; e.n++; return e; };
+  for (const t of TX){
+    if (t.fy !== PRA_FY) continue;
+    const sub = resolveSub(t.code);
+    if (!sub) continue;                                    // exception queue — counted separately
+    if (state.overrides.has(t.code)){
+      const sr = state.sessionRules.find(r => r.code === t.code);
+      if (sr) acc(byRule, sr.id, t);                       // the session rule governs these rows now
+      continue;
+    }
+    if ((state.excDecisions.get(t.code) || {}).action === 'approved') continue;   // human decision, no planted rule
+    const rid = MAP_RULE_BY_CODE.get(t.code);
+    if (!rid) continue;
+    acc(byRule, rid, t);
+    if (ruleStatusOf(rid) === 'inferred'){
+      const progId = subById.get(sub).progId;
+      let e = inferredByProg.get(progId);
+      if (!e) inferredByProg.set(progId, e = {amt: 0, n: 0, rules: new Set()});
+      e.amt += t.amt; e.n++; e.rules.add(rid);
+    }
+  }
+  return {byRule, inferredByProg};
+}
+
+/* ---- 07-d — per-figure "what could not be verified", computed PER PROGRAM.
+   (a) open exception-queue dollars whose AI suggestion points here (NOT in
+   these totals), (b) dollars attributed through unconfirmed inferred rules
+   (clears live when a rule is confirmed on screen 3), (c) unanswered Q9/Q10.
+   The explicit clean state ships now, not later. ---- */
+function cannotVerify(progId){
+  const excMine = openExceptions().filter(e => e.progId === progId).map(e => {
+    const txs = TX.filter(t => t.code === e.code);
+    return {code: e.code, conf: e.conf, amt: txs.reduce((s, t) => s + t.amt, 0), n: txs.length};
+  });
+  const excAmt = excMine.reduce((s, x) => s + x.amt, 0);
+  const excN = excMine.reduce((s, x) => s + x.n, 0);
+  const inf = ruleJoin().inferredByProg.get(progId) || null;
+  const ps = praState(progId);
+  const qPend = ['Q9', 'Q10'].filter(q => !(ps[q] && ps[q].human)).length;
+  return {excMine, excAmt, excN, inf, qPend, clean: !excMine.length && !inf && !qPend};
+}
+function cannotVerifyHtml(progId){
+  const v = cannotVerify(progId);
+  let body, summary;
+  if (v.clean){
+    summary = 'nothing material';
+    body = '<div class="cv-line cv-clean">Nothing material to disclose for this figure — no exception-queue suggestions toward this program; no unconfirmed inferred rules in its mappings; program-office Q9–Q10 answered.</div>';
+  } else {
+    summary = [
+      v.excMine.length ? `${fmtM(v.excAmt)} suggested toward, excluded` : null,
+      v.inf ? `${fmtM(v.inf.amt)} on inferred rules` : null,
+      v.qPend ? `${v.qPend} qualitative pending` : null
+    ].filter(Boolean).join(' · ');
+    const lines = [];
+    lines.push(v.excMine.length
+      ? `<div class="cv-line"><span class="ai-tag" title="The suggestions are precomputed similarity matches — a human must decide; nothing auto-classifies">AI-SUGGESTED</span> <b>${fmtM(v.excAmt)}</b> across ${v.excMine.length} exception-queue code${v.excMine.length === 1 ? '' : 's'} (${v.excN} txns) carries a suggestion toward this program and is <b>NOT in these totals</b> — <span class="mono small">${v.excMine.map(x => esc(x.code)).join(', ')}</span>. <button class="btn ghost sm" data-cv-jump="3">Decide on screen 3 &rarr;</button></div>`
+      : '<div class="cv-line">No open exception-queue suggestions toward this program.</div>');
+    lines.push(v.inf
+      ? `<div class="cv-line"><b>${fmtM(v.inf.amt)}</b> of this program's totals (${v.inf.n} txns) is attributed through ${v.inf.rules.size} unconfirmed inferred rule${v.inf.rules.size === 1 ? '' : 's'} (<span class="mono small">${[...v.inf.rules].sort().map(esc).join(', ')}</span>) — confirming the rule clears this caveat immediately. <button class="btn ghost sm" data-cv-jump="3">Confirm or escalate on screen 3 &rarr;</button></div>`
+      : '<div class="cv-line">No unconfirmed inferred rules in this program\'s mappings.</div>');
+    lines.push(v.qPend
+      ? `<div class="cv-line"><b>${v.qPend} of 2</b> program-office answers (Q9–Q10) still pending — the qualitative risk factors are unverified. <button class="btn ghost sm" data-cv-jump="8">Enter on screen 8 &rarr;</button></div>`
+      : '<div class="cv-line">Program-office Q9–Q10 answered.</div>');
+    body = lines.join('');
+  }
+  return `<details class="cv"><summary>What could not be verified for this figure — ${esc(summary)}</summary>${body}</details>`;
+}
+function wireCv(rootSel){
+  $$(rootSel + ' [data-cv-jump]').forEach(b => b.addEventListener('click', () => setScreen(+b.dataset.cvJump)));
+}
+
+/* ---- 03-e — reason-gated exception resolution. The rationale is REQUIRED
+   (adjudicated: screen-8 overrides already require reasons; the higher-risk
+   decision cannot be the only friction-free one). Prefilled editable
+   AI-SUGGESTED template text keeps the rehearsed beat ~one click. Commit
+   keeps the existing excDecisions + diff-drawer flow. ---- */
+function excRationaleTemplate(code, mode){
+  const e = excByCode.get(code);
+  if (!e) return '';
+  const spend = TX.filter(t => t.code === code).reduce((s, t) => s + t.amt, 0);
+  const sub = shortName(subById.get(e.subId).name), prog = shortName(progById.get(e.progId).name);
+  return mode === 'reassign'
+    ? `Reviewer reassignment: the similarity match (${sub} → ${prog}, confidence ${e.conf.toFixed(2)}) does not fit this code's structure; reviewer knowledge places its ${fmtM(spend)} of FY${PRA_FY} spend under the selected sub-program instead. Flagged for SME follow-up at the next check-in.`
+    : `Accepting the AI-suggested mapping: segment structure, co-occurring codes and amount profile match ${sub} → ${prog} (similarity confidence ${e.conf.toFixed(2)}, below the 0.85 auto-routing bar). ${fmtM(spend)} of FY${PRA_FY} spend joins the program totals with this decision.`;
+}
+/* returns the diff snapshot on success, false when the rationale is empty/whitespace */
+function resolveException(code, subId, rationale, mode){
+  const e = excByCode.get(code);
+  if (!e || !subId || !subById.has(subId)) return false;
+  if (!rationale || !rationale.trim()) return false;       // the rationale is REQUIRED — refuse without it
+  const dsnap = diffSnap();                                // FLOW-07: before-state
+  state.excDecisions.set(code, {action: 'approved', subId});
+  invalidate();
+  const progId = subById.get(subId).progId;
+  logAudit('program_mapping', mode === 'reassign'
+    ? `Exception ${code} reassigned by reviewer to ${subId}/${progId} (AI suggested ${e.subId}, confidence ${e.conf.toFixed(2)}) — rationale: ${rationale.trim()}`
+    : `Exception ${code} accepted to ${e.subId}/${e.progId} (AI suggestion, confidence ${e.conf.toFixed(2)}) — rationale: ${rationale.trim()}`,
+    code + ';' + mode);
+  return dsnap;
+}
+
+/* ---- 04-b — live exposure computations for the screen-9 registers ---- */
+function registerExposures(){
+  const unm = aggregate().unmapped;
+  const rj = ruleJoin();
+  let infAmt = 0, infN = 0; const infRules = new Set();
+  rj.inferredByProg.forEach(e => { infAmt += e.amt; infN += e.n; e.rules.forEach(r => infRules.add(r)); });
+  const qPendProgs = PROGS.filter(p => {
+    const ps = state.pra[p.id] || {};
+    return ['Q9', 'Q10'].some(q => !(ps[q] && ps[q].human));
+  }).length;
+  const dirty = TX.filter(t => t.raw !== t.code);
+  const alias = dirty.filter(t => DATA.config.alias_map[normalizeRaw(t.raw)]).length;
+  return {unmAmt: unm.amt, unmCodes: Object.keys(unm.byCode).length, unmTx: unm.count,
+    infAmt, infN, infRules: infRules.size, qPendProgs, dirtyFmt: dirty.length - alias, alias};
+}
+function expLineHtml(kind, x){
+  if (kind === 'exc') return `Live exposure: <b>${fmtM(x.unmAmt)}</b> across ${x.unmCodes} unmapped code${x.unmCodes === 1 ? '' : 's'} (${x.unmTx} txns) sits in the exception queue — held out of every reported total until a human decides. <button class="btn ghost sm" data-exp-jump="3">Decide on screen 3 &rarr;</button>`;
+  if (kind === 'inf') return `Live exposure: <b>${fmtM(x.infAmt)}</b> of FY${PRA_FY} spend (${x.infN} txns) rides on ${x.infRules} unconfirmed inferred rule${x.infRules === 1 ? '' : 's'} — exactly the validation this entry asks for. <button class="btn ghost sm" data-exp-jump="3">Confirm or escalate on screen 3 &rarr;</button>`;
+  if (kind === 'qual') return `Live exposure: program-office Q9–Q10 pending for <b>${x.qPendProgs} of ${PROGS.length}</b> programs. <button class="btn ghost sm" data-exp-jump="8">Enter on screen 8 &rarr;</button>`;
+  return `Live exposure: <b>${x.dirtyFmt}</b> format-dirty and <b>${x.alias}</b> legacy-alias rows (raw ≠ canonical) in the ledger, repaired deterministically by the cleansing rules. <button class="btn ghost sm" data-exp-jump="2">See the pipeline on screen 2 &rarr;</button>`;
+}
+/* register entries that genuinely correspond to a computation — nothing else gains a line */
+const EXP_TARGETS = {
+  'ASSUMP-16': 'exc', 'SME-15': 'exc',
+  'ASSUMP-02': 'inf', 'SME-02': 'inf',
+  'ASSUMP-17': 'qual', 'SME-12': 'qual',
+  'ASSUMP-01': 'dirty', 'SME-03': 'dirty'
+};
+
 /* ============================ shared UI bits ============================ */
 function kpi(lbl, val, sub, cls){
   return `<div class="kpi ${cls || ''}"><div class="lbl">${lbl}</div><div class="val">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
 }
-function badgeAssess(flag){
-  return flag
-    ? '<span class="badge crit" title="Known from the start: the year-over-year change breached the configured trigger, so this program goes straight to a full (comprehensive) risk assessment">Comprehensive required</span>'
-    : '<span class="badge good" title="Start with a preliminary assessment — the year-over-year change stayed inside the configured trigger, so nothing forces a comprehensive from the outset. A preliminary can still escalate to a comprehensive on its findings.">Preliminary first</span>';
+/* 02-c — three assessment-path states, not two: trigger breach → comprehensive;
+   no breach but 3-year cycle due/overdue → comprehensive on cycle; else
+   preliminary. "Comprehensive" is no longer equated purely with a trigger breach. */
+function badgeAssess(flag, progId, fy){
+  if (flag) return '<span class="badge crit" title="Known from the start: the year-over-year change breached the configured trigger, so this program goes straight to a full (comprehensive) risk assessment">Comprehensive required</span>';
+  const cd = progId ? compDue(progId, fy) : null;
+  if (cd && cd.state !== 'ok')
+    return `<span class="badge warn" title="No trigger breach, but the last comprehensive assessment was FY${cd.last} — the 3-year cycle (REQ-034) requires one ${cd.state === 'due' ? 'this fiscal year' : 'already (' + esc(cd.label) + ')'}. ${esc(CYCLE_LABEL)}">No trigger — comprehensive due on 3-year cycle</span>`;
+  return '<span class="badge good" title="Start with a preliminary assessment — the year-over-year change stayed inside the configured trigger and the 3-year comprehensive cycle is not yet due. A preliminary can still escalate to a comprehensive on its findings.">Preliminary first</span>';
 }
 function yoyCell(pct){
   if (pct == null) return '<td class="num">—</td>';
@@ -1827,6 +2095,8 @@ function renderS1(){
   const totPrior = rows.reduce((s, r) => s + (r.prior || 0), 0);
   const totPct = totPrior > 0 ? (tot - totPrior) / totPrior * 100 : null;
   const flagged = rows.filter(r => r.flag);
+  /* 02-c — cycle-due count is a SEPARATE small stat; the flagged KPI stays trigger-only */
+  const cyc = PROGS.filter(p => { const cd = compDue(p.id, fy); return cd && cd.state !== 'ok'; });
   const unm = agg.unmapped;
   const unmCodes = Object.keys(unm.byCode).length;
   $('#s1-fy').textContent = 'FY' + fy;
@@ -1843,6 +2113,9 @@ function renderS1(){
     kpi('Flagged for comprehensive assessment', flagged.length,
       `trigger: ${state.cfg.direction === 'either' ? '±' : ''}${state.cfg.threshold}% YoY · ${state.cfg.direction.replace('_',' ')} · ${(state.cfg.measures || []).includes('transaction_count') ? 'dollars or txn volume (2024 rule)' : 'dollars'}`,
       flagged.length ? 'alert' : 'ok') +
+    kpi('Comprehensive due on 3-yr cycle', cyc.length,
+      `<span title="${esc(CYCLE_LABEL)}">separate from the trigger count — ${cyc.length ? cyc.map(p => esc(shortName(p.name))).join(', ') : 'no program is cycle-due'} · illustrative history (REQ-034)</span>`,
+      cyc.some(p => compDue(p.id, fy).state === 'overdue') ? 'alert' : '') +
     kpi('Exception queue', unmCodes, `${unmCodes} unmapped codes · ${unm.count} records held out of rollups`, unmCodes ? '' : 'ok') +
     kpi(`Dollars under confirmed rules · FY${PRA_FY}`, tp.pct == null ? '—' : tp.pct.toFixed(1) + '%',
       `<span title="Three-bucket walk over every FY${PRA_FY} dollar — unmapped exception-queue dollars count against the denominator, so the metric cannot flatter itself.">${fmtM(tp.confirmed)} confirmed (sme_confirmed / sop_validated / session decisions) · ${fmtM(tp.inferred)} on inferred rules · ${fmtM(tp.unmapped)} unmapped</span> — confirm or escalate rules on screen 3`,
@@ -1865,7 +2138,7 @@ function renderS1(){
       <td class="mono">${p.listing || '—'}</td>
       <td class="num">${fmtFull(r.cur)}</td>
       <td class="num">${r.prior == null ? '—' : fmtFull(r.prior)}</td>
-      ${yoyCell(r.pct)}<td>${sparkPair(p.id)}</td><td>${badgeAssess(r.flag)}</td></tr>`;
+      ${yoyCell(r.pct)}<td>${sparkPair(p.id)}</td><td>${cycleChip(p.id, fy)}</td><td>${badgeAssess(r.flag, p.id, fy)}</td></tr>`;
   }).join('');
   $$('#s1-programs [data-open-pra]').forEach(b => b.addEventListener('click', () => {
     state.praProg = b.dataset.openPra;
@@ -1972,7 +2245,15 @@ function renderS3Work(){
     kpi('Open exceptions', open.length + Object.keys(agg.unmapped.byCode).filter(c => !excByCode.has(c)).length,
       'below-confidence or unknown → human decision', (open.length || Object.keys(agg.unmapped.byCode).some(c => !excByCode.has(c))) ? 'alert' : 'ok') +
     kpi('Session overrides', state.overrides.size + (EXC.length - open.length), 'in-memory · reload resets · all audited');
-  /* exception queue */
+  /* the ONE grouped sub-program options builder — reused by the exception
+     queue's Reassign select (03-e) and the mapping table below */
+  const allSubOpts = PROGS.map(p =>
+    `<optgroup label="${esc(shortName(p.name))}">` +
+    (subsOfProg.get(p.id) || []).map(s => `<option value="${s.id}">${esc(shortName(s.name))}</option>`).join('') +
+    '</optgroup>').join('');
+  /* exception queue — 03-e reason-gated resolution: Accept-suggestion /
+     Reassign both REQUIRE a rationale (prefilled AI-SUGGESTED template,
+     editable); Keep-in-queue is a recorded no-reason deferral. */
   $('#s3-exceptions tbody').innerHTML = exc.map(e => {
     const d = state.excDecisions.get(e.code);
     const sub = subById.get(e.subId), prog = progById.get(e.progId);
@@ -1980,41 +2261,93 @@ function renderS3Work(){
     const nTx = TX.filter(t => t.code === e.code).length;
     let status, action;
     if (d && d.action === 'approved'){
-      status = `<span class="badge good">approved → ${esc(sub.id)}</span>`;
+      status = `<span class="badge good">approved → ${esc(d.subId)}</span>`;
       action = `<button class="btn sm" data-exc-undo="${e.code}">Undo</button>`;
     } else {
-      status = '<span class="badge warn">exception_queue</span>';
-      action = `<button class="btn sm primary" data-exc-approve="${e.code}">Approve suggestion</button>
-                <button class="btn sm" data-exc-keep="${e.code}">Keep queued</button>`;
+      status = d && d.action === 'queued'
+        ? '<span class="badge gray" title="Deferral recorded in the audit trail — the code stays open; its spend stays out of every total">kept in queue · deferred</span>'
+        : '<span class="badge warn">exception_queue</span>';
+      action = `<div class="flexrow">
+          <button class="btn sm primary" data-exc-open="accept|${e.code}" title="Accept the AI suggestion — a rationale is required (prefilled, editable)">Accept suggestion&hellip;</button>
+          <button class="btn sm" data-exc-open="reassign|${e.code}" title="Map this code to a different sub-program — a rationale is required (prefilled, editable)">Reassign&hellip;</button>
+          <button class="btn sm" data-exc-keep="${e.code}" title="Recorded deferral — no rationale required">Keep in queue</button>
+        </div>
+        <div class="exc-form" data-exc-form="${e.code}" hidden>
+          <div class="small" data-exc-mode-label="${e.code}"></div>
+          <div data-exc-sub-wrap="${e.code}" hidden style="margin:5px 0"><select class="inline" data-exc-sub="${e.code}" aria-label="Reassign ${esc(e.code)} to sub-program">${allSubOpts}</select></div>
+          <div class="small" style="margin:5px 0 3px"><span class="ai-tag" title="Deterministic template text — the connected product would draft this live; a human owns the final wording either way">AI-SUGGESTED · PRECOMPUTED</span> rationale template — edit freely; <b>required</b>, recorded verbatim in the audit trail</div>
+          <textarea class="inline" data-exc-reason="${e.code}" aria-label="Rationale for the ${esc(e.code)} decision (required)"></textarea>
+          <div class="exc-err" data-exc-err="${e.code}" hidden>A rationale is required — the decision is refused without one (screen-8 overrides already require reasons; this queue is held to the same bar).</div>
+          <div class="flexrow" style="margin-top:5px">
+            <button class="btn sm primary" data-exc-commit="${e.code}">Record decision</button>
+            <button class="btn sm" data-exc-cancel="${e.code}">Cancel</button>
+          </div>
+        </div>`;
     }
     return `<tr><td class="mono">${esc(e.code)}</td>
       <td class="num">${fmtFull(spend)} <span class="small">(${nTx} txns)</span></td>
       <td>${esc(shortName(sub.name))} → ${esc(shortName(prog.name))} <span class="ai-tag" title="Similarity match over segment structure, co-occurring codes and amount profile — deterministic stand-in; the connected product scores this live">AI-SUGGESTED · PRECOMPUTED</span></td>
-      <td>${confChip(e.conf)}</td><td>${status}</td><td class="flexrow">${action}</td></tr>`;
+      <td>${confChip(e.conf)}</td><td>${status}</td><td style="min-width:250px">${action}</td></tr>`;
   }).join('') + Object.entries(agg.unmapped.byCode).filter(([c]) => !excByCode.has(c)).sort((a, b) => b[1].amt - a[1].amt).map(([c, b]) => `
     <tr><td class="mono">${esc(c)}</td>
       <td class="num">${fmtFull(b.amt)} <span class="small">(${b.count} txns)</span></td>
       <td><span class="small">none — code not in the embedded reference data (from the ingested extract)</span></td>
       <td>—</td><td><span class="badge warn">unknown code</span></td>
       <td><span class="small">held out of every total — fix the extract or restore the embedded one (screen 2)</span></td></tr>`).join('');
-  $$('#s3-exceptions [data-exc-approve]').forEach(b => b.addEventListener('click', () => {
-    const e = excByCode.get(b.dataset.excApprove);
-    const dsnap = diffSnap();                                  // FLOW-07: before-state
-    state.excDecisions.set(e.code, {action: 'approved', subId: e.subId});
-    invalidate();
-    logAudit('program_mapping', `Exception ${e.code} approved to ${e.subId}/${e.progId} (AI suggestion, confidence ${e.conf.toFixed(2)})`, e.code + ';similarity-match');
-    const t = totalOf(aggregate(), e.progId, state.fy);
-    toast(`<b>${esc(e.code)}</b> mapped to ${esc(shortName(progById.get(e.progId).name))} — its spend joined the rollups. FY${state.fy} program total is now <b>${fmtM(t)}</b>.`);
+  /* 03-e — open the inline disclosure; prefill the editable AI-SUGGESTED rationale */
+  $$('#s3-exceptions [data-exc-open]').forEach(b => b.addEventListener('click', () => {
+    const parts = b.dataset.excOpen.split('|');
+    const mode = parts[0], code = parts[1];
+    const f = $(`[data-exc-form="${code}"]`);
+    const e = excByCode.get(code);
+    if (!f || !e) return;
+    f.hidden = false;
+    f.dataset.mode = mode;
+    const wrap = $(`[data-exc-sub-wrap="${code}"]`);
+    if (wrap) wrap.hidden = mode !== 'reassign';
+    const sel = $(`[data-exc-sub="${code}"]`);
+    if (sel && mode === 'reassign') sel.value = e.subId;
+    $(`[data-exc-mode-label="${code}"]`).innerHTML = mode === 'accept'
+      ? `Accepting the AI suggestion: <b>${esc(shortName(subById.get(e.subId).name))}</b> → ${esc(shortName(progById.get(e.progId).name))}`
+      : `Reassigning <span class="mono">${esc(code)}</span> — pick the governing sub-program:`;
+    const ta = $(`[data-exc-reason="${code}"]`);
+    ta.value = excRationaleTemplate(code, mode);
+    $(`[data-exc-err="${code}"]`).hidden = true;
+    ta.focus();
+  }));
+  $$('#s3-exceptions [data-exc-cancel]').forEach(b => b.addEventListener('click', () => {
+    const f = $(`[data-exc-form="${b.dataset.excCancel}"]`);
+    if (f) f.hidden = true;
+  }));
+  $$('#s3-exceptions [data-exc-commit]').forEach(b => b.addEventListener('click', () => {
+    const code = b.dataset.excCommit;
+    const f = $(`[data-exc-form="${code}"]`);
+    const e = excByCode.get(code);
+    if (!f || !e) return;
+    const mode = f.dataset.mode || 'accept';
+    const subId = mode === 'reassign' ? ($(`[data-exc-sub="${code}"]`) || {value: e.subId}).value : e.subId;
+    const reason = ($(`[data-exc-reason="${code}"]`) || {value: ''}).value;
+    const dsnap = resolveException(code, subId, reason, mode);
+    if (!dsnap){                                             // empty/whitespace rationale → inline refusal
+      const err = $(`[data-exc-err="${code}"]`);
+      if (err) err.hidden = false;
+      return;
+    }
+    const progId = subById.get(subId).progId;
+    const t = totalOf(aggregate(), progId, state.fy);
+    toast(`<b>${esc(code)}</b> mapped to ${esc(shortName(progById.get(progId).name))} — its spend joined the rollups. FY${state.fy} program total is now <b>${fmtM(t)}</b>. Rationale recorded in the audit trail.`);
     refresh();
-    openDiffDrawer(`Exception approved: <span class="mono">${esc(e.code)}</span> &rarr; ${esc(e.subId)}`, dsnap, () => {
-      state.excDecisions.delete(e.code);
+    openDiffDrawer(`Exception ${mode === 'reassign' ? 'reassigned' : 'accepted'}: <span class="mono">${esc(code)}</span> &rarr; ${esc(subId)}`, dsnap, () => {
+      state.excDecisions.delete(code);                       // the revert path the drawer has always used
       invalidate();
-      logAudit('program_mapping', `Exception approval on ${e.code} reverted via what-changed drawer`, e.code + ';revert');
+      logAudit('program_mapping', `Exception decision on ${code} reverted via what-changed drawer`, code + ';revert');
     });
   }));
   $$('#s3-exceptions [data-exc-keep]').forEach(b => b.addEventListener('click', () => {
-    logAudit('program_mapping', `Exception ${b.dataset.excKeep} kept in queue (reviewer choice)`, b.dataset.excKeep);
-    toast(`<b>${esc(b.dataset.excKeep)}</b> stays in the exception queue — its spend remains excluded from all totals.`);
+    const code = b.dataset.excKeep;
+    state.excDecisions.set(code, {action: 'queued'});        // recorded no-op disposition — no reason required for deferral
+    logAudit('program_mapping', `Exception ${code} kept in queue — recorded deferral (no rationale required); its spend stays out of every total`, code + ';defer');
+    toast(`<b>${esc(code)}</b> stays in the exception queue — deferral recorded; its spend remains excluded from all totals.`);
     refresh();
   }));
   $$('#s3-exceptions [data-exc-undo]').forEach(b => b.addEventListener('click', () => {
@@ -2023,14 +2356,10 @@ function renderS3Work(){
     logAudit('program_mapping', `Exception decision on ${b.dataset.excUndo} reverted`, b.dataset.excUndo);
     refresh();
   }));
-  /* mapping table */
+  /* mapping table (allSubOpts built once, above the exception queue) */
   const fsel = $('#s3-filter-prog');
   if (!fsel.dataset.init){ progOptions(fsel, '', true); fsel.dataset.init = 1; }
   const want = fsel.value;
-  const allSubOpts = PROGS.map(p =>
-    `<optgroup label="${esc(shortName(p.name))}">` +
-    (subsOfProg.get(p.id) || []).map(s => `<option value="${s.id}">${esc(shortName(s.name))}</option>`).join('') +
-    '</optgroup>').join('');
   const rows = [];
   for (const c of DATA.codes){
     const curSub = resolveSub(c.code);
@@ -2075,8 +2404,13 @@ function renderS3Work(){
   const tsel = $('#s3-filter-ruletype');
   const tw = tsel.value;
   const allRules = [...DATA.rules, ...state.sessionRules.map(r => ({id: r.id, type: 'session_override', expr: r.expr, conf: 1, status: 'reviewed (session)'}))];
-  const shown = allRules.filter(r => !tw || r.type === tw);
-  $('#s3-rule-count').textContent = `${shown.length} of ${allRules.length} rules`;
+  /* 06-d — blast radius: FY2026 dollars governed by each rule (shared join
+     with 07-d), shown as a column and the DEFAULT SORT, high → low */
+  const rj = ruleJoin();
+  const expOf = r => rj.byRule.get(r.id) || {amt: 0, n: 0};
+  const shown = allRules.filter(r => !tw || r.type === tw)
+    .sort((a, b) => expOf(b).amt - expOf(a).amt || (a.id < b.id ? -1 : 1));
+  $('#s3-rule-count').textContent = `${shown.length} of ${allRules.length} rules · sorted by FY2026 $ exposure`;
   /* 07-c — registry rows read the SAME session status map as the trust-posture
      tile/chip; inferred rows gain Confirm (illustrative signature) and
      Escalate (note required) actions. */
@@ -2106,8 +2440,12 @@ function renderS3Work(){
     } else if (sessConf){
       actions = '<span class="small">confirmed this session — audited</span>';
     }
+    const exp = expOf(r);
+    const expCell = exp.n
+      ? `<td class="num" data-exposure="${exp.amt.toFixed(2)}" title="${fmtFull(exp.amt)} across ${exp.n} FY${PRA_FY} transactions ride on this rule — the blast radius if it is wrong">${fmtM(exp.amt)} <span class="small">· ${exp.n} txns</span></td>`
+      : `<td class="num" data-exposure="0.00"><span class="small" title="No FY${PRA_FY} program_mapping rows reference this rule — cleansing/rollup/event rules govern structure, not mapped dollars">—</span></td>`;
     return `<tr><td class="mono">${esc(r.id)}</td><td class="mono small">${esc(r.type)}</td>
-    <td class="small">${esc(exprText(r.expr))}</td><td>${confChip(r.conf)}</td>
+    <td class="small">${esc(exprText(r.expr))}</td>${expCell}<td>${confChip(r.conf)}</td>
     <td>${statusBadge}</td><td style="min-width:190px">${actions}</td></tr>`;
   }).join('');
   $$('#s3-rules [data-rule-confirm]').forEach(b => b.addEventListener('click', () => {
@@ -2288,8 +2626,17 @@ function renderS6(){
     tip: `<div class="tt-h">${esc(shortName(progById.get(r.progId).name))}</div>
       <div class="tt-m">FY${state.fy - 1}: ${fmtFull(r.prior || 0)} · ${(r.nPrior || 0).toLocaleString()} txns<br>FY${state.fy}: ${fmtFull(r.cur)} · ${r.nCur.toLocaleString()} txns<br>YoY $: ${fmtPct(r.pct)}${r.dflag ? ' — BREACH' : ''}<br>YoY txn volume: ${fmtPct(r.cpct)}${r.cflag ? ' — BREACH' : ''}<br>${r.flag ? 'FLAGGED' : 'within corridor on both measures'}</div>`
   })), state.cfg);
+  /* 04-e — diff each program's flag state under the live config against the
+     IMMUTABLE shipped default (reconstructed the same way runParity does) */
+  const dcfg = shippedCfg(), aggS6 = aggregate();
   $('#s6-table tbody').innerHTML = rows.map(r => {
     const p = progById.get(r.progId);
+    const defFlag = progRow(r.progId, state.fy, dcfg, aggS6).flag;
+    const dd = r.flag === defFlag ? '—' : (r.flag ? 'newly flagged' : 'drops off');
+    const ddCell = `<td data-diffdefault="${dd}" data-diffprog="${r.progId}">${
+      dd === '—' ? '<span class="small" title="Same flag state under the live configuration and the shipped default">—</span>'
+      : dd === 'newly flagged' ? '<span class="badge crit" title="Flagged under the live (session-modified) configuration but NOT under the shipped default">newly flagged</span>'
+      : '<span class="badge warn" title="Flagged under the shipped default but NOT under the live (session-modified) configuration">drops off</span>'}</td>`;
     const why = r.pct == null ? '—' :
       `${aiTag()} ${r.flag
         ? (r.dflag
@@ -2302,7 +2649,8 @@ function renderS6(){
       <td class="num">${r.prior == null ? '—' : fmtFull(r.prior)}</td>
       <td class="num">${fmtFull(r.cur)}</td>${yoyCell(r.pct)}${cCell}
       <td>${sparkPair(p.id)}</td>
-      <td>${badgeAssess(r.flag)}</td><td class="small" style="max-width:330px">${why}</td></tr>`;
+      <td>${badgeAssess(r.flag, p.id, state.fy)}<div style="margin-top:4px">${cycleChip(p.id, state.fy)}</div></td>
+      ${ddCell}<td class="small" style="max-width:330px">${why}</td></tr>`;
   }).join('');
   renderS6Drill();   // 05-c — the open card survives refresh() and re-derives its verdicts
 }
@@ -2325,13 +2673,16 @@ function renderS7(){
   $('#s7-summary').innerHTML = fyPinNote() + `<div class="note ${y.value.startsWith('Yes') ? 'amber' : ''}">
     <b>${esc(shortName(progById.get(progId).name))}</b> — FY${PRA_FY} preliminary risk assessment. ${esc(y.value)}.
     Every auto answer below carries its evidence, its confidence and an AI-suggested rationale; sign-off happens on screen 8.</div>`;
+  /* 07-d — one per-program computation, the same disclosure block on every answer card */
+  const cvBlock = cannotVerifyHtml(progId);
   $('#s7-questions').innerHTML = A.map(a => {
     const q = qMeta(a.qid);
     if (a.human){
       return `<div class="qcard"><div class="qhead"><span class="qid">${a.qid}</span>
         <span class="qtext">${esc(qText(q))}</span><span class="badge gray">qualitative</span></div>
         <div class="aval"><span class="pending">Awaiting program-office input</span></div>
-        <div class="ev">Routed to the program office — e.g., changes to program rules, regulation, staffing. Enter and sign off on screen 8.</div></div>`;
+        <div class="ev">Routed to the program office — e.g., changes to program rules, regulation, staffing. Enter and sign off on screen 8.</div>
+        ${cvBlock}</div>`;
     }
     /* 03-d — "Trace to FY records": the shared record grid, filtered to this
        program + assessment FY, opens inline beneath the answer (Q1/Q2). */
@@ -2349,6 +2700,7 @@ function renderS7(){
       <div class="ev"><b>Evidence:</b> ${a.evidence}${a.spark ? '<div style="margin-top:6px">' + sparkline(a.spark) + '</div>' : ''}</div>
       <div class="ai">${aiTag()}${esc(a.rationale)} <span class="small">Editable &amp; overridable on screen 8.</span></div>
       ${traceUi}
+      ${cvBlock}
     </div>`;
   }).join('');
   $$('#s7-questions [data-trace-grid]').forEach(b => b.addEventListener('click', () => {
@@ -2356,6 +2708,7 @@ function renderS7(){
     refresh();
   }));
   wireGrid('#s7-questions');
+  wireCv('#s7-questions');
 }
 
 function renderS8(){
@@ -2388,6 +2741,8 @@ function renderS8(){
   $('#s8-final-banner').innerHTML = fyPinNote() + (fin
     ? `<div class="note" style="border-left-color:var(--good);background:#e7f4e7;color:var(--good-text)"><b>PRA finalized</b> by <b>${esc(fin.by)}</b> at ${esc(fin.at)} (typed-name attestation — illustrative signature). Answers below are <b>frozen</b>; exports carry the sign-off. In-memory only — reload resets.</div>`
     : '');
+  /* 07-d — one per-program computation, the same disclosure block on every question card */
+  const cvBlock8 = cannotVerifyHtml(progId);
   $('#s8-questions').innerHTML = A.map(a => {
     const q = qMeta(a.qid);
     const st = ps[a.qid] || {};
@@ -2426,8 +2781,10 @@ function renderS8(){
         <div class="actions"><button class="btn sm primary" data-ovr-save="${a.qid}">Save override</button>
         <button class="btn sm" data-ovr-cancel="${a.qid}">Cancel</button></div>
       </div>`}
+      ${cvBlock8}
     </div>`;
   }).join('');
+  wireCv('#s8-questions');
   /* wire review controls — every mutation goes through the 07-e guarded functions */
   $$('#s8-questions [data-approve]').forEach(b => b.addEventListener('click', () => {
     if (!approveAnswer(progId, b.dataset.approve)) return;
@@ -2468,11 +2825,24 @@ function renderS8(){
     toast(`<b>${esc(shortName(progById.get(progId).name))}</b> PRA finalized — attested by <b>${esc(name)}</b> (illustrative signature). Answers are now frozen; export it on screen 10.`);
     refresh();
   };
-  /* audit table */
-  $('#s8-audit tbody').innerHTML = state.audit.length
-    ? state.audit.slice().reverse().map(a => `<tr><td class="mono">${a.n}</td><td class="mono small">${esc(a.entity)}</td>
+  /* audit table — 02-d: kind badges, date-bearing stamps, per-program filter */
+  const asel = $('#s8-audit-prog');
+  if (!asel.dataset.init){
+    asel.dataset.init = 1;
+    progOptions(asel, '', true);
+    asel.addEventListener('change', () => { if (state.screen === 8) renderS8(); });
+  }
+  const aw = asel.value;
+  const kindBadge = k => k === 'system'
+    ? '<span class="badge gray" title="Seeded ingestion-time provenance — simulated record, deterministic stamp derived from the dataset seed date">system · simulated</span>'
+    : k === 'gate' ? '<span class="badge good" title="Sign-off gate event — real wall clock">gate</span>'
+    : '<span class="badge info" title="Live reviewer action — real wall clock">user</span>';
+  const entries = state.audit.filter(a => !aw || (a.refs || '').includes(aw) || (a.decision || '').includes(aw));
+  $('#s8-audit-count').textContent = `${entries.length} of ${state.audit.length} entries`;
+  $('#s8-audit tbody').innerHTML = entries.length
+    ? entries.slice().reverse().map(a => `<tr><td class="mono">${a.n}</td><td>${kindBadge(a.kind)}</td><td class="mono small">${esc(a.entity)}</td>
       <td class="small">${esc(a.decision)}</td><td class="small">${esc(a.actor)} · ${esc(a.ts)}</td><td class="mono small">${esc(a.refs)}</td></tr>`).join('')
-    : '<tr><td colspan="5" class="small">No session decisions yet — approve, override or remap something.</td></tr>';
+    : `<tr><td colspan="6" class="small">No entries${aw ? ' for this program yet' : ' yet'} — approve, override or remap something.</td></tr>`;
 }
 
 function renderS9(){
@@ -2492,22 +2862,29 @@ function renderS9(){
   const shown = a => !/synthetic|demo|illustrat|fabricat/i.test(a.text);
   if (!$('#s9-assumptions').dataset.init){
     $('#s9-assumptions').dataset.init = 1;
+    /* 04-b — the checkbox rows render once (checkbox state is in-memory DOM);
+       relevant entries carry an exposure container refilled on every render */
     $('#s9-assumptions').innerHTML = DATA.assumptions.filter(shown).map(a => `
       <label class="checkrow"><input type="checkbox" aria-label="Mark assumption for confirmation at the next check-in">
-        <span>${esc(a.text)}</span></label>`).join('');
+        <span>${esc(a.text)}</span></label>` +
+      (EXP_TARGETS[a.id] ? `<div class="exp-row" data-exp="${a.id}" data-exp-kind="${EXP_TARGETS[a.id]}"></div>` : '')).join('');
     $('#s9-sme-filter').addEventListener('change', renderS9);
   }
+  /* 04-b — live-computed exposure lines with setScreen jump links, IN PLACE
+     on the existing register entries (no new register, no new card) */
+  const xexp = registerExposures();
+  $$('#s9-assumptions [data-exp]').forEach(el => { el.innerHTML = expLineHtml(el.dataset.expKind, xexp); });
   const want = $('#s9-sme-filter').value;
   $('#s9-sme').innerHTML = DATA.smeQuestions
     .filter(q => (!want || q.priority === want) && shown(q))
     .map(q => `<div class="checkrow">
-      <span>${esc(qText(q))}<br><span class="small">${q.priority === 'blocking' ? '<span class="badge crit">blocking</span>' : q.priority === 'high' ? '<span class="badge warn">high value</span>' : '<span class="badge gray">roadmap / pilot</span>'}</span></span></div>`).join('');
+      <span>${esc(qText(q))}<br><span class="small">${q.priority === 'blocking' ? '<span class="badge crit">blocking</span>' : q.priority === 'high' ? '<span class="badge warn">high value</span>' : '<span class="badge gray">roadmap / pilot</span>'}</span></span></div>` +
+      (EXP_TARGETS[q.id] ? `<div class="exp-row" data-exp="${q.id}" data-exp-kind="${EXP_TARGETS[q.id]}">${expLineHtml(EXP_TARGETS[q.id], xexp)}</div>` : '')).join('');
+  $$('#screen-9 [data-exp-jump]').forEach(b => b.addEventListener('click', () => setScreen(+b.dataset.expJump)));
 }
 function runParity(){
   const agg = aggregate(true);                       // baseline mapping — session overrides excluded
-  const cfg0 = {threshold: DATA.config.threshold_pct, direction: DATA.config.direction,
-    minPrior: DATA.config.min_prior_year_amount, minPriorCount: DATA.config.min_prior_year_count,
-    measures: DATA.config.measures, combine: DATA.config.combine};
+  const cfg0 = shippedCfg();                         // 04-e shares this exact reconstruction
   let checked = 0, ok = 0; const misses = [];
   for (const g of GEN_FY){
     const row = progRow(g.progId, g.fy, cfg0, agg);
@@ -2571,6 +2948,9 @@ function praReportHtml(progId){
   const rows = reviewStateOf(progId);
   const fin = state.finalized[progId];
   const cfg = state.cfg;
+  const cd = compDue(progId, PRA_FY);                       // 02-c — 3-year comprehensive cycle
+  const cycleDue = !flag && cd && cd.state !== 'ok';
+  const drift = driftMarker();                              // 04-e — session-modified config marker
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <title>PRA ${esc(progId)} FY${PRA_FY} — SYNTHETIC DEMO</title>
 <style>
@@ -2586,14 +2966,15 @@ function praReportHtml(progId){
  footer{margin-top:26px;font-size:11px;color:#52514e;border-top:1px solid #ddd;padding-top:10px}
 </style></head><body>
 <h1>Preliminary Risk Assessment — ${esc(shortName(p.name))}</h1>
-<div>Fiscal year ${PRA_FY} · assistance listing ${esc(p.listing || 'n/a (synthetic program)')} · ${fin ? `FINALIZED in-session by <b>${esc(fin.by)}</b> at ${esc(fin.at)} — typed-name attestation (illustrative signature, simulated capability; session only)` : 'DRAFT — pending sign-off (ASSUMP-17)'}</div>
+<div>Fiscal year ${PRA_FY} · assistance listing ${esc(p.listing || 'n/a (synthetic program)')} · ${fin ? `FINALIZED in-session by <b>${esc(fin.by)}</b> at ${esc(fin.at)} — typed-name attestation (illustrative signature, simulated capability; session only)` : 'DRAFT — pending sign-off (ASSUMP-17)'}${drift ? ` · <b>${esc(drift)}</b>` : ''}</div>
 <div class="banner"><b>SYNTHETIC DEMO DATA.</b> Conceptual demo, not production. All figures are synthetic <b>disbursements</b> watermarked SYNTHETIC-DEMO, calibrated to public FEMA <b>obligation</b> envelopes (obligations ≠ disbursements — ASSUMP-05/10). The 10-question instrument is an <b>illustrative placeholder</b> structured on OMB M-21-19 / A-123 App. C risk factors — it is not FEMA's form (ASSUMP-04, SME-05). AI rationales are precomputed, deterministic template text labeled as such — no live model, no network.</div>
 <h2>Headline</h2>
 <table><tr><th>FY${PRA_FY} disbursements</th><th>FY${PRA_FY-1}</th><th>YoY ($)</th><th>YoY (txn volume)</th><th>Trigger in force</th><th>Assessment path</th></tr>
 <tr><td class="n">${fmtFull(y.cur)}</td><td class="n">${y.prior == null ? '—' : fmtFull(y.prior)}</td>
 <td class="n">${fmtPct(y.pct)}</td><td class="n">${fmtPct(row.cpct)} (${(row.nPrior || 0).toLocaleString()} → ${row.nCur.toLocaleString()} txns)</td>
-<td>${cfg.threshold}% · ${esc(cfg.direction.replace('_',' '))} · ${(cfg.measures || []).includes('transaction_count') ? 'dollars or txn volume (2024 rule)' : 'dollars'} · min prior ${fmtM(cfg.minPrior)} (REQ-010/031, configurable)</td>
-<td><b>${flag ? 'COMPREHENSIVE ASSESSMENT REQUIRED FROM THE START' : 'Begins with preliminary assessment'}</b>${flag && row.cflag && !row.dflag ? ' — flagged by transaction volume; dollars stayed inside the corridor' : ''}</td></tr></table>
+<td>${cfg.threshold}% · ${esc(cfg.direction.replace('_',' '))} · ${(cfg.measures || []).includes('transaction_count') ? 'dollars or txn volume (2024 rule)' : 'dollars'} · min prior ${fmtM(cfg.minPrior)} (REQ-010/031, configurable)${drift ? ` — <b>${esc(drift)}</b>` : ''}</td>
+<td><b>${flag ? 'COMPREHENSIVE ASSESSMENT REQUIRED FROM THE START (trigger breach)' : cycleDue ? 'NO TRIGGER — COMPREHENSIVE DUE ON 3-YEAR CYCLE' : 'Begins with preliminary assessment'}</b>${flag && row.cflag && !row.dflag ? ' — flagged by transaction volume; dollars stayed inside the corridor' : ''}${cycleDue ? ` — last comprehensive FY${cd.last}; ${esc(cd.label)}` : ''}</td></tr></table>
+<p><b>Comprehensive cycle (3-year rule, REQ-034):</b> last comprehensive assessment FY${cd ? cd.last : '—'} — ${cd ? esc(cd.label) : 'no record'}. <i>Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.</i></p>
 <h2>Questionnaire (illustrative — ASSUMP-04)</h2>
 <table><tr><th>#</th><th>Question</th><th>Answer</th><th>Populated by</th><th>Confidence</th><th>Review status</th></tr>
 ${rows.map(r => `<tr><td class="mono">${r.qid}</td><td>${esc(r.text)}</td>
@@ -2630,13 +3011,17 @@ function exportCsv(){
 }
 function exportJson(){
   const agg = aggregate();
-  return JSON.stringify({
+  const drift = driftMarker();                              // 04-e — marker only when modified
+  const out = {
     disclaimer: 'SYNTHETIC-DEMO — conceptual demo, not production. Synthetic disbursements calibrated to public obligations (ASSUMP-05/10). Illustrative PRA instrument (ASSUMP-04). AI rationales are precomputed template text.',
-    configInForce: {...state.cfg, prefillThreshold: DATA.config.prefill_threshold},
+    cycleNote: 'Comprehensive-cycle dates (REQ-034): Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.',
+    configInForce: {...state.cfg, prefillThreshold: DATA.config.prefill_threshold,
+      sessionModifiedFromDefault: !cfgIsDefault()},
     sessionMappingOverrides: state.sessionRules.map(r => r.expr),
     exceptionDecisions: Array.from(state.excDecisions.entries()).map(([c, d]) => ({code: c, ...d})),
     programs: PROGS.map(p => {
       const r = progRow(p.id, PRA_FY, state.cfg, agg);
+      const cd = compDue(p.id, PRA_FY);                     // 02-c — additive cycle fields
       return {programId: p.id, name: shortName(p.name), fiscalYear: PRA_FY,
         isDisaster: p.isDisaster, tafs: p.tafs,
         totalDisbursement: +r.cur.toFixed(2), priorYear: r.prior == null ? null : +r.prior.toFixed(2),
@@ -2644,13 +3029,21 @@ function exportJson(){
         transactionCount: r.nCur,
         countYoyPctChange: r.cpct == null ? null : +r.cpct.toFixed(1),
         triggerFlag: r.flag, dollarTriggerFlag: r.dflag, countTriggerFlag: r.cflag,
+        lastComprehensiveFy: cd ? cd.last : null,
+        cycleDueFy: cd ? cd.due : null,
+        cycleState: cd ? cd.state : null,
+        assessmentPath: r.flag ? 'comprehensive — trigger breach'
+          : (cd && cd.state !== 'ok') ? 'no trigger — comprehensive due on 3-year cycle'
+          : 'preliminary first',
         finalized: !!state.finalized[p.id],
         finalizedBy: state.finalized[p.id] ? state.finalized[p.id].by : null,
         finalizedAt: state.finalized[p.id] ? state.finalized[p.id].at : null,
         pra: reviewStateOf(p.id)};
     }),
     sessionAudit: state.audit
-  }, null, 2);
+  };
+  if (drift) out.configDrift = drift;                       // header marker — absent when at default
+  return JSON.stringify(out, null, 2);
 }
 function renderS10(){
   const psel = $('#s10-prog');
@@ -3424,6 +3817,11 @@ function setScreen(n){
 function refreshChip(){
   $('#chip-threshold').textContent = (state.cfg.direction === 'either' ? '±' : (state.cfg.direction === 'decrease_only' ? '−' : '+')) + state.cfg.threshold + '%';
   $('#chip-direction').textContent = state.cfg.direction.replace('_', ' ');
+  /* 04-e — drift marker: present only while state.cfg differs from the shipped default */
+  const dm = driftMarker();
+  const drift = $('#chip-drift');
+  drift.hidden = !dm;
+  drift.textContent = dm ? ' · ' + dm : '';
   /* 07-c — trust-posture chip: same trustPosture() the screen-1 tile reads */
   const tp = trustPosture();
   $('#chip-trust-pct').textContent = tp.pct == null ? '—' : tp.pct.toFixed(1) + '%';
@@ -3438,18 +3836,27 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
   const fySel = $('#fy-select');
   fyOptions(fySel, FYS.slice(1), state.fy);           // FY2023+ (YoY needs a prior year)
   fySel.addEventListener('change', () => { state.fy = +fySel.value; refresh(); });
-  /* trigger config (screen 6) */
+  /* trigger config (screen 6) — 02-d: every commit is audited ('user', real
+     wall clock). The slider logs on CHANGE (commit), never on input ticks. */
   const thr = $('#s6-threshold');
   thr.addEventListener('input', () => {
     state.cfg.threshold = +thr.value;
     $('#s6-thr-read').textContent = thr.value;
     refresh();
   });
+  thr.addEventListener('change', () => {
+    logAudit('trigger_config', `Trigger threshold committed at ${state.cfg.threshold}% — config in force for every subsequent flag`, 'cfg;threshold');
+  });
   $$('input[name="s6-dir"]').forEach(r => r.addEventListener('change', () => {
-    if (r.checked){ state.cfg.direction = r.value; refresh(); }
+    if (r.checked){
+      state.cfg.direction = r.value;
+      logAudit('trigger_config', `Trigger direction set to "${r.value.replace('_', ' ')}"`, 'cfg;direction');
+      refresh();
+    }
   }));
   $('#s6-minprior').addEventListener('change', () => {
     state.cfg.minPrior = Math.max(0, +$('#s6-minprior').value || 0);
+    logAudit('trigger_config', `Noise floor (min prior-FY amount) set to ${fmtM(state.cfg.minPrior)}`, 'cfg;minprior');
     refresh();
   });
   const syncMeasures = () => {
@@ -3458,14 +3865,14 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     if ($('#s6-m-count').checked) ms.push('transaction_count');
     if (!ms.length){ $('#s6-m-dollars').checked = true; ms.push('disbursements'); toast('At least one measure must stay enabled — dollars re-enabled.'); }
     state.cfg.measures = ms;
+    logAudit('trigger_config', `Trigger measures set to ${ms.map(m => m === 'transaction_count' ? 'txn volume' : 'dollars').join(' + ')}`, 'cfg;measures');
     refresh();
   };
   $('#s6-m-dollars').addEventListener('change', syncMeasures);
   $('#s6-m-count').addEventListener('change', syncMeasures);
   $('#s6-reset').addEventListener('click', () => {
-    state.cfg = {threshold: DATA.config.threshold_pct, direction: DATA.config.direction,
-      minPrior: DATA.config.min_prior_year_amount, minPriorCount: DATA.config.min_prior_year_count,
-      measures: DATA.config.measures.slice(), combine: DATA.config.combine};
+    state.cfg = shippedCfg();
+    logAudit('trigger_config', `Trigger configuration reset to the shipped default (${DATA.config.threshold_pct}% · ${DATA.config.direction} · ${DATA.config.measures.join(' + ')})`, 'cfg;reset');
     toast('Trigger restored to the shipped configuration: ' + DATA.config.threshold_pct + '% · ' + DATA.config.direction + ' · ' + DATA.config.measures.join(' + ') + ' (rules-as-data default).');
     refresh();
   });
@@ -3620,21 +4027,24 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     toast('Embedded extract downloaded — edit a number in Excel and re-ingest it to watch every screen recompute.');
   });
   $('#s2-restore').addEventListener('click', restoreExtract);
-  /* reload = reset is deliberate; confirm it once session decisions exist */
+  /* reload = reset is deliberate; confirm it once LIVE session decisions exist
+     (boot-seeded 'system' provenance entries alone never trigger the prompt) */
   window.addEventListener('beforeunload', ev => {
-    if (!state.audit.length) return;
+    if (!state.audit.some(a => a.kind !== 'system')) return;
     ev.preventDefault();
     ev.returnValue = '';
   });
+  seedProvenance();   // 02-d — ingestion-time provenance, seeded before first paint
   refreshChip();
   setScreen(1);
 })();
 
 /* =====================================================================
-   WAVE-1 SELF-TESTS — executed by design-alternatives/_qa/test_harness.mjs
-   (jsdom). Returns [{name, pass, detail}]. Deterministic; each phase
-   normalizes the state it needs, so the suite is robust to whatever the
-   harness clicked first. Covers the six integrated features end to end.
+   WAVE-1 + WAVE-2 SELF-TESTS — executed by design-alternatives/_qa/
+   test_harness.mjs (jsdom). Returns [{name, pass, detail}]. Deterministic;
+   each phase normalizes the state it needs, so the suite is robust to
+   whatever the harness clicked first. Covers all thirteen integrated
+   features end to end.
    ===================================================================== */
 window.__SELFTEST__ = function(){
   const T = [];
@@ -3760,6 +4170,224 @@ window.__SELFTEST__ = function(){
       chip && chip.textContent === (tp2.pct == null ? '—' : tp2.pct.toFixed(1) + '%'), chip && chip.textContent);
   } catch (e){
     t('self-test suite completes without exception', false, String(e && e.stack || e).slice(0, 300));
+  }
+  /* ================= WAVE 2 (debate §2, items 7–13) ================= */
+  try {
+    /* normalize again — the wave-1 phases changed screens and config */
+    state.fy = CUR_FY_DEFAULT; state.cfg = cfg0(); state.s6open = null; state.s7grid = null;
+    state.overrides.clear(); state.sessionRules = []; state.excDecisions.clear();
+    state.ruleStatus.clear(); state.ruleEsc.clear();
+    invalidate();
+
+    /* ---- 02-d audit-log upgrade ---- */
+    const seeded = state.audit.filter(a => a.kind === 'system');
+    const expFlag = allRows(PRA_FY, cfg0()).filter(r => r.flag);
+    t('02-d: one seeded system provenance entry per program flagged at the shipped config',
+      seeded.length === expFlag.length && expFlag.every(r => seeded.some(s => (s.refs || '').indexOf(r.progId) === 0)),
+      `seeded=${seeded.length} flagged=${expFlag.length}`);
+    t('02-d: seeded entries labeled simulated, worded "at ingestion", deterministic seed-date stamp',
+      seeded.length > 0 && seeded.every(s => /simulated/i.test(s.decision) && s.decision.includes('at ingestion') && s.ts.includes('2026-07-08')));
+    t('02-d: every audit entry carries a kind (system | user | gate)',
+      state.audit.length > 0 && state.audit.every(a => ['system', 'user', 'gate'].includes(a.kind)));
+    const gateE = state.audit.find(a => a.entity === 'gate');
+    t('02-d: the finalize event carries kind "gate"', !!gateE && gateE.kind === 'gate');
+    const thrEl = $('#s6-threshold');
+    const preN = state.audit.length;
+    thrEl.value = 25;
+    thrEl.dispatchEvent(new Event('input', {bubbles: true}));
+    thrEl.dispatchEvent(new Event('change', {bubbles: true}));
+    const cfgE = state.audit[state.audit.length - 1];
+    t('02-d: trigger-config commit appends ONE audit entry (change, not input ticks)',
+      state.audit.length === preN + 1 && cfgE.entity === 'trigger_config' && cfgE.kind === 'user' && cfgE.decision.includes('25%'),
+      cfgE && (cfgE.entity + ' · ' + cfgE.decision.slice(0, 60)));
+    t('02-d: live entries use a real date-bearing wall clock (never the seed stamp)',
+      /[\/\-]/.test(cfgE.ts) && /:/.test(cfgE.ts) && cfgE.ts !== SEED_STAMP, cfgE.ts);
+    state.cfg = cfg0(); refresh();
+    setScreen(8);
+    const asel = $('#s8-audit-prog');
+    asel.value = 'PROG-UR';
+    asel.dispatchEvent(new Event('change', {bubbles: true}));
+    const expRows = state.audit.filter(a => (a.refs || '').includes('PROG-UR') || (a.decision || '').includes('PROG-UR')).length;
+    t('02-d: per-program audit filter narrows the table to matching entries',
+      expRows > 0 && $$('#s8-audit tbody tr').length === expRows, `${$$('#s8-audit tbody tr').length} vs ${expRows}`);
+    asel.value = '';
+    asel.dispatchEvent(new Event('change', {bubbles: true}));
+
+    /* ---- 03-e reason-gated exception resolution ---- */
+    state.s3Tab = 'work';
+    setScreen(3);
+    const e0 = EXC[0];
+    t('03-e: accept with an empty/whitespace rationale is refused',
+      resolveException(e0.code, e0.subId, '   ', 'accept') === false && !state.excDecisions.has(e0.code));
+    const openA = $(`#s3-exceptions [data-exc-open="accept|${e0.code}"]`);
+    t('03-e: queue rows offer Accept / Reassign / Keep-in-queue',
+      !!openA && !!$(`#s3-exceptions [data-exc-open="reassign|${e0.code}"]`) && !!$(`#s3-exceptions [data-exc-keep="${e0.code}"]`));
+    openA.click();
+    const ta0 = $(`[data-exc-reason="${e0.code}"]`);
+    const prefill = ta0 ? ta0.value : '';
+    t('03-e: rationale prefilled with editable template text, labeled AI-SUGGESTED',
+      !!ta0 && prefill.trim().length > 40 && !!$(`[data-exc-form="${e0.code}"] .ai-tag`));
+    $(`[data-exc-commit="${e0.code}"]`).click();
+    const d0 = state.excDecisions.get(e0.code);
+    const aud0 = state.audit.slice().reverse().find(a => a.entity === 'program_mapping' && (a.refs || '').indexOf(e0.code) === 0);
+    t('03-e: prefilled rationale accepted — decision recorded, rationale in the audit detail',
+      !!d0 && d0.action === 'approved' && d0.subId === e0.subId && !!aud0 && aud0.decision.includes('rationale:') && aud0.decision.includes(prefill.trim().slice(0, 40)),
+      aud0 && aud0.decision.slice(0, 100));
+    closeDiffDrawer(false);
+    state.excDecisions.delete(e0.code); invalidate(); refresh();
+    /* reassign records the CHOSEN sub-program; the diff-drawer revert restores */
+    const e1 = EXC[1];
+    const altSub = DATA.subPrograms.find(s => s.progId !== e1.progId).id;
+    const altProg = subById.get(altSub).progId;
+    const beforeTot = totalOf(aggregate(), altProg, state.fy);
+    $(`#s3-exceptions [data-exc-open="reassign|${e1.code}"]`).click();
+    const sel1 = $(`[data-exc-sub="${e1.code}"]`);
+    sel1.value = altSub;
+    $(`[data-exc-commit="${e1.code}"]`).click();
+    const d1 = state.excDecisions.get(e1.code);
+    t('03-e: reassign records the chosen sub-program (not the AI suggestion)',
+      !!d1 && d1.action === 'approved' && d1.subId === altSub && $('#diff-drawer').classList.contains('open'), JSON.stringify(d1));
+    $('#dd-revert').click();
+    const afterTot = totalOf(aggregate(), altProg, state.fy);
+    t('03-e: diff-drawer revert deletes the decision key and restores totals exactly',
+      !state.excDecisions.has(e1.code) && Math.abs(afterTot - beforeTot) < 0.005, `${beforeTot.toFixed(2)} -> ${afterTot.toFixed(2)}`);
+    const keepBtn = $(`#s3-exceptions [data-exc-keep="${e0.code}"]`);
+    keepBtn.click();
+    const dq = state.excDecisions.get(e0.code);
+    const audQ = state.audit[state.audit.length - 1];
+    t('03-e: keep-in-queue is a recorded no-reason deferral; the code stays open',
+      !!dq && dq.action === 'queued' && audQ.entity === 'program_mapping' && audQ.decision.includes('kept in queue') &&
+      openExceptions().some(x => x.code === e0.code));
+    state.excDecisions.clear(); invalidate(); refresh();
+
+    /* ---- 06-d blast-radius column ---- */
+    $('#s3-filter-ruletype').value = ''; refresh();
+    /* independent recomputation of per-rule FY2026 exposure (baseline mapping, no session decisions) */
+    const expMap = new Map();
+    for (const tx of TX){
+      if (tx.fy !== PRA_FY) continue;
+      const rid = MAP_RULE_BY_CODE.get(tx.code);
+      if (rid) expMap.set(rid, (expMap.get(rid) || 0) + tx.amt);
+    }
+    const topRule = [...expMap.entries()].sort((a, b) => b[1] - a[1])[0];
+    const expCells = $$('#s3-rules tbody [data-exposure]').map(td => +td.dataset.exposure);
+    t('06-d: blast-radius column present and default-sorted high → low',
+      expCells.length > 3 && expCells.every((v, i) => i === 0 || v <= expCells[i - 1]), expCells.slice(0, 5).join(','));
+    t('06-d: top blast-radius value matches an independent recomputation',
+      expCells.length > 0 && Math.abs(expCells[0] - topRule[1]) < 0.01, `col=${expCells[0]} recomputed=${topRule[1].toFixed(2)} (${topRule[0]})`);
+
+    /* ---- 07-d cannot-verify blocks ---- */
+    state.praProg = 'PROG-IA';
+    setScreen(7);
+    const cvIa = $('#s7-questions .cv');
+    const excIa = openExceptions().filter(x => x.progId === 'PROG-IA');
+    const excAmtIa = excIa.reduce((s, x) => s + TX.filter(t2 => t2.code === x.code).reduce((s2, t2) => s2 + t2.amt, 0), 0);
+    t('07-d: block renders on screen-7 cards with exception dollars suggested toward the program',
+      excIa.length > 0 && !!cvIa && cvIa.textContent.includes('NOT in these totals') && cvIa.textContent.includes(fmtM(excAmtIa)),
+      cvIa && cvIa.textContent.slice(0, 120));
+    t('07-d: suggestion line reuses AI-SUGGESTED labeling and jumps to screen 3',
+      !!$('#s7-questions .cv .ai-tag') && !!$('#s7-questions .cv [data-cv-jump="3"]'));
+    setScreen(8);
+    t('07-d: block also renders on every screen-8 question card',
+      $$('#s8-questions .cv').length === praAnswers('PROG-IA').length);
+    setScreen(7);
+    const infIa = ruleJoin().inferredByProg.get('PROG-IA');
+    t('07-d: inferred-rule caveat present while the governing rule is unconfirmed',
+      !!infIa && $('#s7-questions .cv').textContent.includes('attributed through'));
+    const infIaRules = infIa ? [...infIa.rules] : [];
+    infIaRules.forEach(rid => confirmRule(rid));
+    refresh();
+    t('07-d: confirming the rule (wave-1 action) clears the inferred caveat live',
+      infIaRules.length > 0 && !$('#s7-questions .cv').textContent.includes('attributed through'));
+    infIaRules.forEach(rid => state.ruleStatus.delete(rid));
+    /* clean state: PROG-UR — no suggestions toward it, no inferred rules, Q9/Q10 answered in the wave-1 phase */
+    state.praProg = 'PROG-UR'; refresh();
+    t('07-d: the explicit clean state renders for a clean program',
+      $('#s7-questions .cv').textContent.includes('Nothing material to disclose for this figure'));
+
+    /* ---- 04-e diff-vs-default + session-modified marker ---- */
+    state.cfg = cfg0(); refresh();
+    t('04-e: marker absent at the shipped default (topbar chip + JSON export)',
+      $('#chip-drift').hidden === true && !exportJson().includes('session-modified') && !praReportHtml('PROG-PA').includes('session-modified'));
+    setScreen(6);
+    const dd0 = $$('#s6-table [data-diffdefault]').map(td => td.dataset.diffdefault);
+    t('04-e: diff-vs-default column shows "—" for every program at the default config',
+      dd0.length === PROGS.length && dd0.every(v => v === '—'), dd0.join(','));
+    state.cfg.threshold = 40; refresh();
+    const agg40 = aggregate();
+    const want40 = {};
+    PROGS.forEach(p => {
+      const live = progRow(p.id, state.fy, state.cfg, agg40).flag;
+      const def = progRow(p.id, state.fy, cfg0(), agg40).flag;
+      want40[p.id] = live === def ? '—' : (live ? 'newly flagged' : 'drops off');
+    });
+    const got40 = {};
+    $$('#s6-table [data-diffdefault]').forEach(td => { got40[td.dataset.diffprog] = td.dataset.diffdefault; });
+    t('04-e: badges correct at threshold 40 against the immutable shipped default',
+      PROGS.every(p => got40[p.id] === want40[p.id]) && Object.values(want40).includes('drops off'),
+      JSON.stringify(got40));
+    t('04-e: marker present after a config change — chip and both export texts',
+      $('#chip-drift').hidden === false && exportJson().includes('session-modified from default') &&
+      praReportHtml('PROG-PA').includes('session-modified from default'));
+    state.cfg = cfg0(); refresh();
+
+    /* ---- 04-b register exposure lines ---- */
+    setScreen(9);
+    const excLine = $('#s9-assumptions [data-exp-kind="exc"]');
+    const unm2 = aggregate().unmapped;
+    t('04-b: register entries carry live-computed exposure lines with jump links',
+      !!excLine && excLine.textContent.includes(fmtM(unm2.amt)) && !!excLine.querySelector('[data-exp-jump="3"]') &&
+      !!$('#s9-sme [data-exp-jump]'), excLine && excLine.textContent.slice(0, 90));
+    const qualLine = $('#s9-assumptions [data-exp-kind="qual"]');
+    const pendProgs = PROGS.filter(p => {
+      const psP = state.pra[p.id] || {};
+      return ['Q9', 'Q10'].some(q => !(psP[q] && psP[q].human));
+    }).length;
+    t('04-b: Q9–Q10 exposure line matches the recomputed pending-program count',
+      !!qualLine && qualLine.textContent.includes(`${pendProgs} of ${PROGS.length}`), qualLine && qualLine.textContent.slice(0, 80));
+    const dirtyLine = $('#s9-assumptions [data-exp-kind="dirty"]');
+    const dirtyN = TX.filter(x => x.raw !== x.code).length;
+    const aliasN = TX.filter(x => DATA.config.alias_map[normalizeRaw(x.raw)]).length;
+    t('04-b: dirty-row / legacy-alias exposure matches the ledger and jumps to screen 2',
+      !!dirtyLine && dirtyLine.textContent.includes(String(dirtyN - aliasN)) && dirtyLine.textContent.includes(String(aliasN)) &&
+      !!dirtyLine.querySelector('[data-exp-jump="2"]'));
+
+    /* ---- 02-c comprehensive-cycle chips + third assessment path ---- */
+    t('02-c: compDue states correct per LAST_COMPREHENSIVE (ok / due / overdue)',
+      compDue('PROG-PA').state === 'ok' && compDue('PROG-PA').label === 'due FY2028' &&
+      compDue('PROG-IA').state === 'due' && compDue('PROG-IA').label === 'due this FY' &&
+      compDue('PROG-UR').state === 'overdue' && compDue('PROG-UR').label.includes('OVERDUE — was due FY2025'));
+    const urRow = progRow('PROG-UR', PRA_FY, cfg0(), aggregate());
+    t('02-c: PROG-UR is unflagged yet cycle-overdue — the quiet program still owes an assessment',
+      urRow.flag === false && compDue('PROG-UR').state === 'overdue');
+    t('02-c: badgeAssess threads the third assessment-path state',
+      badgeAssess(false, 'PROG-UR', PRA_FY).includes('No trigger — comprehensive due on 3-year cycle') &&
+      badgeAssess(true).includes('Comprehensive required') &&
+      badgeAssess(false, 'PROG-PA', PRA_FY).includes('Preliminary first'));
+    const q3ur = praAnswers('PROG-UR').find(a => a.qid === 'Q3');
+    t('02-c: Q3 states the third path for the cycle-due unflagged program',
+      q3ur.value.includes('3-year cycle') && !q3ur.value.includes('begins with the preliminary'));
+    const urReport = praReportHtml('PROG-UR');
+    t('02-c: PRA report states the third path (no surface equates comprehensive with trigger breach)',
+      urReport.includes('NO TRIGGER — COMPREHENSIVE DUE ON 3-YEAR CYCLE') && urReport.includes('Comprehensive cycle (3-year rule'));
+    setScreen(1);
+    const s1Label = $('#screen-1').textContent.includes(CYCLE_LABEL);
+    const s1Chip = $$('#s1-programs .badge').some(b2 => (b2.title || '').includes('3-year cycle'));
+    setScreen(6);
+    const s6Label = $('#screen-6').textContent.includes(CYCLE_LABEL);
+    t('02-c: mandatory illustrative-records label verbatim at every cycle surface incl. exports',
+      s1Label && s1Chip && s6Label && urReport.includes(CYCLE_LABEL) && exportJson().includes(CYCLE_LABEL),
+      `s1=${s1Label} chip=${s1Chip} s6=${s6Label}`);
+    setScreen(1);
+    t('02-c: flagged KPI stays trigger-only; the cycle count is a separate small stat',
+      $('#s1-kpis').textContent.includes('Flagged for comprehensive assessment') &&
+      $('#s1-kpis').textContent.includes('Comprehensive due on 3-yr cycle'));
+
+    /* leave the session tidy */
+    state.cfg = cfg0(); state.excDecisions.clear(); state.ruleStatus.clear(); state.ruleEsc.clear();
+    invalidate(); state.praProg = 'PROG-PA'; refresh();
+  } catch (e){
+    t('wave-2 self-test suite completes without exception', false, String(e && e.stack || e).slice(0, 300));
   }
   const fails = T.filter(x => !x.pass);
   console.log(`__SELFTEST__: ${T.length - fails.length}/${T.length} passed${fails.length ? ' — FAIL: ' + fails.map(f => f.name).join('; ') : ''}`);
