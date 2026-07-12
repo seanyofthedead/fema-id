@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Chronicle — FEMA Program Integrity Through Time (SYNTHETIC-DEMO)</title>
+<style>
+/* ============================================================
+   THE CHRONICLE — cartographic timeline instrument
+   Design language: chart-paper neutrals, ink-and-signal color,
+   color is meaning (dollars=blue, volume=teal, breach=red,
+   count-only signal=amber, events=plum). Conservative CSS only
+   (no nesting / :has / container queries) for jsdom parsing.
+   ============================================================ */
+:root{
+  --paper:#f7f6f2; --paper-2:#efede6; --card:#ffffff;
+  --ink:#1c2733; --ink-2:#46545f; --ink-3:#5d6b76;
+  --line:#d8d4c9; --line-2:#c4bfb1;
+  --dollars:#1f4e79;          /* disbursement strand */
+  --volume:#0e7c7b;           /* transaction-count strand */
+  --breach:#a52217;           /* dollar / both breach */
+  --countonly:#a05a00;        /* count-only signal (hero) */
+  --event:#5f4b8b;            /* disaster declarations */
+  --cycle:#4a5568;            /* comprehensive-cycle arc */
+  --due:#a52217;
+  --ok:#2e6b34;
+  --focus:#1a4480;
+  --chip:#e9e5da;
+  --mono:"Consolas","SFMono-Regular",Menlo,monospace;
+  --sans:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button{font-family:var(--sans)}
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:2px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- header ---------- */
+.app-header{background:#14212e;color:#f2efe8;padding:14px 22px 12px;border-bottom:4px solid #b8925a}
+.masthead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px}
+.masthead h1{font-family:var(--serif);font-weight:400;font-size:24px;letter-spacing:.4px;margin:0}
+.masthead .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c9bfa8}
+.masthead .agency{font-size:12px;color:#aebac4}
+.header-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{background:transparent;color:#e8e3d6;border:1px solid #55636f;border-radius:4px;padding:6px 12px;font-size:12.5px;cursor:pointer}
+.hbtn:hover{background:#22303d;border-color:#8b98a3}
+.hbtn.primary{background:#b8925a;border-color:#b8925a;color:#14212e;font-weight:600}
+.hbtn.primary:hover{background:#caa66e}
+.synth-banner{margin-top:8px;font-size:12px;color:#d8cfbc;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.synth-chip{display:inline-block;background:#3d2f18;color:#f0d9a8;border:1px solid #8a6d3b;border-radius:3px;padding:1px 8px;font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1460px;margin:0 auto;padding:14px 18px 40px}
+.instrument{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;align-items:start}
+.canvas-col{min-width:0}
+.side-col{position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;min-width:0}
+@media (max-width:1080px){
+  .instrument{grid-template-columns:1fr}
+  .side-col{position:static;max-height:none}
+}
+@media (max-width:820px){
+  .wrap{padding:10px 10px 30px}
+  .masthead h1{font-size:20px}
+  .toolbar{gap:8px}
+}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin-bottom:10px}
+.tgroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tgroup .glabel{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-right:2px}
+.zbtn{background:var(--paper-2);border:1px solid var(--line-2);border-radius:4px;min-width:30px;height:28px;font-size:14px;cursor:pointer;color:var(--ink)}
+.zbtn:hover{background:#e4e0d3}
+.scrub{width:190px}
+.tsep{width:1px;align-self:stretch;background:var(--line);margin:2px 0}
+.toolbar label{font-size:12.5px;color:var(--ink-2)}
+.toolbar select,.toolbar input[type=number]{font:inherit;font-size:12.5px;padding:3px 6px;border:1px solid var(--line-2);border-radius:4px;background:#fff;color:var(--ink)}
+.toolbar input[type=number]{width:64px}
+.meas-check{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--ink-2);border:1px solid var(--line);border-radius:4px;padding:3px 8px;background:var(--paper-2)}
+.viewport-note{font-size:11.5px;color:var(--ink-3);margin-left:auto;font-family:var(--mono)}
+
+/* ---------- canvas card ---------- */
+.canvas-card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px 10px;overflow:hidden}
+.canvas-card svg{display:block;width:100%;height:auto}
+.canvas-legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:8px 10px 4px;font-size:11.5px;color:var(--ink-2);align-items:center}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg .swatch{display:inline-block;width:22px;height:0;border-top:3px solid var(--dollars)}
+.lg .swatch.vol{border-top-style:dashed;border-top-color:var(--volume)}
+.lg .dm{width:9px;height:9px;transform:rotate(45deg);display:inline-block}
+.lg .dm.both{background:var(--breach)}
+.lg .dm.conly{background:var(--countonly)}
+.lg .dm.evt{background:var(--event);border-radius:50%}
+.lg .arcsw{display:inline-block;width:20px;height:9px;border:2px solid var(--cycle);border-bottom:none;border-radius:10px 10px 0 0}
+.norm-note{font-size:11px;color:var(--ink-3);padding:0 10px 6px;font-style:italic}
+
+/* SVG element classes */
+.lane-bg{fill:#ffffff}
+.lane-bg.alt{fill:#faf9f5}
+.lane-bg.focused{fill:#fdfcf7;stroke:#b8925a;stroke-width:1}
+.lane-sep{stroke:var(--line);stroke-width:1}
+.gridline{stroke:#e7e4da;stroke-width:1}
+.gridline.major{stroke:#d5d1c4}
+.axis-label{font-family:var(--mono);font-size:11px;fill:var(--ink-2)}
+.axis-label.minor{fill:#8a948e;font-size:10px}
+.lane-name{font-family:var(--sans);font-size:13px;font-weight:600;fill:var(--ink)}
+.lane-sub{font-family:var(--sans);font-size:10.5px;fill:var(--ink-3)}
+.lane-kind{font-family:var(--mono);font-size:9.5px;fill:#7a746a;letter-spacing:.08em}
+.strand-d{fill:none;stroke:var(--dollars);stroke-width:2.4;stroke-linejoin:round}
+.strand-c{fill:none;stroke:var(--volume);stroke-width:2;stroke-dasharray:6 4;stroke-linejoin:round}
+.strand-pt{stroke:#fff;stroke-width:1.2;cursor:pointer}
+.strand-pt.d{fill:var(--dollars)}
+.strand-pt.c{fill:var(--volume)}
+.strand-pt.sel{stroke:#b8925a;stroke-width:3}
+.diverge-fill{fill:var(--countonly);opacity:.14;pointer-events:none}
+.flare{cursor:pointer}
+.flare .fshape{stroke:#fff;stroke-width:1.4}
+.flare.both .fshape,.flare.dollar .fshape{fill:var(--breach)}
+.flare.countonly .fshape{fill:var(--countonly)}
+.flare-halo{fill:none;stroke-width:1.6;opacity:.55}
+.flare.both .flare-halo,.flare.dollar .flare-halo{stroke:var(--breach)}
+.flare.countonly .flare-halo{stroke:var(--countonly)}
+.flare-tag{font-family:var(--mono);font-size:9.5px;fill:#fff}
+.marker-label{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3)}
+.cycle-arc{fill:none;stroke:var(--cycle);stroke-width:1.8;stroke-dasharray:3 3;cursor:pointer}
+.cycle-arc.due{stroke:var(--due);stroke-dasharray:none;stroke-width:2.2}
+.cycle-lab{font-family:var(--mono);font-size:9.5px;fill:var(--cycle);cursor:pointer}
+.cycle-lab.due{fill:var(--due);font-weight:bold}
+.exc-chip{cursor:pointer}
+.exc-chip rect{fill:#fdf3e3;stroke:#c88a2d;stroke-width:1;rx:3}
+.exc-chip text{font-family:var(--mono);font-size:9.5px;fill:#7a5310}
+.pra-mark{cursor:pointer}
+.pra-mark rect{fill:#eef2f7;stroke:#5b7794;stroke-width:1}
+.pra-mark text{font-family:var(--mono);font-size:8.5px;fill:#2c4a68;font-weight:bold}
+.pra-mark.signed rect{fill:#e3efe4;stroke:var(--ok)}
+.pra-mark.signed text{fill:var(--ok)}
+.evt-dot{fill:var(--event);stroke:#fff;stroke-width:1;cursor:pointer}
+.ctx-band{fill:#f1eee6}
+.ctx-label{font-family:var(--mono);font-size:9.5px;fill:#6d675c}
+.ctx-title{font-family:var(--sans);font-size:10px;fill:var(--ink-3);letter-spacing:.12em}
+.extract-tick{cursor:pointer}
+.extract-tick rect{fill:#fff;stroke:#9aa5ad;stroke-width:1}
+.extract-tick text{font-family:var(--mono);font-size:8.5px;fill:#57646d}
+.modern-mark{cursor:pointer}
+.modern-line{stroke:#8a6d3b;stroke-width:1.6;stroke-dasharray:5 3}
+.modern-diamond{fill:#b8925a;stroke:#fff;stroke-width:1.2}
+.modern-lab{font-family:var(--mono);font-size:9.5px;fill:#7a5c2e}
+.origin-zone{fill:#ece8dd}
+.origin-lab{font-family:var(--mono);font-size:9.5px;fill:#6d675c;cursor:pointer}
+.horizon-zone{fill:url(#hatch)}
+.horizon-lab{font-family:var(--mono);font-size:9.5px;fill:#8a8172}
+.lane-focus-btn{cursor:pointer}
+.lane-focus-btn rect{fill:#f1eee6;stroke:var(--line-2);stroke-width:1}
+.lane-focus-btn text{font-family:var(--sans);font-size:10px;fill:var(--ink-2)}
+.lane-hl{fill:none;stroke:#b8925a;stroke-width:2;opacity:.9}
+.yaxis-lab{font-family:var(--mono);font-size:9px;fill:var(--ink-3)}
+.yaxis-lab.right{fill:var(--volume)}
+.yaxis-lab.left{fill:var(--dollars)}
+.val-lab{font-family:var(--mono);font-size:9px;fill:var(--ink-2)}
+.today-line{stroke:#6b7c69;stroke-width:1;stroke-dasharray:2 3}
+
+/* ---------- side drawer / panels ---------- */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:6px;margin-bottom:12px}
+.panel-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);background:linear-gradient(#fbfaf6,#f3f1ea)}
+.panel-head h2{font-size:13px;margin:0;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.panel-head .spacer{margin-left:auto}
+.panel-body{padding:10px 12px}
+.xbtn{background:none;border:1px solid transparent;border-radius:4px;color:var(--ink-3);font-size:15px;cursor:pointer;padding:1px 7px}
+.xbtn:hover{background:var(--paper-2);color:var(--ink)}
+.drawer-empty{color:var(--ink-3);font-size:12.5px;font-style:italic;padding:6px 2px}
+.evi-kv{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}
+.evi-kv td{padding:3px 6px;border-bottom:1px dotted var(--line);vertical-align:top}
+.evi-kv td:first-child{color:var(--ink-3);white-space:nowrap;width:42%}
+.evi-kv td.num{font-family:var(--mono)}
+.verdict{display:inline-block;border-radius:3px;padding:1px 8px;font-size:11px;font-weight:600}
+.verdict.breach{background:#f7e3e0;color:var(--breach);border:1px solid #d8a49d}
+.verdict.conly{background:#fbeed7;color:var(--countonly);border:1px solid #d9ad63}
+.verdict.ok{background:#e6efe6;color:var(--ok);border:1px solid #a9c7ab}
+.math-block{font-family:var(--mono);font-size:11.5px;background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:8px 10px;margin:6px 0;white-space:pre-wrap;word-break:break-word}
+.sim-tag{display:inline-block;background:#efe9f5;color:#5f4b8b;border:1px solid #c3b3d8;border-radius:3px;padding:0 6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.ai-tag{display:inline-block;background:#e8eef5;color:#274c74;border:1px solid #a9c0d8;border-radius:3px;padding:0 6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.conf-bar{display:inline-block;width:64px;height:7px;background:#e4e0d4;border-radius:4px;vertical-align:middle;overflow:hidden}
+.conf-bar i{display:block;height:100%;background:var(--dollars)}
+.conf-bar.low i{background:#c88a2d}
+.small{font-size:11.5px;color:var(--ink-3)}
+.pbtn{background:var(--paper-2);border:1px solid var(--line-2);border-radius:4px;padding:5px 11px;font-size:12px;cursor:pointer;color:var(--ink)}
+.pbtn:hover{background:#e6e2d5}
+.pbtn.go{background:#1a4480;border-color:#1a4480;color:#fff}
+.pbtn.go:hover{background:#2a5aa0}
+.pbtn.warn{background:#fbeed7;border-color:#c88a2d;color:#7a5310}
+.pbtn:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 2px}
+.field{margin:8px 0}
+.field label{display:block;font-size:11.5px;color:var(--ink-2);margin-bottom:3px}
+.field input[type=text],.field textarea,.field select{width:100%;font:inherit;font-size:12.5px;padding:5px 7px;border:1px solid var(--line-2);border-radius:4px;background:#fff;color:var(--ink)}
+.field textarea{min-height:52px;resize:vertical}
+.err-note{color:var(--breach);font-size:11.5px;margin-top:3px;min-height:14px}
+.ok-note{color:var(--ok);font-size:11.5px;margin-top:3px}
+.txn-table-wrap{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.txn-table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono)}
+.txn-table th{position:sticky;top:0;background:#efede4;text-align:left;padding:4px 6px;font-weight:600;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.txn-table td{padding:3px 6px;border-bottom:1px dotted var(--line);white-space:nowrap}
+.txn-table td.r{text-align:right}
+.cleansed{background:#fbf3df}
+.audit-list{list-style:none;margin:6px 0;padding:0;font-size:12px}
+.audit-list li{border-left:3px solid var(--line-2);padding:4px 8px;margin:4px 0;background:var(--paper-2);border-radius:0 4px 4px 0}
+.audit-list .who{font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+
+/* PRA */
+.pra-q{border:1px solid var(--line);border-radius:5px;padding:8px 10px;margin:8px 0;background:#fffdf9}
+.pra-q.human{background:#f5f8fb}
+.pra-q .qhead{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.pra-q .qid{font-family:var(--mono);font-weight:700;color:var(--ink-2);font-size:11.5px}
+.pra-q .qtext{font-size:12.5px;flex:1;min-width:180px}
+.pra-ans{font-family:var(--mono);font-size:12.5px;margin:5px 0 2px;color:var(--ink)}
+.pra-src{font-size:10.5px;color:var(--ink-3);font-family:var(--mono)}
+.override-box{border-top:1px dashed var(--line-2);margin-top:7px;padding-top:7px}
+.overridden{background:#fdf6e9;border-color:#d9ad63}
+
+/* ledger */
+.ledger-card{margin-top:12px}
+.ledger-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:0 0 8px}
+.ledger-toolbar input[type=search]{font:inherit;font-size:12.5px;padding:4px 8px;border:1px solid var(--line-2);border-radius:4px;min-width:170px}
+.ledger-wrap{overflow-x:auto}
+.ledger{width:100%;border-collapse:collapse;font-size:12.5px}
+.ledger th{background:#efede4;border-bottom:2px solid var(--line-2);padding:0;text-align:left;white-space:nowrap}
+.ledger th .sortbtn{width:100%;background:none;border:none;font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--ink-2);padding:6px 8px;text-align:left;cursor:pointer}
+.ledger th .sortbtn:hover{background:#e6e2d3;color:var(--ink)}
+.ledger td{padding:5px 8px;border-bottom:1px solid #eceade;white-space:nowrap}
+.ledger td.r{text-align:right;font-family:var(--mono);font-size:12px}
+.ledger tr.sel{background:#f6efdd;box-shadow:inset 3px 0 0 #b8925a}
+.ledger tr:hover{background:#f6f4ec}
+.rowbtn{background:none;border:1px solid var(--line-2);border-radius:3px;font-size:10.5px;padding:1px 7px;cursor:pointer;color:var(--ink-2)}
+.rowbtn:hover{background:var(--paper-2)}
+.pill{display:inline-block;border-radius:9px;padding:0 8px;font-size:10.5px;font-weight:600}
+.pill.breach{background:#f7e3e0;color:var(--breach)}
+.pill.conly{background:#fbeed7;color:var(--countonly)}
+.pill.ok{background:#e8efe8;color:var(--ok)}
+.pill.na{background:var(--chip);color:var(--ink-3)}
+.yoy-up{color:var(--breach)}
+.yoy-dn{color:#1f4e79}
+
+/* compare */
+.cmp-table{width:100%;border-collapse:collapse;font-size:12px}
+.cmp-table th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);text-align:right;padding:4px 6px;border-bottom:1px solid var(--line-2)}
+.cmp-table th:first-child{text-align:left}
+.cmp-table td{padding:4px 6px;border-bottom:1px dotted var(--line);text-align:right;font-family:var(--mono);font-size:11.5px}
+.cmp-table td:first-child{text-align:left;font-family:var(--sans);font-size:12px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(20,26,32,.55);display:none;z-index:50}
+.overlay.open{display:block}
+.modal{position:fixed;top:5vh;left:50%;transform:translateX(-50%);width:min(860px,94vw);max-height:88vh;overflow:auto;background:var(--card);border-radius:8px;border:1px solid var(--line-2);box-shadow:0 18px 50px rgba(0,0,0,.35);z-index:51;display:none}
+.modal.open{display:block}
+.modal-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:#f6f4ec;border-radius:8px 8px 0 0}
+.modal-head h2{margin:0;font-size:15px}
+.modal-body{padding:14px 18px}
+.briefing{font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;background:#fbfaf5;border:1px solid var(--line);border-radius:5px;padding:14px;position:relative;word-break:break-word}
+.wm{position:absolute;top:6px;right:10px;font-size:22px;color:rgba(165,34,23,.25);font-weight:800;letter-spacing:.15em;transform:rotate(-6deg);pointer-events:none}
+
+/* footer */
+.app-footer{margin-top:26px;border-top:1px solid var(--line-2);padding:14px 4px;font-size:11.5px;color:var(--ink-3)}
+.app-footer p{margin:4px 0}
+
+/* toast */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#14212e;color:#f2efe8;border-radius:5px;padding:8px 16px;font-size:12.5px;z-index:60;display:none;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.toast.show{display:block}
+
+@media (max-width:1024px){
+  .scrub{width:130px}
+  .txn-table-wrap{max-height:240px}
+}
+@media print{
+  .app-header,.toolbar,.side-col{display:none}
+}
+</style>
+</head>
+<body>
+<!-- ================= HEADER ================= -->
+<header class="app-header">
+  <div class="masthead">
+    <div>
+      <div class="kicker">FEMA &middot; Office of the Chief Financial Officer &middot; Payment Integrity</div>
+      <h1>The Chronicle <span class="agency">— each program&rsquo;s story through time, FY2022 &rarr; FY2027 horizon</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="hbtn" id="btnProvenance">Data &amp; provenance</button>
+      <button class="hbtn" id="btnAssumptions">Assumptions &amp; open questions</button>
+      <button class="hbtn" id="btnHelp">Keyboard &amp; reading guide</button>
+      <button class="hbtn primary" id="btnExport">Export chronicle briefing</button>
+    </div>
+  </div>
+  <div class="synth-banner">
+    <span class="synth-chip">SYNTHETIC-DEMO</span>
+    <span>All figures are synthetic demonstration data — calibrated to public envelopes, not FEMA records. Program names and DR numbers are real public identifiers. AI-flavored outputs are simulated and labeled.</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ================= TOOLBAR: time navigation + trigger console ================= -->
+  <div class="toolbar" role="toolbar" aria-label="Chronology navigation and trigger configuration">
+    <div class="tgroup" aria-label="Zoom and pan">
+      <span class="glabel">Time</span>
+      <button class="zbtn" id="zoomOut" title="Zoom out (minus key)" aria-label="Zoom out">&minus;</button>
+      <button class="zbtn" id="zoomIn" title="Zoom in (plus key)" aria-label="Zoom in">+</button>
+      <button class="zbtn" id="panLeft" title="Pan earlier (left arrow)" aria-label="Pan earlier">&larr;</button>
+      <button class="zbtn" id="panRight" title="Pan later (right arrow)" aria-label="Pan later">&rarr;</button>
+      <button class="zbtn" id="zoomAll" title="Fit all years (0 key)" aria-label="Fit all fiscal years" style="min-width:44px;font-size:11px">All</button>
+      <label for="scrubber" class="glabel" style="margin-left:6px">Scrub</label>
+      <input type="range" class="scrub" id="scrubber" min="2022" max="2027" step="0.25" value="2024.5" aria-label="Scrub timeline center (fiscal year)">
+    </div>
+    <div class="tsep" aria-hidden="true"></div>
+    <div class="tgroup" aria-label="Trigger configuration">
+      <span class="glabel">Trigger</span>
+      <label for="thNum">YoY threshold</label>
+      <input type="number" id="thNum" min="1" max="60" step="1" value="20" aria-label="Year-over-year trigger threshold percent"><span class="small">%</span>
+      <input type="range" id="thRange" min="1" max="60" step="1" value="20" style="width:110px" aria-label="Threshold slider">
+      <label for="dirSel">Direction</label>
+      <select id="dirSel" aria-label="Trigger direction">
+        <option value="either" selected>Either direction</option>
+        <option value="increase">Increase only</option>
+        <option value="decrease">Decrease only</option>
+      </select>
+      <span class="meas-check"><input type="checkbox" id="mDollars" checked><label for="mDollars">Disbursement $</label></span>
+      <span class="meas-check"><input type="checkbox" id="mCount" checked><label for="mCount">Transaction volume</label></span>
+      <span class="small" id="ruleNote">2024 rule: dollars OR volume, either direction</span>
+    </div>
+    <span class="viewport-note" id="viewportNote">FY2022 – FY2027</span>
+  </div>
+
+  <div class="instrument">
+    <div class="canvas-col">
+      <!-- ================= CHRONOLOGY CANVAS ================= -->
+      <div class="canvas-card">
+        <div class="canvas-legend" aria-hidden="false">
+          <span class="lg"><span class="swatch"></span> Disbursements (indexed)</span>
+          <span class="lg"><span class="swatch vol"></span> Transaction volume (indexed)</span>
+          <span class="lg"><span class="dm both"></span> Trigger breach</span>
+          <span class="lg"><span class="dm conly"></span> Volume-only breach</span>
+          <span class="lg"><span class="dm evt"></span> Disaster declaration (DR)</span>
+          <span class="lg"><span class="arcsw"></span> 3-year comprehensive clock</span>
+        </div>
+        <div id="chronology" aria-label="Chronology canvas: one lane per program, fiscal years left to right"></div>
+        <p class="norm-note">Normalization: each strand is indexed to its own FY2022 value = 100, per lane, so dollars and transaction counts share lane space honestly. Divergence between the two strands — not height — is the anomaly signal. Exact values: hover any point, or read the ledger below. Horizon note: this demo payload covers FY2022–FY2026; imagine the real canvas reaching back to 2018, where FEMA&rsquo;s actual assessment history begins.</p>
+      </div>
+
+      <!-- ================= DETAIL LEDGER (viewport-synced, screen-reader-friendly equivalent) ================= -->
+      <section class="panel ledger-card" aria-label="Detail ledger">
+        <div class="panel-head">
+          <h2>Detail ledger — exact values for the years in view</h2>
+          <span class="spacer"></span>
+          <span class="small" id="ledgerScope"></span>
+        </div>
+        <div class="panel-body">
+          <div class="ledger-toolbar">
+            <input type="search" id="ledgerFilter" placeholder="Filter programs&hellip;" aria-label="Filter ledger by program name">
+            <span class="small">Select a row to highlight its lane on the canvas; select a point on the canvas to highlight its row. This table is the precise-lookup and screen-reader surface for the canvas.</span>
+          </div>
+          <div class="ledger-wrap">
+            <table class="ledger" id="ledgerTable" aria-label="Program by fiscal year: disbursements, transaction counts, year-over-year change, trigger status">
+              <thead><tr id="ledgerHead"></tr></thead>
+              <tbody id="ledgerBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= SIDE COLUMN: evidence drawer + compare ================= -->
+    <div class="side-col">
+      <section class="panel" aria-label="Evidence panel" id="drawerPanel">
+        <div class="panel-head">
+          <h2 id="drawerTitle">Evidence</h2>
+          <span class="spacer"></span>
+          <button class="xbtn" id="drawerClose" aria-label="Close evidence panel">&times;</button>
+        </div>
+        <div class="panel-body" id="drawerBody">
+          <p class="drawer-empty">Nothing selected. Click any flare, declaration marker, cycle arc, PRA milestone, exception chip, or strand point on the canvas — its evidence opens here and stays while you keep scrubbing.</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Compare two fiscal years">
+        <div class="panel-head"><h2>Compare two fiscal years</h2></div>
+        <div class="panel-body">
+          <div class="btnrow" style="align-items:center">
+            <label for="cmpA" class="small">From</label>
+            <select id="cmpA" aria-label="Comparison baseline fiscal year"></select>
+            <label for="cmpB" class="small">to</label>
+            <select id="cmpB" aria-label="Comparison target fiscal year"></select>
+            <span class="small">at the live threshold above</span>
+          </div>
+          <div id="cmpOut"></div>
+          <p class="small" style="margin:8px 0 0">Tip: drag horizontally across the canvas to set this window; the trigger verdicts recompute at whatever threshold, direction, and measures are configured in the console.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ================= MODALS ================= -->
+<div class="overlay" id="overlay"></div>
+
+<div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+  <div class="modal-head"><h2 id="exportTitle">Chronicle briefing — export simulation</h2><span class="spacer" style="margin-left:auto"></span><button class="xbtn" data-close="exportModal" aria-label="Close export dialog">&times;</button></div>
+  <div class="modal-body">
+    <p class="small"><span class="sim-tag">Simulated</span> No file leaves this page. In production this becomes the reportable output package (briefing + CSV annex). Every export carries the SYNTHETIC-DEMO watermark.</p>
+    <div class="briefing" id="briefingOut"><span class="wm">SYNTHETIC-DEMO</span></div>
+    <div class="btnrow">
+      <button class="pbtn go" id="btnCopyBriefing">Copy briefing text (simulated hand-off)</button>
+      <button class="pbtn" data-close="exportModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="provModal" role="dialog" aria-modal="true" aria-labelledby="provTitle">
+  <div class="modal-head"><h2 id="provTitle">Data &amp; provenance — the ingestion contract</h2><span style="margin-left:auto"></span><button class="xbtn" data-close="provModal" aria-label="Close provenance dialog">&times;</button></div>
+  <div class="modal-body" id="provBody"></div>
+</div>
+
+<div class="modal" id="assumpModal" role="dialog" aria-modal="true" aria-labelledby="assumpTitle">
+  <div class="modal-head"><h2 id="assumpTitle">Assumptions &amp; open questions</h2><span style="margin-left:auto"></span><button class="xbtn" data-close="assumpModal" aria-label="Close assumptions dialog">&times;</button></div>
+  <div class="modal-body" id="assumpBody"></div>
+</div>
+
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-head"><h2 id="helpTitle">Reading &amp; keyboard guide</h2><span style="margin-left:auto"></span><button class="xbtn" data-close="helpModal" aria-label="Close help dialog">&times;</button></div>
+  <div class="modal-body" id="helpBody"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= FOOTER: honest disclosure ================= -->
+<footer class="app-footer wrap">
+  <p><strong>SYNTHETIC-DEMO.</strong> Every number on this page is synthetic demonstration data, computed live in this file from an embedded synthetic extract (1,459 transaction rows, FY2022&ndash;FY2026). Nothing here is a FEMA record. The dataset is calibrated to public obligation envelopes; program names and disaster declaration (DR) numbers are real public identifiers.</p>
+  <p>&ldquo;AI&rdquo; capabilities shown (mapping suggestions, drafted assessment answers) are simulated and deterministic: the machine proposes and explains; it never owns a reportable number, and nothing finalizes without human sign-off. Historical assessment milestones before FY2026 are illustrative — real records exist at FEMA from 2018&ndash;19 onward. Glossary: PRA = Preliminary Risk Assessment; PIIA = Payment Integrity Information Act; YoY = year over year; DR = major disaster declaration number; TAFS = Treasury Appropriation Fund Symbol; FY = federal fiscal year (Oct 1 &ndash; Sep 30).</p>
+</footer>
+<script>
+/* ================= DATA PAYLOAD (injected by inject.py) ================= */
+window.FEMA_DATA = /*__FEMA_DATA__*/null;
+</script>
+<script>
+/* ============================================================
+   THE CHRONICLE — application core
+   Section 1: derived data, live trigger math, app state
+   All reportable numbers are computed here from the embedded
+   synthetic payload; nothing reportable is hardcoded (planted
+   values appear only as cross-check constants in self-tests).
+   ============================================================ */
+(function(){
+"use strict";
+var D = window.FEMA_DATA;
+var APP = window.APP = {};
+
+/* --- jsdom/browser compatibility: programmatic click on SVG controls.
+       Browsers dispatch real pointer clicks; test harnesses call .click(),
+       which SVGElement lacks. Safe no-op enhancement. --- */
+if (window.SVGElement && !window.SVGElement.prototype.click) {
+  window.SVGElement.prototype.click = function(){
+    var ev; try { ev = new MouseEvent("click", {bubbles:true, cancelable:true}); }
+    catch(e){ ev = document.createEvent("Event"); ev.initEvent("click", true, true); }
+    this.dispatchEvent(ev);
+  };
+}
+
+/* ---------- lookups ---------- */
+var FYS = D.meta.fiscal_years.slice();           // [2022..2026]
+var FY0 = FYS[0], FYLAST = FYS[FYS.length-1];
+var PROGS = D.programs.slice();                   // canonical lane order
+var progById = {}; PROGS.forEach(function(p){ progById[p.id] = p; });
+var subById = {};  D.sub_programs.forEach(function(s){ subById[s.id] = s; });
+var ruleById = {}; D.mapping_rules.forEach(function(r){ ruleById[r.rule_id] = r; });
+var eventByDr = {}; D.disaster_events.forEach(function(e){ eventByDr[e.dr] = e; });
+
+/* fy_summary indexed [progId][fy] */
+var SUM = {};
+D.fy_summary.forEach(function(r){ (SUM[r.program_id] = SUM[r.program_id] || {})[r.fy] = r; });
+
+/* financial code -> sub-program -> program (mapping chain) */
+var codeInfo = {}; D.financial_codes.forEach(function(c){ codeInfo[c.code] = c; });
+var codeToProg = {}, codeToSub = {};
+D.financial_codes.forEach(function(c){
+  if (c.sub_program_id && subById[c.sub_program_id]) {
+    codeToSub[c.code] = c.sub_program_id;
+    codeToProg[c.code] = subById[c.sub_program_id].program_id;
+  }
+});
+/* rule that maps a code (from program_mapping rows, for lineage display) */
+var codeRule = {};
+D.program_mapping.forEach(function(m){ if (m.rule_id && !codeRule[m.code]) codeRule[m.code] = m.rule_id; });
+
+/* transactions: columns -> objects, once */
+var COLS = {}; D.transaction_columns.forEach(function(c,i){ COLS[c]=i; });
+var TXNS = D.transactions.map(function(a){
+  return { id:a[COLS.txn_id], raw:a[COLS.raw_code], code:a[COLS.code], dr:a[COLS.disaster_number],
+           isDr:a[COLS.is_disaster], fy:a[COLS.fiscal_year], amt:a[COLS.amount],
+           type:a[COLS.disbursement_type], date:a[COLS.date], prog: codeToProg[a[COLS.code]] || null };
+});
+APP.txnsFor = function(progId, fy){ return TXNS.filter(function(t){ return t.prog===progId && t.fy===fy; }); };
+APP.txnsForDr = function(dr, fy){ return TXNS.filter(function(t){ return t.dr===dr && (fy==null || t.fy===fy); }); };
+
+/* computed totals (deterministic JS owns every reportable number) */
+var CALC = {};   // CALC[progId][fy] = {total, count}
+PROGS.forEach(function(p){ CALC[p.id] = {}; FYS.forEach(function(fy){ CALC[p.id][fy] = {total:0, count:0}; }); });
+TXNS.forEach(function(t){ if (t.prog && CALC[t.prog][t.fy]) { CALC[t.prog][t.fy].total += t.amt; CALC[t.prog][t.fy].count += 1; } });
+APP.CALC = CALC; APP.SUM = SUM; APP.TXNS = TXNS; APP.PROGS = PROGS; APP.FYS = FYS;
+APP.progById = progById; APP.subById = subById; APP.ruleById = ruleById; APP.codeInfo = codeInfo;
+APP.codeToSub = codeToSub; APP.codeRule = codeRule; APP.eventByDr = eventByDr;
+
+/* exception queue (in-memory resolution state lives in APP.state) */
+var EXC = D.program_mapping.filter(function(m){ return m.status === "exception_queue"; });
+APP.EXC = EXC;
+
+/* event_summary indexed for DR panels */
+var EVSUM = {}; // EVSUM[dr] = [{fy,total,program_id,...}]
+D.event_summary.forEach(function(r){ if (r.disaster_number!=null){ (EVSUM[r.disaster_number]=EVSUM[r.disaster_number]||[]).push(r); } });
+APP.EVSUM = EVSUM;
+
+/* risk questions/responses (FY2026 PRA) */
+var QS = D.risk_questions.slice();
+var RESP = {}; // RESP[progId][qid]
+D.risk_responses.forEach(function(r){ (RESP[r.program_id]=RESP[r.program_id]||{})[r.question_id]=r; });
+APP.QS = QS; APP.RESP = RESP;
+
+/* ---------- ILLUSTRATIVE assessment history (SIMULATED — see label) ----------
+   Historical PRA / comprehensive-assessment records do NOT exist in the payload.
+   This small set is synthesized for the cycle arcs and history panels and is
+   labeled everywhere it appears:
+   "Illustrative — historical assessment records simulated; FEMA holds real
+    records from 2018–19 onward." */
+var CYCLES = {
+  "PROG-PA": { lastComprehensive: 2024, note: "Comprehensive completed FY2024 after the FY2023 dollar spike." },
+  "PROG-HM": { lastComprehensive: 2023, note: "Comprehensive completed FY2023; clock expires this year." },
+  "PROG-IA": { lastComprehensive: 2025, note: "Comprehensive completed FY2025 after the FY2024 volume climb." },
+  "PROG-HS": { lastComprehensive: 2023, note: "Comprehensive completed FY2023 (FY2023 +28% dollar breach); clock expires this year." },
+  "PROG-UR": { lastComprehensive: 2024, note: "Comprehensive completed FY2024; FY2025 −22% dip reviewed, no escalation." }
+};
+Object.keys(CYCLES).forEach(function(pid){
+  var c = CYCLES[pid]; c.due = c.lastComprehensive + 3;    // 3-year rule
+  c.history = FYS.filter(function(fy){ return fy < 2026; }).map(function(fy){
+    return { fy: fy, kind: (fy === c.lastComprehensive ? "Comprehensive assessment" : "Preliminary Risk Assessment (PRA)"),
+             status: "completed (illustrative)" };
+  });
+  c.history.push({ fy: 2026, kind: "Preliminary Risk Assessment (PRA)", status: "in progress — this canvas" });
+});
+APP.CYCLES = CYCLES;
+APP.HIST_LABEL = "Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.";
+
+/* ---------- live trigger math ---------- */
+APP.config = { threshold: D.meta.trigger_default.threshold_pct, direction: "either", mDollars: true, mCount: true };
+
+function pct(cur, prior){ return (prior == null || prior === 0) ? null : (cur - prior) / prior * 100; }
+APP.pct = pct;
+APP.yoy = function(progId, fy){
+  var cur = CALC[progId][fy], pr = CALC[progId][fy-1];
+  if (!cur || !pr) return { d:null, c:null };
+  return { d: pct(cur.total, pr.total), c: pct(cur.count, pr.count) };
+};
+function dirHit(v, cfg){
+  if (v == null) return false;
+  if (cfg.direction === "increase") return v >= cfg.threshold;
+  if (cfg.direction === "decrease") return v <= -cfg.threshold;
+  return Math.abs(v) >= cfg.threshold;
+}
+/* breach verdict for program+fy at a given config (defaults to live config) */
+APP.breach = function(progId, fy, cfg){
+  cfg = cfg || APP.config;
+  var y = APP.yoy(progId, fy);
+  var d = cfg.mDollars && dirHit(y.d, cfg);
+  var c = cfg.mCount  && dirHit(y.c, cfg);
+  return { fy: fy, prog: progId, yoyD: y.d, yoyC: y.c, dollar: d, count: c,
+           any: d || c, countOnly: c && !d, dollarOnly: d && !c };
+};
+/* arbitrary-window comparison (compare tool) */
+APP.compare = function(progId, fyA, fyB, cfg){
+  cfg = cfg || APP.config;
+  var a = CALC[progId][fyA], b = CALC[progId][fyB];
+  var dp = pct(b.total, a.total), cp = pct(b.count, a.count);
+  var d = cfg.mDollars && dirHit(dp, cfg), c = cfg.mCount && dirHit(cp, cfg);
+  return { a:a, b:b, dPct:dp, cPct:cp, dollar:d, count:c, any:d||c, countOnly:c&&!d };
+};
+
+/* ---------- formatting ---------- */
+APP.fmt$ = function(v){
+  if (v == null) return "—";
+  var neg = v < 0; v = Math.abs(v);
+  var s = v.toFixed(2), parts = s.split("."), ip = parts[0], out = "";
+  while (ip.length > 3) { out = "," + ip.slice(-3) + out; ip = ip.slice(0,-3); }
+  return (neg?"-":"") + "$" + ip + out + "." + parts[1];
+};
+APP.fmt$c = function(v){ // compact for canvas labels
+  if (v == null) return "—";
+  var a = Math.abs(v);
+  if (a >= 1e9) return "$" + (v/1e9).toFixed(2) + "B";
+  if (a >= 1e6) return "$" + (v/1e6).toFixed(1) + "M";
+  if (a >= 1e3) return "$" + (v/1e3).toFixed(0) + "K";
+  return "$" + v.toFixed(0);
+};
+APP.fmtPct = function(v, signed){
+  if (v == null) return "—";
+  var s = v.toFixed(1) + "%";
+  return (signed !== false && v > 0 ? "+" : "") + s;
+};
+APP.esc = function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); };
+
+/* ---------- app state ---------- */
+APP.state = {
+  view: { c: (FY0 + FYLAST + 1) / 2, s: 5.9 },   // center & span in FY units; full domain
+  focused: null,                                   // focused lane program id
+  selection: null,                                 // {prog, fy} strand-point/ledger selection
+  drawer: null,                                    // {kind, ...} current evidence panel
+  cmp: { a: 2025, b: 2026 },
+  ledgerSort: { key: "fy", dir: 1 },
+  ledgerFilter: "",
+  excState: {},                                    // code -> {action, program_id, reason, when}
+  pra: {},                                         // progId -> {answers:{qid:{value,by,reason}}, signed:bool, signoffNote}
+  audit: []                                        // in-memory audit history (simulated session)
+};
+PROGS.forEach(function(p){ APP.state.pra[p.id] = { answers:{}, signed:false, signoffNote:"" }; });
+
+APP.excOpenCount = function(){
+  return EXC.filter(function(e){ return !APP.state.excState[e.code]; }).length;
+};
+APP.excForProg = function(pid){
+  return EXC.filter(function(e){ return e.program_id === pid; });
+};
+APP.logAudit = function(entry){
+  entry.when = "this session (simulated clock)";
+  APP.state.audit.unshift(entry);
+};
+})();
+</script>
+<script>
+/* ============================================================
+   Section 2: CHRONOLOGY CANVAS
+   Hand-rolled SVG, explicit coordinates, own scale math.
+   No layout-engine dependence (no getBBox / clientWidth for
+   correctness): fixed 1200-unit viewBox, text widths estimated.
+   ============================================================ */
+(function(){
+"use strict";
+var APP = window.APP, S = APP.state, esc = APP.esc;
+var FYS = APP.FYS, PROGS = APP.PROGS, FY0 = FYS[0];
+var W = 1200, ML = 182, MR = 16, PL = ML, PR = W - MR;
+var CTX_H = 50, AXIS_H = 30, LANE_H = 112, LANE_FOC_H = 232;
+var FULL0 = 2021.55, FULL1 = 2027.45, MIN_SPAN = 1.4, MAX_SPAN = FULL1 - FULL0;
+var SHORT = { "PROG-PA":"Public Assistance", "PROG-HM":"Hazard Mitigation (HMGP)", "PROG-IA":"Individual Assistance", "PROG-HS":"Homeland Security Grants (HSGP)", "PROG-UR":"Urban Search & Rescue (US&R)" };
+
+APP.clampView = function(){
+  var v = S.view;
+  v.s = Math.max(MIN_SPAN, Math.min(MAX_SPAN, v.s));
+  var half = v.s/2;
+  v.c = Math.max(FULL0 + half, Math.min(FULL1 - half, v.c));
+};
+function x0(){ return S.view.c - S.view.s/2; }
+function x1(){ return S.view.c + S.view.s/2; }
+function X(fy){ return PL + (fy - x0()) / (x1() - x0()) * (PR - PL); }
+APP.fyAtPx = function(px, rectW){ // inverse map for drag-select (guards zero width)
+  if (!rectW) return null;
+  var u = px / rectW * W;
+  return x0() + (u - PL) / (PR - PL) * (x1() - x0());
+};
+
+/* per-lane index scale: value indexed to FY2022=100, both measures share it */
+function idxSeries(pid, m){
+  var base = APP.CALC[pid][FY0];
+  var b = m === "d" ? base.total : base.count;
+  return FYS.map(function(fy){
+    var r = APP.CALC[pid][fy];
+    return { fy: fy, idx: (m==="d" ? r.total : r.count) / b * 100, raw: (m==="d" ? r.total : r.count) };
+  });
+}
+function laneScale(pid){
+  var vals = [];
+  ["d","c"].forEach(function(m){ idxSeries(pid,m).forEach(function(p){ vals.push(p.idx); }); });
+  var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  var pad = (hi - lo) * 0.14 + 4;
+  return { lo: lo - pad, hi: hi + pad };
+}
+function laneH(pid){ return S.focused === pid ? LANE_FOC_H : LANE_H; }
+function laneTops(){
+  var tops = {}, y = CTX_H + 6;
+  PROGS.forEach(function(p){ tops[p.id] = y; y += laneH(p.id); });
+  tops.__end = y;
+  return tops;
+}
+function yFor(pid, top, idx){
+  var sc = laneScale(pid), h = laneH(pid);
+  var innerTop = top + 26, innerBot = top + h - 26;
+  return innerBot - (idx - sc.lo) / (sc.hi - sc.lo) * (innerBot - innerTop);
+}
+
+/* nice ticks for focused-lane y axis */
+function niceTicks(lo, hi, n){
+  var span = hi - lo, step = Math.pow(10, Math.floor(Math.log(span/n)/Math.LN10));
+  var err = span / n / step;
+  if (err >= 7.5) step *= 10; else if (err >= 3.5) step *= 5; else if (err >= 1.5) step *= 2;
+  var t = [], v = Math.ceil(lo/step)*step;
+  for (; v <= hi; v += step) t.push(v);
+  return t;
+}
+
+/* ---------- main render ---------- */
+APP.renderCanvas = function(){
+  APP.clampView();
+  var tops = laneTops(), H = tops.__end + AXIS_H;
+  var out = [];
+  out.push('<svg viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="Program chronology, fiscal years ' + Math.ceil(x0()) + ' to ' + Math.floor(x1()) + ' in view" xmlns="http://www.w3.org/2000/svg">');
+  out.push('<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#f3f0e8"></rect><line x1="0" y1="0" x2="0" y2="7" stroke="#ddd7c8" stroke-width="2"></line></pattern>' +
+           '<clipPath id="plotclip"><rect x="' + PL + '" y="0" width="' + (PR-PL) + '" height="' + H + '"></rect></clipPath></defs>');
+  out.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#fdfcf8"></rect>');
+
+  /* ----- context track ----- */
+  out.push('<rect class="ctx-band" x="0" y="0" width="' + W + '" height="' + CTX_H + '"></rect>');
+  out.push('<text class="ctx-title" x="10" y="17">CONTEXT</text><text class="ctx-label" x="10" y="31">extracts &middot; declarations</text><text class="ctx-label" x="10" y="43">&middot; milestones</text>');
+  out.push('<g clip-path="url(#plotclip)">');
+
+  /* origin zone: DR declarations predate the window (FY2017-18) */
+  var oEdge = X(FY0 - 0.32), oW = oEdge - PL;
+  if (oW > 4) {
+    out.push('<rect class="origin-zone" x="' + PL + '" y="0" width="' + Math.max(0, oW) + '" height="' + H + '"></rect>');
+    out.push('<g data-act="drlist" role="button" tabindex="0" aria-label="Seven disaster declarations, DR-4332 through DR-4346, declared fiscal years 2017 to 2018, before this window. Open declaration list.">');
+    if (oW > 118) { /* room for the full annotation */
+      out.push('<text class="origin-lab" x="' + (PL+6) + '" y="16">&#9668; 7 DRs declared FY2017&ndash;18</text>' +
+        '<text class="origin-lab" x="' + (PL+6) + '" y="28">recovery spend runs through</text>' +
+        '<text class="origin-lab" x="' + (PL+6) + '" y="40">this window (open list)</text>');
+      window.FEMA_DATA.disaster_events.forEach(function(e, i){
+        out.push('<circle class="evt-dot" cx="' + (PL + 12 + i*14) + '" cy="' + (CTX_H - 4) + '" r="4"><title>DR-' + e.dr + ' ' + esc(e.title) + ' (declared FY' + e.fy_declared + ')</title></circle>');
+      });
+    } else { /* narrow sliver: compact chevron only */
+      out.push('<rect x="' + PL + '" y="0" width="' + Math.max(10, Math.min(18, oW)) + '" height="' + CTX_H + '" fill="#e2ddcf"></rect>' +
+        '<text class="origin-lab" x="' + (PL+4) + '" y="30">&#9668;</text>' +
+        '<title>7 disaster declarations (DR-4332…4346) declared FY2017–18, before this window — click to open the list</title>');
+    }
+    out.push('</g>');
+  }
+
+  /* horizon zone: FY2027 projection */
+  var hz = X(2026.5);
+  if (hz < PR - 4) {
+    out.push('<rect class="horizon-zone" x="' + hz + '" y="' + CTX_H + '" width="' + Math.max(0, PR-hz) + '" height="' + (H-CTX_H-AXIS_H) + '"></rect>');
+    out.push('<text class="horizon-lab" x="' + (hz+8) + '" y="' + (CTX_H+20) + '">FY2027 &mdash; horizon (no data yet)</text>');
+  }
+
+  /* FY gridlines + extract ticks */
+  var zoomedIn = S.view.s < 3.2;
+  for (var fy = 2022; fy <= 2027; fy++){
+    var gx = X(fy);
+    if (gx > PL-1 && gx < PR+1){
+      out.push('<line class="gridline major" x1="' + gx + '" y1="' + CTX_H + '" x2="' + gx + '" y2="' + (H-AXIS_H) + '"></line>');
+      if (fy <= 2026 && APP.CALC[PROGS[0].id][fy]) {
+        out.push('<g class="extract-tick" data-act="extract" data-fy="' + fy + '" role="button" tabindex="0" aria-label="Fiscal year ' + fy + ' extract file ingested. Open ingestion provenance.">' +
+          '<rect x="' + (gx-6) + '" y="8" width="12" height="15" rx="1"></rect>' +
+          '<line x1="' + (gx-3) + '" y1="13" x2="' + (gx+3) + '" y2="13" stroke="#9aa5ad" stroke-width="1"></line>' +
+          '<line x1="' + (gx-3) + '" y1="16" x2="' + (gx+3) + '" y2="16" stroke="#9aa5ad" stroke-width="1"></line>' +
+          '<line x1="' + (gx-3) + '" y1="19" x2="' + (gx+3) + '" y2="19" stroke="#9aa5ad" stroke-width="1"></line>' +
+          '<text x="' + (gx-11) + '" y="34">FY' + String(fy).slice(2) + '</text>' +
+          '<title>FY' + fy + ' extract ingested (file-in / file-out contract) — click for provenance</title></g>');
+      }
+    }
+    /* Oct-1 boundary minor lines when zoomed */
+    var bx = X(fy - 0.5);
+    if (zoomedIn && bx > PL && bx < PR){
+      out.push('<line class="gridline" x1="' + bx + '" y1="' + CTX_H + '" x2="' + bx + '" y2="' + (H-AXIS_H) + '"></line>');
+      out.push('<text class="axis-label minor" x="' + (bx+3) + '" y="' + (H-AXIS_H+12) + '">Oct 1, ' + (fy-1) + '</text>');
+    }
+  }
+
+  /* modernization milestone at Oct 1 2026 (= FY2027 boundary) */
+  var mx = X(2026.5);
+  if (mx > PL && mx < PR){
+    out.push('<g class="modern-mark" data-act="modern" role="button" tabindex="0" aria-label="Financial system modernization milestone, October 1 2026. Contextual, simulated. Open details.">' +
+      '<line class="modern-line" x1="' + mx + '" y1="6" x2="' + mx + '" y2="' + (H-AXIS_H) + '"></line>' +
+      '<path class="modern-diamond" d="M ' + mx + ' 10 l 7 8 l -7 8 l -7 -8 Z"></path>' +
+      (mx > W - 230
+        ? '<text class="modern-lab" text-anchor="end" x="' + (mx-11) + '" y="20">Oct 1, 2026 &mdash; financial-system</text>' +
+          '<text class="modern-lab" text-anchor="end" x="' + (mx-11) + '" y="32">modernization (simulated milestone)</text>'
+        : '<text class="modern-lab" x="' + (mx+11) + '" y="20">Oct 1, 2026 &mdash; financial-system</text>' +
+          '<text class="modern-lab" x="' + (mx+11) + '" y="32">modernization (simulated milestone)</text>') +
+      '<title>WebFMIS successor cutover ~Oct 1, 2026 — contextual milestone, simulated</title></g>');
+  }
+  out.push('</g>'); /* end clipped context/grid layer */
+  out.push('<line class="lane-sep" x1="0" y1="' + CTX_H + '" x2="' + W + '" y2="' + CTX_H + '"></line>');
+
+  /* ----- lanes ----- */
+  PROGS.forEach(function(p, li){ out.push(renderLane(p, li, tops[p.id])); });
+
+  /* ----- bottom axis ----- */
+  var ay = H - AXIS_H;
+  out.push('<line class="lane-sep" x1="0" y1="' + ay + '" x2="' + W + '" y2="' + ay + '"></line>');
+  for (fy = 2022; fy <= 2027; fy++){
+    var lx = X(fy);
+    if (lx > PL-10 && lx < PR+10) out.push('<text class="axis-label" x="' + (lx-16) + '" y="' + (ay+19) + '">FY' + fy + '</text>');
+  }
+  out.push('<text class="axis-label minor" x="' + (PL-170) + '" y="' + (ay+19) + '">federal FY: Oct 1 &ndash; Sep 30</text>');
+  out.push('</svg>');
+
+  document.getElementById("chronology").innerHTML = out.join("");
+  var vn = document.getElementById("viewportNote");
+  if (vn) vn.textContent = "viewing FY" + Math.max(2022, Math.ceil(x0()-0.01)) + " – FY" + Math.min(2027, Math.floor(x1()+0.01)) + (S.focused ? "  ·  lane focus: " + SHORT[S.focused] : "");
+};
+
+/* ---------- one lane ---------- */
+function renderLane(p, li, top){
+  var pid = p.id, h = laneH(pid), out = [];
+  var focused = S.focused === pid;
+  out.push('<g aria-label="' + esc(p.name) + ' lane">');
+  out.push('<rect class="lane-bg' + (li%2 ? " alt" : "") + (focused ? " focused" : "") + '" x="0" y="' + top + '" width="' + W + '" height="' + h + '"></rect>');
+  out.push('<line class="lane-sep" x1="0" y1="' + (top+h) + '" x2="' + W + '" y2="' + (top+h) + '"></line>');
+
+  /* header (left margin) */
+  var fy26 = APP.CALC[pid][2026];
+  out.push('<text class="lane-name" x="10" y="' + (top+20) + '">' + esc(SHORT[pid]) + '</text>');
+  out.push('<text class="lane-kind" x="10" y="' + (top+34) + '">' + (p.is_disaster ? "DISASTER" : "NON-DISASTER") + ' &middot; TAFS ' + esc(p.tafs) + '</text>');
+  out.push('<text class="lane-sub" x="10" y="' + (top+49) + '">FY26: ' + APP.fmt$c(fy26.total) + ' &middot; ' + fy26.count + ' txns</text>');
+  var cyc = APP.CYCLES[pid];
+  out.push('<text class="lane-sub" x="10" y="' + (top+63) + '"' + (cyc.due===2026 ? ' fill="#a52217" font-weight="bold"' : '') + '>comprehensive due FY' + cyc.due + (cyc.due===2026 ? ' &#9650;' : '') + '</text>');
+  out.push('<g class="lane-focus-btn" data-act="focus" data-prog="' + pid + '" role="button" tabindex="0" aria-label="' + (focused ? "Collapse" : "Expand") + ' ' + esc(p.name) + ' lane detail">' +
+    '<rect x="10" y="' + (top+h-26) + '" width="86" height="18" rx="3"></rect>' +
+    '<text x="18" y="' + (top+h-13) + '">' + (focused ? "&#9666; collapse" : "&#9656; focus lane") + '</text></g>');
+
+  out.push('<g clip-path="url(#plotclip)">');
+  var sd = idxSeries(pid,"d"), sc = idxSeries(pid,"c");
+  var ptsD = sd.map(function(q){ return { x:X(q.fy), y:yFor(pid,top,q.idx), fy:q.fy, idx:q.idx, raw:q.raw }; });
+  var ptsC = sc.map(function(q){ return { x:X(q.fy), y:yFor(pid,top,q.idx), fy:q.fy, idx:q.idx, raw:q.raw }; });
+
+  /* divergence fill where one measure breaches and the other does not (signature) */
+  FYS.forEach(function(fy, i){
+    if (i === 0) return;
+    var b = APP.breach(pid, fy);
+    if (b.countOnly || b.dollarOnly){
+      out.push('<polygon class="diverge-fill" points="' +
+        ptsD[i-1].x + ',' + ptsD[i-1].y + ' ' + ptsD[i].x + ',' + ptsD[i].y + ' ' +
+        ptsC[i].x + ',' + ptsC[i].y + ' ' + ptsC[i-1].x + ',' + ptsC[i-1].y + '"></polygon>');
+    }
+  });
+
+  /* focused lane: y-axis grid with REAL units both sides */
+  if (focused){
+    var scl = laneScale(pid), base = APP.CALC[pid][FY0];
+    niceTicks(scl.lo, scl.hi, 5).forEach(function(t){
+      var y = yFor(pid, top, t);
+      out.push('<line class="gridline" x1="' + PL + '" y1="' + y + '" x2="' + PR + '" y2="' + y + '"></line>');
+      out.push('<text class="yaxis-lab left" x="' + (PL+4) + '" y="' + (y-2) + '">' + APP.fmt$c(t/100*base.total) + '</text>');
+      out.push('<text class="yaxis-lab right" x="' + (PR-52) + '" y="' + (y-2) + '">' + Math.round(t/100*base.count) + ' txns</text>');
+    });
+    out.push('<text class="yaxis-lab left" x="' + (PL+4) + '" y="' + (top+14) + '">left scale: disbursements &middot; right scale: transaction volume &middot; both indexed FY2022 = 100</text>');
+  }
+
+  /* strands */
+  out.push('<polyline class="strand-d" points="' + ptsD.map(function(q){return q.x+","+q.y;}).join(" ") + '"></polyline>');
+  out.push('<polyline class="strand-c" points="' + ptsC.map(function(q){return q.x+","+q.y;}).join(" ") + '"></polyline>');
+
+  /* strand points with exact-value tooltips */
+  [["d",ptsD,"Disbursements"],["c",ptsC,"Transaction volume"]].forEach(function(pair){
+    var m = pair[0];
+    pair[1].forEach(function(q){
+      var sel = S.selection && S.selection.prog===pid && S.selection.fy===q.fy;
+      var exact = m==="d" ? APP.fmt$(q.raw) : (q.raw + " transactions");
+      var yoy = APP.yoy(pid, q.fy);
+      var yv = m==="d" ? yoy.d : yoy.c;
+      var tip = esc(SHORT[pid]) + ' — FY' + q.fy + ' ' + pair[2] + ': ' + exact + ' (index ' + q.idx.toFixed(1) + (yv!=null ? ', YoY ' + APP.fmtPct(yv) : ', first year on record') + ')';
+      out.push('<circle class="strand-pt ' + m + (sel ? ' sel' : '') + '" data-act="pt" data-prog="' + pid + '" data-fy="' + q.fy + '" data-m="' + m + '" role="button" tabindex="0" aria-label="' + tip + '. Open point detail." cx="' + q.x + '" cy="' + q.y + '" r="' + (sel?5:3.6) + '"><title>' + tip + '</title></circle>');
+      if (focused) out.push('<text class="val-lab" x="' + (q.x+5) + '" y="' + (q.y + (m==="d"?-6:12)) + '">' + (m==="d" ? APP.fmt$c(q.raw) : q.raw) + '</text>');
+    });
+  });
+
+  /* breach flares at FY boundaries (live-configured) */
+  FYS.forEach(function(fy){
+    var b = APP.breach(pid, fy);
+    if (!b.any) return;
+    var fx = X(fy), fyTop = top + 16;
+    var cls = b.countOnly ? "countonly" : (b.dollar && b.count ? "both" : "dollar");
+    var what = b.countOnly ? "VOLUME-ONLY breach: dollars " + APP.fmtPct(b.yoyD) + " but transaction volume " + APP.fmtPct(b.yoyC)
+             : (b.dollar && b.count) ? "Breach on both measures: dollars " + APP.fmtPct(b.yoyD) + ", volume " + APP.fmtPct(b.yoyC)
+             : "Dollar breach: " + APP.fmtPct(b.yoyD) + " (volume " + APP.fmtPct(b.yoyC) + ")";
+    out.push('<g class="flare ' + cls + '" data-act="flare" data-prog="' + pid + '" data-fy="' + fy + '" role="button" tabindex="0" aria-label="' + esc(SHORT[pid]) + ' fiscal year ' + fy + ' trigger flare. ' + esc(what) + '. Open trigger evidence.">' +
+      (b.countOnly ? '<path class="flare-halo" d="M ' + fx + ' ' + (fyTop-11) + ' l 11 11 l -11 11 l -11 -11 Z"></path>' : '') +
+      '<path class="fshape" d="M ' + fx + ' ' + (fyTop-7) + ' l 7 7 l -7 7 l -7 -7 Z"></path>' +
+      '<title>' + esc(SHORT[pid]) + ' FY' + fy + ' — ' + esc(what) + '</title></g>');
+    if (b.countOnly) out.push('<text class="marker-label" x="' + (fx+13) + '" y="' + (fyTop+3) + '" fill="#a05a00">volume-only</text>');
+  });
+
+  /* 3-year comprehensive-cycle arc (illustrative history) */
+  var cy2 = top + 12, ax1 = X(cyc.lastComprehensive), ax2 = X(Math.min(cyc.due, 2027.35));
+  var due = cyc.due === 2026;
+  out.push('<g data-act="cycle" data-prog="' + pid + '" role="button" tabindex="0" aria-label="Comprehensive assessment cycle for ' + esc(p.name) + ': last comprehensive fiscal year ' + cyc.lastComprehensive + ', due fiscal year ' + cyc.due + (due ? ", due this year" : "") + '. Illustrative simulated history. Open assessment history.">' +
+    '<path class="cycle-arc' + (due ? " due" : "") + '" d="M ' + ax1 + ' ' + cy2 + ' Q ' + ((ax1+ax2)/2) + ' ' + (cy2-16) + ' ' + ax2 + ' ' + cy2 + '"></path>' +
+    '<text class="cycle-lab' + (due ? " due" : "") + '" x="' + (((ax1+ax2)/2)-34) + '" y="' + (cy2-19) + '">3-yr clock &rarr; FY' + cyc.due + (due ? " DUE" : "") + '</text>' +
+    '<title>3-year comprehensive cycle (illustrative history, simulated). Last comprehensive FY' + cyc.lastComprehensive + ' → due FY' + cyc.due + '</title></g>');
+
+  /* PRA milestone + exception chip at FY2026 */
+  var px = X(2026);
+  var signed = S.pra[pid] && S.pra[pid].signed;
+  out.push('<g class="pra-mark' + (signed ? " signed" : "") + '" data-act="pra" data-prog="' + pid + '" role="button" tabindex="0" aria-label="Preliminary Risk Assessment for ' + esc(p.name) + ', fiscal year 2026, status ' + (signed ? "signed off" : "draft") + '. Open PRA workspace.">' +
+    '<rect x="' + (px-19) + '" y="' + (top+h-22) + '" width="38" height="15" rx="2"></rect>' +
+    '<text x="' + (px-14) + '" y="' + (top+h-11) + '">PRA' + (signed ? " &#10003;" : "&hellip;") + '</text>' +
+    '<title>FY2026 Preliminary Risk Assessment — ' + (signed ? "signed off (this session)" : "draft, awaiting human sign-off") + '</title></g>');
+
+  var excs = APP.excForProg(pid);
+  if (excs.length){
+    var open = excs.filter(function(e){ return !S.excState[e.code]; }).length;
+    out.push('<g class="exc-chip" data-act="exc" data-prog="' + pid + '" role="button" tabindex="0" aria-label="' + excs.length + ' exception-queue codes suggest ' + esc(p.name) + ' in fiscal year 2026; ' + open + ' still unresolved. Open exception queue.">' +
+      '<rect x="' + (px+26) + '" y="' + (top+h-22) + '" width="' + (open ? 96 : 108) + '" height="15" rx="3"></rect>' +
+      '<text x="' + (px+32) + '" y="' + (top+h-11) + '">' + (open ? "&#9670; " + open + " unmapped" : "&#10003; queue clear") + '</text>' +
+      '<title>FY2026 exception queue: ' + excs.length + ' low-confidence codes suggested for this program (' + open + ' open)</title></g>');
+  }
+  out.push('</g></g>');
+  return out.join("");
+}
+})();
+</script>
+<script>
+/* ============================================================
+   Section 3: EVIDENCE DRAWER, PRA WORKSPACE, EXCEPTION QUEUE,
+   MODALS, EXPORT SIMULATION
+   ============================================================ */
+(function(){
+"use strict";
+var APP = window.APP, S = APP.state, esc = APP.esc, fmt$ = APP.fmt$, fmtPct = APP.fmtPct;
+var SHORTQ = { "PROG-PA":"Public Assistance", "PROG-HM":"HMGP", "PROG-IA":"Individual Assistance", "PROG-HS":"HSGP", "PROG-UR":"US&R" };
+
+function el(id){ return document.getElementById(id); }
+APP.toast = function(msg){
+  var t = el("toast"); if (!t) return;
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(APP._toastT); APP._toastT = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+};
+
+/* ---------- drawer plumbing ---------- */
+APP.openDrawer = function(kind, params){
+  S.drawer = Object.assign({ kind: kind }, params || {});
+  APP.renderDrawer();
+};
+APP.closeDrawer = function(){ S.drawer = null; APP.renderDrawer(); };
+APP.renderDrawer = function(){
+  var body = el("drawerBody"), title = el("drawerTitle");
+  if (!body) return;
+  if (!S.drawer){
+    title.textContent = "Evidence";
+    body.innerHTML = '<p class="drawer-empty">Nothing selected. Click any flare, declaration marker, cycle arc, PRA milestone, exception chip, or strand point on the canvas — its evidence opens here and stays while you keep scrubbing.</p>';
+    return;
+  }
+  var d = S.drawer, r = DRAWERS[d.kind] ? DRAWERS[d.kind](d) : { t:"Evidence", h:"" };
+  title.textContent = r.t;
+  body.innerHTML = r.h;
+};
+
+function verdictPill(b){
+  if (b.countOnly) return '<span class="verdict conly">VOLUME-ONLY BREACH</span>';
+  if (b.any) return '<span class="verdict breach">TRIGGER BREACH</span>';
+  return '<span class="verdict ok">WITHIN THRESHOLD</span>';
+}
+function measureRow(name, prior, cur, yoy, fired, fmt){
+  return '<tr><td>' + name + '</td><td class="num">' + fmt(prior) + '</td><td class="num">' + fmt(cur) + '</td>' +
+    '<td class="num">' + fmtPct(yoy) + '</td><td>' + (fired ? '<span class="verdict breach">fired</span>' : '<span class="verdict ok">no</span>') + '</td></tr>';
+}
+function txnTable(rows, note){
+  var shown = rows.slice(0, 60);
+  var h = ['<div class="txn-table-wrap"><table class="txn-table" aria-label="Underlying transactions"><thead><tr><th>Txn</th><th>Raw code &rarr; canonical</th><th>Sub-program</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th></tr></thead><tbody>'];
+  shown.forEach(function(t){
+    var dirty = t.raw !== t.code;
+    var sub = APP.codeToSub[t.code] ? APP.subById[APP.codeToSub[t.code]].name : "(exception queue)";
+    var rule = APP.codeRule[t.code];
+    h.push('<tr' + (dirty ? ' class="cleansed" title="Format-dirty or legacy raw code recovered by a cleansing rule"' : '') + '>' +
+      '<td>' + esc(t.id) + '</td><td>' + (dirty ? esc(t.raw) + ' &rarr; ' : '') + esc(t.code) + (rule ? ' <span class="small">(' + esc(rule) + ')</span>' : '') + '</td>' +
+      '<td>' + esc(sub) + '</td><td>' + esc(t.date) + '</td><td>' + esc(t.type) + '</td><td class="r">' + fmt$(t.amt) + '</td></tr>');
+  });
+  h.push('</tbody></table></div><p class="small">Showing ' + shown.length + ' of ' + rows.length + ' transactions' + (note ? " — " + note : "") + '. Shaded rows were format-dirty or legacy raw codes recovered by cleansing rules — full lineage: transaction &rarr; financial code &rarr; mapping rule &rarr; sub-program &rarr; program.</p>');
+  return h.join("");
+}
+
+var DRAWERS = {};
+
+/* ----- trigger flare evidence + drill to transactions ----- */
+DRAWERS.flare = function(d){
+  var p = APP.progById[d.prog], fy = +d.fy, b = APP.breach(d.prog, fy), cfg = APP.config;
+  var cur = APP.CALC[d.prog][fy], pr = APP.CALC[d.prog][fy-1];
+  var rows = APP.txnsFor(d.prog, fy);
+  var h = ['<p style="margin:2px 0 6px"><strong>' + esc(p.name) + '</strong> — FY' + fy + ' trigger evaluation ' + verdictPill(b) + '</p>'];
+  h.push('<table class="evi-kv" aria-label="Trigger math"><tr><th style="text-align:left;font-size:10.5px;color:#5d6b76">Measure</th><th style="font-size:10.5px;color:#5d6b76">FY' + (fy-1) + '</th><th style="font-size:10.5px;color:#5d6b76">FY' + fy + '</th><th style="font-size:10.5px;color:#5d6b76">YoY</th><th style="font-size:10.5px;color:#5d6b76">Fired?</th></tr>' +
+    measureRow("Disbursements", pr.total, cur.total, b.yoyD, b.dollar, fmt$) +
+    measureRow("Transaction volume", pr.count, cur.count, b.yoyC, b.count, function(v){ return String(v); }) + '</table>');
+  h.push('<div class="math-block">rule (live console): |YoY| &ge; ' + cfg.threshold + '% · direction: ' + cfg.direction + ' · measures: ' +
+    [cfg.mDollars?"dollars":null, cfg.mCount?"volume":null].filter(Boolean).join(" OR ") +
+    '\nverdict: ' + (b.any ? (b.countOnly ? "flagged by TRANSACTION VOLUME alone — the pre-2024 dollars-only rule would have MISSED this" : "flagged") : "not flagged") +
+    (b.any ? "\nconsequence: FY" + fy + " Preliminary Risk Assessment escalates toward comprehensive review" : "") + '</div>');
+  if (b.countOnly) h.push('<p class="small"><span class="ai-tag">Simulated AI note</span> Dollars moved ' + fmtPct(b.yoyD) + ' — quiet. Volume moved ' + fmtPct(b.yoyC) + ' — loud. Many more, smaller payments is a classic improper-payment risk shape. Evidence: the two computed YoY figures above; the machine proposes, this panel is the human check.</p>');
+  h.push('<h3 style="font-size:12px;margin:12px 0 2px">Underlying records — every dollar traceable</h3>');
+  h.push(txnTable(rows, "FY" + fy + " " + esc(SHORTQ[d.prog])));
+  h.push('<div class="btnrow"><button class="pbtn" data-do="openPra" data-prog="' + d.prog + '">Open FY2026 PRA workspace</button><button class="pbtn" data-do="cmpSet" data-a="' + (fy-1) + '" data-b="' + fy + '">Load FY' + (fy-1) + '&rarr;' + fy + ' in compare</button></div>');
+  return { t: "Trigger evidence — " + SHORTQ[d.prog] + " FY" + fy, h: h.join("") };
+};
+
+/* ----- strand point detail ----- */
+DRAWERS.pt = function(d){
+  var p = APP.progById[d.prog], fy = +d.fy, c = APP.CALC[d.prog][fy], y = APP.yoy(d.prog, fy);
+  S.selection = { prog: d.prog, fy: fy };
+  var subs = {}; APP.txnsFor(d.prog, fy).forEach(function(t){ var sid = APP.codeToSub[t.code]; if (sid){ subs[sid] = subs[sid] || {n:0,amt:0}; subs[sid].n++; subs[sid].amt += t.amt; } });
+  var h = ['<table class="evi-kv"><tr><td>Program</td><td>' + esc(p.name) + (p.listing ? ' <span class="small">(assistance listing ' + esc(p.listing) + ')</span>' : ' <span class="small">(umbrella — no single listing)</span>') + '</td></tr>' +
+    '<tr><td>Fiscal year</td><td class="num">FY' + fy + ' (Oct 1, ' + (fy-1) + ' – Sep 30, ' + fy + ')</td></tr>' +
+    '<tr><td>Disbursements</td><td class="num">' + fmt$(c.total) + (y.d!=null ? ' <span class="small">(YoY ' + fmtPct(y.d) + ')</span>' : '') + '</td></tr>' +
+    '<tr><td>Transaction volume</td><td class="num">' + c.count + ' transactions' + (y.c!=null ? ' <span class="small">(YoY ' + fmtPct(y.c) + ')</span>' : '') + '</td></tr></table>'];
+  h.push('<h3 style="font-size:12px;margin:10px 0 2px">Sub-grouping composition <span class="small">(sub-groupings are never programs)</span></h3><table class="evi-kv">');
+  Object.keys(subs).forEach(function(sid){ h.push('<tr><td>' + esc(APP.subById[sid].name) + '</td><td class="num">' + fmt$(subs[sid].amt) + ' · ' + subs[sid].n + ' txns</td></tr>'); });
+  h.push('</table><div class="btnrow"><button class="pbtn" data-do="drill" data-prog="' + d.prog + '" data-fy="' + fy + '">Drill to the ' + c.count + ' transactions</button></div>');
+  return { t: "FY" + fy + " point — " + SHORTQ[d.prog], h: h.join("") };
+};
+DRAWERS.drill = function(d){
+  var fy = +d.fy, rows = APP.txnsFor(d.prog, fy);
+  return { t: "Transactions — " + SHORTQ[d.prog] + " FY" + fy,
+           h: '<p class="small">Aggregate ' + fmt$(APP.CALC[d.prog][fy].total) + ' &rarr; ' + rows.length + ' transaction rows. Lineage is complete: any reportable number resolves to records.</p>' + txnTable(rows) };
+};
+
+/* ----- disaster declarations ----- */
+DRAWERS.drlist = function(){
+  var h = ['<p class="small">All seven declarations predate this canvas window (declared FY2017–18); their recovery spend runs through it. Real public DR numbers; dollar figures synthetic.</p><div class="btnrow">'];
+  window.FEMA_DATA.disaster_events.forEach(function(e){
+    h.push('<button class="pbtn" data-do="dr" data-dr="' + e.dr + '">DR-' + e.dr + ' ' + esc(e.title) + '</button>');
+  });
+  h.push('</div>');
+  return { t: "Disaster declarations (DR)", h: h.join("") };
+};
+DRAWERS.dr = function(d){
+  var e = APP.eventByDr[+d.dr], rows = (APP.EVSUM[+d.dr]||[]).slice().sort(function(a,b){ return a.fy-b.fy; });
+  var txns = APP.txnsForDr(+d.dr, null);
+  var h = ['<table class="evi-kv"><tr><td>Declaration</td><td>DR-' + e.dr + ' — ' + esc(e.incident_type) + ' (' + esc(e.state) + ')</td></tr>' +
+    '<tr><td>Declared</td><td class="num">FY' + e.fy_declared + ' — before this window (canvas begins FY2022)</td></tr>' +
+    '<tr><td>Transactions in window</td><td class="num">' + txns.length + '</td></tr></table>'];
+  h.push('<h3 style="font-size:12px;margin:10px 0 2px">Affected disbursements by fiscal year (Public Assistance)</h3><table class="evi-kv">');
+  rows.forEach(function(r){ h.push('<tr><td class="num">FY' + r.fy + '</td><td class="num">' + fmt$(r.total) + (r.yoy_pct!=null ? ' <span class="small">(YoY ' + fmtPct(r.yoy_pct) + ')</span>' : '') + (r.trigger_flag ? ' <span class="verdict breach">event-level flag</span>' : '') + '</td></tr>'); });
+  h.push('</table><p class="small">In Public Assistance, sub-groupings ARE the disaster events — but a DR is never itself a program.</p>');
+  h.push('<div class="btnrow"><button class="pbtn" data-do="drTxns" data-dr="' + e.dr + '">Show its transactions</button><button class="pbtn" data-do="backDrList">All declarations</button></div>');
+  return { t: "DR-" + e.dr + " — " + e.title, h: h.join("") };
+};
+DRAWERS.drTxns = function(d){
+  var rows = APP.txnsForDr(+d.dr, null);
+  return { t: "Transactions — DR-" + d.dr, h: txnTable(rows) + '<div class="btnrow"><button class="pbtn" data-do="dr" data-dr="' + d.dr + '">Back to DR-' + d.dr + '</button></div>' };
+};
+
+/* ----- extract / ingestion provenance ----- */
+DRAWERS.extract = function(d){
+  var fy = +d.fy, n = APP.TXNS.filter(function(t){ return t.fy===fy; }).length;
+  var dirty = APP.TXNS.filter(function(t){ return t.fy===fy && t.raw!==t.code; }).length;
+  return { t: "FY" + fy + " extract — ingestion record", h:
+    '<p class="small"><span class="sim-tag">Simulated</span> File-in / file-out contract: one fiscal-year extract in, reportable outputs out. No live system connection in this demo.</p>' +
+    '<table class="evi-kv"><tr><td>Source</td><td>WebFMIS fiscal-year extract (synthetic stand-in)</td></tr>' +
+    '<tr><td>Rows received</td><td class="num">' + n + ' transactions</td></tr>' +
+    '<tr><td>Cleansing applied</td><td class="num">' + dirty + ' rows had format-dirty or retired legacy raw codes; canonical codes recovered by cleansing rules (BR-series)</td></tr>' +
+    '<tr><td>Validation</td><td>row counts and control totals reconciled; exceptions routed to queue</td></tr></table>' +
+    '<div class="btnrow"><button class="pbtn" data-do="provModal">Full ingestion contract</button></div>' };
+};
+
+/* ----- modernization milestone ----- */
+DRAWERS.modern = function(){
+  return { t: "Milestone — system modernization", h:
+    '<p><span class="sim-tag">Simulated milestone</span> The financial system of record (WebFMIS) is scheduled to be replaced around <strong>Oct 1, 2026</strong> — the first day of FY2027.</p>' +
+    '<p class="small">Why it is on the canvas: the FY2027 extract will come from a different system. The ingestion contract (file-in / file-out) is designed to absorb that change — mapping rules and cleansing live on this side of the boundary. Transition is reported as &ldquo;not going smoothly,&rdquo; so FY2027 ingestion should expect new code formats and heavier exception-queue traffic.</p>' +
+    '<p class="small">This is contextual planning information, not payload data.</p>' };
+};
+
+/* ----- comprehensive-cycle / assessment history ----- */
+DRAWERS.cycle = function(d){
+  var p = APP.progById[d.prog], c = APP.CYCLES[d.prog];
+  var h = ['<p class="small"><span class="sim-tag">Simulated</span> ' + esc(APP.HIST_LABEL) + '</p>'];
+  h.push('<table class="evi-kv"><tr><td>Rule</td><td>a comprehensive assessment at least once every 3 years per program</td></tr>' +
+    '<tr><td>Last comprehensive</td><td class="num">FY' + c.lastComprehensive + '</td></tr>' +
+    '<tr><td>Next due</td><td class="num">FY' + c.due + (c.due===2026 ? ' <span class="verdict breach">DUE THIS YEAR</span>' : ' <span class="verdict ok">clock running</span>') + '</td></tr>' +
+    '<tr><td>Context</td><td>' + esc(c.note) + '</td></tr></table>');
+  h.push('<h3 style="font-size:12px;margin:10px 0 2px">Assessment history (illustrative)</h3><ul class="audit-list">');
+  c.history.forEach(function(rec){ h.push('<li>FY' + rec.fy + ' — ' + esc(rec.kind) + ' <span class="who">' + esc(rec.status) + '</span></li>'); });
+  h.push('</ul><div class="btnrow"><button class="pbtn" data-do="openPra" data-prog="' + d.prog + '">Open the FY2026 PRA</button></div>');
+  return { t: "3-year cycle — " + SHORTQ[d.prog], h: h.join("") };
+};
+
+/* ----- exception queue (mapping governance) ----- */
+DRAWERS.exc = function(d){
+  var excs = d.prog ? APP.excForProg(d.prog) : APP.EXC;
+  var h = ['<p class="small">FY2026 codes the mapper could not confirm (confidence below the ' + window.FEMA_DATA.meta.confidence_routing_threshold + ' routing threshold). Each holds a <em>similarity suggestion</em> — <span class="ai-tag">Simulated AI</span> proposes, a human decides, and every decision requires a reason. These dollars are excluded from program totals until resolved.</p>'];
+  excs.forEach(function(e){
+    var st = S.excState[e.code], ci = APP.codeInfo[e.code];
+    var amt = 0, n = 0; APP.TXNS.forEach(function(t){ if (t.code===e.code){ amt+=t.amt; n++; } });
+    h.push('<div class="pra-q' + (st ? "" : " overridden") + '">');
+    h.push('<div class="qhead"><span class="qid">' + esc(e.code) + '</span><span class="qtext">fund segment <strong>' + esc(ci.fund_segment) + '</strong> · program segment ' + esc(ci.program_segment) + ' · event ' + esc(ci.event_segment) + ' · ' + n + ' txns · ' + fmt$(amt) + '</span></div>');
+    h.push('<p class="pra-src" style="margin:4px 0">suggestion: ' + esc(APP.subById[e.sub_program_id].name) + ' &rarr; ' + esc(APP.progById[e.program_id].name) + ' · similarity confidence ' + e.confidence.toFixed(2) + ' <span class="conf-bar low"><i style="width:' + Math.round(e.confidence*100) + '%"></i></span></p>');
+    if (st){
+      h.push('<p class="ok-note">Resolved this session: ' + esc(st.action) + (st.program_id ? ' &rarr; ' + esc(APP.progById[st.program_id].name) : '') + ' — reason: &ldquo;' + esc(st.reason) + '&rdquo; <button class="rowbtn" data-do="excUndo" data-code="' + esc(e.code) + '">undo</button></p>');
+    } else {
+      h.push('<div class="field"><label for="excR-' + esc(e.code) + '">Reason (required for any decision)</label><input type="text" id="excR-' + esc(e.code) + '" placeholder="e.g., program office confirmed cost-share correction"></div>');
+      h.push('<div class="btnrow">' +
+        '<button class="pbtn go" data-do="excConfirm" data-code="' + esc(e.code) + '">Confirm suggestion</button>' +
+        '<select aria-label="Reassign ' + esc(e.code) + ' to a different program" id="excP-' + esc(e.code) + '">' + APP.PROGS.map(function(p){ return '<option value="' + p.id + '"' + (p.id===e.program_id?" selected":"") + '>' + esc(p.name) + '</option>'; }).join("") + '</select>' +
+        '<button class="pbtn" data-do="excReassign" data-code="' + esc(e.code) + '">Reassign</button>' +
+        '<button class="pbtn warn" data-do="excDefer" data-code="' + esc(e.code) + '">Send to SME</button></div>');
+      h.push('<div class="err-note" id="excE-' + esc(e.code) + '"></div>');
+    }
+    h.push('</div>');
+  });
+  if (S.audit.length){
+    h.push('<h3 style="font-size:12px;margin:10px 0 2px">Session decision log (simulated audit trail)</h3><ul class="audit-list">');
+    S.audit.slice(0,6).forEach(function(a){ h.push('<li>' + esc(a.what) + ' <span class="who">' + esc(a.when) + '</span></li>'); });
+    h.push('</ul>');
+  }
+  return { t: d.prog ? "Exception queue — " + SHORTQ[d.prog] : "Exception queue — FY2026", h: h.join("") };
+};
+
+/* exception decisions (all require a reason) */
+APP.resolveException = function(code, action, programId, reason){
+  if (!reason || !String(reason).trim()) return { ok:false, error:"A reason is required — decisions without rationale do not enter the audit trail." };
+  S.excState[code] = { action: action, program_id: programId || null, reason: String(reason).trim() };
+  APP.logAudit({ what: "Exception " + code + ": " + action + (programId ? " → " + APP.progById[programId].name : "") + " — " + reason });
+  return { ok:true };
+};
+
+/* ----- PRA workspace ----- */
+DRAWERS.pra = function(d){
+  var p = APP.progById[d.prog], st = S.pra[d.prog];
+  var resp = APP.RESP[d.prog] || {};
+  var excOpen = APP.excForProg(d.prog).filter(function(e){ return !S.excState[e.code]; }).length;
+  var h = ['<p class="small"><strong>' + esc(p.name) + '</strong> — FY2026 Preliminary Risk Assessment (PRA): the standard 10-question instrument. <span class="ai-tag">Simulated AI</span> drafted 8 of 10 answers from the ledger you are looking at; each cites its source. Question text is an illustrative placeholder instrument, not FEMA&rsquo;s real form. Nothing finalizes without human sign-off.</p>'];
+  if (excOpen) h.push('<p class="err-note" style="min-height:0">Note: ' + excOpen + ' unresolved exception-queue code(s) suggest this program — resolve or acknowledge before relying on totals.</p>');
+  APP.QS.forEach(function(q){
+    var r = resp[q.id], ov = st.answers[q.id];
+    var human = !q.auto_populatable;
+    h.push('<div class="pra-q' + (human ? " human" : "") + (ov && ov.reason ? " overridden" : "") + '">');
+    h.push('<div class="qhead"><span class="qid">' + q.id + '</span><span class="qtext">' + esc(q.text.replace(/\s*\(illustrative placeholder[^)]*\)/, "")) + ' <span class="small">(illustrative placeholder)</span></span></div>');
+    if (human){
+      h.push('<p class="pra-src">human-only — requires program-office input</p>');
+      if (ov) h.push('<p class="pra-ans">&ldquo;' + esc(ov.value) + '&rdquo; <span class="small">(entered this session)</span></p>');
+      h.push('<div class="field"><label for="praH-' + d.prog + '-' + q.id + '">' + (ov ? "Revise answer" : "Answer") + '</label><textarea id="praH-' + d.prog + '-' + q.id + '" placeholder="Program-office narrative&hellip;"></textarea></div>' +
+        '<div class="btnrow"><button class="pbtn go" data-do="praHuman" data-prog="' + d.prog + '" data-q="' + q.id + '">Save answer</button></div><div class="err-note" id="praE-' + d.prog + '-' + q.id + '"></div>');
+    } else {
+      var shown = ov ? ov.value : (r ? r.answer_value : "—");
+      var disp = (q.id === "Q1" && !ov) ? fmt$(parseFloat(shown)) : esc(String(shown));
+      h.push('<p class="pra-ans">' + disp + (ov ? ' <span class="small">(human override)</span>' : '') + '</p>');
+      h.push('<p class="pra-src">' + (ov ? 'override reason: &ldquo;' + esc(ov.reason) + '&rdquo;' :
+        'drafted by simulated AI · confidence ' + (r ? r.confidence.toFixed(2) : "—") + ' <span class="conf-bar' + (r && r.confidence < 0.85 ? " low" : "") + '"><i style="width:' + (r ? Math.round(r.confidence*100) : 0) + '%"></i></span> · source: ' + esc(q.source_binding)) + '</p>');
+      h.push('<div class="override-box"><div class="field"><label for="praV-' + d.prog + '-' + q.id + '">Override value</label><input type="text" id="praV-' + d.prog + '-' + q.id + '" placeholder="corrected value"></div>' +
+        '<div class="field"><label for="praR-' + d.prog + '-' + q.id + '">Override reason (required)</label><input type="text" id="praR-' + d.prog + '-' + q.id + '" placeholder="why the drafted answer is wrong"></div>' +
+        '<div class="btnrow"><button class="pbtn" data-do="praOverride" data-prog="' + d.prog + '" data-q="' + q.id + '">Apply override</button>' + (ov ? '<button class="rowbtn" data-do="praClearOv" data-prog="' + d.prog + '" data-q="' + q.id + '">revert to drafted</button>' : '') + '</div>' +
+        '<div class="err-note" id="praE-' + d.prog + '-' + q.id + '"></div></div>');
+    }
+    h.push('</div>');
+  });
+  h.push('<div class="pra-q" style="background:#f4f7f4"><div class="qhead"><span class="qid">SIGN-OFF</span><span class="qtext">Human certification — required before this PRA counts as complete.</span></div>');
+  if (st.signed){
+    h.push('<p class="ok-note">Signed off this session' + (st.signoffNote ? ' — note: &ldquo;' + esc(st.signoffNote) + '&rdquo;' : '') + '.</p><div class="btnrow"><button class="rowbtn" data-do="praUnsign" data-prog="' + d.prog + '">withdraw sign-off</button></div>');
+  } else {
+    h.push('<div class="field"><label for="praSN-' + d.prog + '">Certification note (optional)</label><input type="text" id="praSN-' + d.prog + '" placeholder="e.g., reviewed with program office"></div>' +
+      '<div class="btnrow"><button class="pbtn go" data-do="praSign" data-prog="' + d.prog + '">Sign off FY2026 PRA</button></div>' +
+      '<div class="err-note" id="praSE-' + d.prog + '"></div><p class="small">Sign-off requires answers to Q9 and Q10 (human-only questions).</p>');
+  }
+  h.push('</div>');
+  return { t: "PRA workspace — " + SHORTQ[d.prog] + " FY2026", h: h.join("") };
+};
+
+/* PRA actions */
+APP.praOverride = function(pid, qid, value, reason){
+  if (!reason || !String(reason).trim()) return { ok:false, error:"An override needs a reason — the drafted answer and your rationale both go to the audit trail." };
+  if (value == null || !String(value).trim()) return { ok:false, error:"Enter the corrected value." };
+  S.pra[pid].answers[qid] = { value: String(value).trim(), reason: String(reason).trim(), by: "human override" };
+  APP.logAudit({ what: "PRA " + SHORTQ[pid] + " " + qid + " overridden — " + reason });
+  return { ok:true };
+};
+APP.praHuman = function(pid, qid, value){
+  if (value == null || !String(value).trim()) return { ok:false, error:"Q9/Q10 need program-office narrative before sign-off." };
+  S.pra[pid].answers[qid] = { value: String(value).trim(), reason: "", by: "human input" };
+  APP.logAudit({ what: "PRA " + SHORTQ[pid] + " " + qid + " answered by human" });
+  return { ok:true };
+};
+APP.praSign = function(pid, note){
+  var a = S.pra[pid].answers;
+  if (!a.Q9 || !a.Q10) return { ok:false, error:"Cannot sign off: Q9 and Q10 are human-only and still unanswered." };
+  S.pra[pid].signed = true; S.pra[pid].signoffNote = note || "";
+  APP.logAudit({ what: "PRA " + SHORTQ[pid] + " FY2026 signed off" });
+  return { ok:true };
+};
+
+/* ---------- modals ---------- */
+var MODALS = ["exportModal","provModal","assumpModal","helpModal"];
+APP.openModal = function(id){
+  MODALS.forEach(function(m){ el(m).classList.remove("open"); });
+  el("overlay").classList.add("open"); el(id).classList.add("open");
+};
+APP.closeModals = function(){
+  el("overlay").classList.remove("open");
+  MODALS.forEach(function(m){ el(m).classList.remove("open"); });
+};
+
+/* ----- export simulation: the Chronicle briefing ----- */
+APP.buildBriefing = function(){
+  var cfg = APP.config, L = [];
+  L.push("SYNTHETIC-DEMO — CHRONICLE BRIEFING (export simulation; all data synthetic)");
+  L.push("FEMA OCFO payment-integrity chronicle · window FY2022–FY2026 · horizon FY2027");
+  L.push("Trigger console at export: |YoY| ≥ " + cfg.threshold + "% · " + cfg.direction + " · measures: " + [cfg.mDollars?"dollars":null,cfg.mCount?"volume":null].filter(Boolean).join(" OR "));
+  L.push("");
+  var grand = 0;
+  APP.PROGS.forEach(function(p){
+    var c26 = APP.CALC[p.id][2026]; grand += c26.total;
+    var b = APP.breach(p.id, 2026), cyc = APP.CYCLES[p.id];
+    var flares = APP.FYS.filter(function(fy){ return APP.breach(p.id, fy).any; }).map(function(fy){ return "FY"+fy; });
+    L.push(p.name.toUpperCase() + (p.is_disaster ? "  [disaster]" : "  [non-disaster]"));
+    L.push("  FY2026: " + APP.fmt$(c26.total) + " across " + c26.count + " transactions" +
+      (b.yoyD!=null ? " · YoY $ " + fmtPct(b.yoyD) + " · YoY volume " + fmtPct(b.yoyC) : ""));
+    L.push("  trajectory: " + trajectoryWords(p.id));
+    L.push("  breaches in window at current console: " + (flares.length ? flares.join(", ") : "none") + (b.countOnly ? "  — FY2026 flagged by VOLUME ALONE (dollars-only rule would have missed it)" : ""));
+    L.push("  3-year cycle (illustrative history, simulated): last comprehensive FY" + cyc.lastComprehensive + " → due FY" + cyc.due + (cyc.due===2026 ? "  ** DUE THIS YEAR **" : ""));
+    L.push("  FY2026 PRA: " + (S.pra[p.id].signed ? "signed off (this session)" : "draft — awaiting human sign-off"));
+    var eo = APP.excForProg(p.id).filter(function(e){ return !S.excState[e.code]; }).length;
+    if (eo) L.push("  exception queue: " + eo + " unresolved suggested code(s)");
+    L.push("");
+  });
+  L.push("FY2026 total disbursements (5 reportable programs): " + APP.fmt$(grand));
+  L.push("Exception queue open: " + APP.excOpenCount() + " of " + APP.EXC.length + " FY2026 codes");
+  L.push("Horizon: financial-system modernization ~Oct 1, 2026 (contextual, simulated) — expect new code formats in the FY2027 extract.");
+  L.push("");
+  L.push("Historical assessment milestones before FY2026 are illustrative/simulated; FEMA holds real records from 2018–19 onward.");
+  L.push("SYNTHETIC-DEMO — not FEMA data. Generated by The Chronicle demonstration instrument.");
+  return L.join("\n");
+};
+function trajectoryWords(pid){
+  var parts = [];
+  APP.FYS.forEach(function(fy){
+    var y = APP.yoy(pid, fy); if (y.d == null) return;
+    var d = Math.abs(y.d) < 12 ? "steady" : (y.d > 0 ? "up " + fmtPct(y.d) : "down " + fmtPct(y.d));
+    parts.push("FY" + fy + " " + d);
+  });
+  return parts.join(" · ");
+}
+APP.renderExport = function(){
+  el("briefingOut").innerHTML = '<span class="wm">SYNTHETIC-DEMO</span>' + esc(APP.buildBriefing());
+};
+})();
+</script>
+<script>
+/* ============================================================
+   Section 4: DETAIL LEDGER, COMPARE TOOL, EVENT WIRING, INIT
+   ============================================================ */
+(function(){
+"use strict";
+var APP = window.APP, S = APP.state, esc = APP.esc, fmt$ = APP.fmt$, fmtPct = APP.fmtPct;
+function el(id){ return document.getElementById(id); }
+var SHORTL = { "PROG-PA":"Public Assistance", "PROG-HM":"Hazard Mitigation (HMGP)", "PROG-IA":"Individual Assistance", "PROG-HS":"Homeland Security Grants (HSGP)", "PROG-UR":"Urban Search & Rescue (US&R)" };
+
+/* ---------- detail ledger (viewport-synced) ---------- */
+var LCOLS = [
+  { k:"prog",  label:"Program" }, { k:"fy", label:"FY" },
+  { k:"total", label:"Disbursements", num:true }, { k:"yoyD", label:"YoY $", num:true },
+  { k:"count", label:"Txns", num:true }, { k:"yoyC", label:"YoY vol", num:true },
+  { k:"trig",  label:"Trigger" }, { k:"extra", label:"Cycle / queue" }, { k:"act", label:"" }
+];
+function viewportFys(){
+  var a = S.view.c - S.view.s/2, b = S.view.c + S.view.s/2;
+  return APP.FYS.filter(function(fy){ return fy >= a - 0.35 && fy <= b + 0.35; });
+}
+function ledgerRows(){
+  var fys = viewportFys(), rows = [], f = (S.ledgerFilter||"").toLowerCase();
+  APP.PROGS.forEach(function(p, li){
+    if (f && (p.name + " " + p.id + " " + SHORTL[p.id]).toLowerCase().indexOf(f) < 0) return;
+    fys.forEach(function(fy){
+      var c = APP.CALC[p.id][fy], b = APP.breach(p.id, fy);
+      rows.push({ prog: li, pid: p.id, pname: SHORTL[p.id], fy: fy, total: c.total, count: c.count,
+                  yoyD: b.yoyD, yoyC: b.yoyC, trig: b.any ? (b.countOnly ? 2 : 3) : (b.yoyD==null ? 0 : 1), b: b });
+    });
+  });
+  var s = S.ledgerSort, k = s.key;
+  rows.sort(function(a, x){
+    var va = a[k], vb = x[k];
+    if (va == null) va = -1e18; if (vb == null) vb = -1e18;
+    if (va < vb) return -1*s.dir; if (va > vb) return 1*s.dir;
+    return (a.prog - x.prog) || (a.fy - x.fy);
+  });
+  return rows;
+}
+APP.renderLedger = function(){
+  var head = el("ledgerHead"), body = el("ledgerBody");
+  if (!head) return;
+  head.innerHTML = LCOLS.map(function(c){
+    if (!c.k || c.k==="act") return "<th></th>";
+    var cur = S.ledgerSort.key === c.k ? (S.ledgerSort.dir > 0 ? " ▲" : " ▼") : "";
+    return '<th><button class="sortbtn" data-sort="' + c.k + '" aria-label="Sort by ' + esc(c.label) + '">' + esc(c.label) + cur + '</button></th>';
+  }).join("");
+  var rows = ledgerRows();
+  body.innerHTML = rows.map(function(r){
+    var sel = S.selection && S.selection.prog===r.pid && S.selection.fy===r.fy;
+    var pill = r.b.any ? (r.b.countOnly ? '<span class="pill conly">volume-only</span>' : '<span class="pill breach">' + (r.b.dollarOnly ? "dollar-only" : "breach") + '</span>')
+             : (r.yoyD==null ? '<span class="pill na">baseline yr</span>' : '<span class="pill ok">within</span>');
+    var cyc = APP.CYCLES[r.pid], extras = [];
+    if (cyc.due === r.fy) extras.push('<span class="pill breach">comp due</span>');
+    if (r.fy === 2026){
+      var eo = APP.excForProg(r.pid).filter(function(e){ return !S.excState[e.code]; }).length;
+      if (eo) extras.push('<span class="pill conly">' + eo + ' exc</span>');
+      extras.push(S.pra[r.pid].signed ? '<span class="pill ok">PRA signed</span>' : '<span class="pill na">PRA draft</span>');
+    }
+    return '<tr data-pid="' + r.pid + '" data-fy="' + r.fy + '"' + (sel ? ' class="sel"' : '') + '>' +
+      '<td>' + esc(r.pname) + '</td><td class="r">FY' + r.fy + '</td>' +
+      '<td class="r">' + fmt$(r.total) + '</td>' +
+      '<td class="r">' + yoyCell(r.yoyD) + '</td>' +
+      '<td class="r">' + r.count + '</td>' +
+      '<td class="r">' + yoyCell(r.yoyC) + '</td>' +
+      '<td>' + pill + '</td><td>' + extras.join(" ") + '</td>' +
+      '<td><button class="rowbtn" data-view="1" aria-label="Open evidence for ' + esc(r.pname) + ' fiscal year ' + r.fy + '">view</button></td></tr>';
+  }).join("");
+  var fys = viewportFys();
+  el("ledgerScope").textContent = rows.length + " rows · FY" + (fys[0]||"—") + "–FY" + (fys[fys.length-1]||"—") + " in view";
+};
+function yoyCell(v){
+  if (v == null) return "—";
+  var cls = Math.abs(v) >= APP.config.threshold ? (v > 0 ? "yoy-up" : "yoy-dn") : "";
+  return '<span class="' + cls + '">' + fmtPct(v) + '</span>';
+}
+
+/* ---------- compare tool ---------- */
+APP.renderCompare = function(){
+  var a = S.cmp.a, b = S.cmp.b, out = el("cmpOut");
+  if (!out) return;
+  if (a === b){ out.innerHTML = '<p class="small">Pick two different fiscal years to compare.</p>'; return; }
+  var h = ['<table class="cmp-table" aria-label="Comparison of two fiscal years"><thead><tr><th>Program</th><th>$ FY' + a + '</th><th>$ FY' + b + '</th><th>Δ$</th><th>vol Δ</th><th>verdict</th></tr></thead><tbody>'];
+  APP.PROGS.forEach(function(p){
+    var c = APP.compare(p.id, a, b);
+    var v = c.any ? (c.countOnly ? '<span class="pill conly">vol-only</span>' : '<span class="pill breach">breach</span>') : '<span class="pill ok">within</span>';
+    h.push('<tr><td>' + esc(SHORTL[p.id]) + '</td><td>' + APP.fmt$c(c.a.total) + '</td><td>' + APP.fmt$c(c.b.total) + '</td>' +
+      '<td>' + fmtPct(c.dPct) + '</td><td>' + fmtPct(c.cPct) + '</td><td>' + v + '</td></tr>');
+  });
+  h.push('</tbody></table><p class="small" style="margin:6px 0 0">Verdicts use the live console: |Δ| ≥ ' + APP.config.threshold + '%, ' + APP.config.direction + ', ' + [APP.config.mDollars?"dollars":null,APP.config.mCount?"volume":null].filter(Boolean).join(" OR ") + '. Note: the statutory trigger is year-over-adjacent-year; wider windows are exploratory.</p>');
+  out.innerHTML = h.join("");
+};
+
+/* ---------- global re-render ---------- */
+APP.renderAll = function(){
+  APP.renderCanvas();
+  APP.renderLedger();
+  APP.renderCompare();
+  APP.renderDrawer();
+};
+
+/* ---------- static modal content ---------- */
+function fillStatics(){
+  el("provBody").innerHTML =
+    '<p><span class="sim-tag">Simulated</span> This demo carries no live connection. In production the contract is <strong>file-in / file-out</strong>: one fiscal-year extract in from the financial system of record (WebFMIS today; successor after the ~Oct 1, 2026 modernization), reportable outputs out. Nothing else crosses the boundary.</p>' +
+    '<table class="evi-kv"><tr><td>Embedded dataset</td><td>' + esc(window.FEMA_DATA.meta.note) + '</td></tr>' +
+    '<tr><td>Volume</td><td class="num">' + APP.TXNS.length + ' synthetic transactions · FY2022–FY2026 · 5 reportable programs · 15 sub-groupings · 57 financial codes</td></tr>' +
+    '<tr><td>Mapping engine</td><td>26 rules (cleansing, code&rarr;sub-program, event split, rollup); 23 SME-confirmed, 3 machine-inferred at 0.88 confidence; anything under ' + window.FEMA_DATA.meta.confidence_routing_threshold + ' routes to the exception queue for a human.</td></tr>' +
+    '<tr><td>Historical grading</td><td>On the held-out grading year, the mapper auto-mapped <strong>47 of 47 codes correctly</strong> and routed 10 low-confidence codes to review — 0 incorrect. The grading key is never read by the inference engine.</td></tr>' +
+    '<tr><td>Watermark</td><td><span class="synth-chip" style="background:#3d2f18">SYNTHETIC-DEMO</span> on every export; all figures synthetic.</td></tr></table>' +
+    '<p class="small">Deterministic code computes every reportable number live from the embedded extract. Simulated-AI outputs (mapping suggestions, drafted PRA answers) only propose and explain — they never own a number.</p>';
+
+  el("assumpBody").innerHTML =
+    '<p class="small">Open items the build team would take to FEMA subject-matter experts — stated plainly, because hiding them would be worse.</p>' +
+    '<ul class="audit-list">' +
+    '<li><strong>The question set is a placeholder.</strong> The 10 PRA questions shown are an illustrative instrument; the real form should replace it one-for-one.</li>' +
+    '<li><strong>Assessment history is simulated.</strong> The 3-year-cycle arcs rest on invented "last comprehensive" dates. FEMA holds real assessment records from 2018–19 onward; the canvas is built to ingest them.</li>' +
+    '<li><strong>Which measure should lead?</strong> Since the 2024 rule change the trigger watches dollars OR transaction volume, either direction. We assume "either fires &rarr; escalate"; confirm tie-breaking and documentation expectations.</li>' +
+    '<li><strong>Umbrella programs.</strong> Individual Assistance has no single assistance listing; we treat it as one reportable program with three sub-groupings (IHP, Mass Care, DCM). Sub-groupings are never presented as programs — debris removal is a subset of Public Assistance, not a program.</li>' +
+    '<li><strong>Exception-queue dollars.</strong> Unresolved FY2026 codes (6 in this extract) are excluded from program totals until a human maps them. Confirm that is the right reporting posture.</li>' +
+    '<li><strong>Modernization risk.</strong> The FY2027 extract arrives from a new financial system mid-transition ("not going smoothly"). Expect new code formats; the cleansing-rule layer is the shock absorber and will need SME attention in the first cycle.</li>' +
+    '<li><strong>Trigger anchoring.</strong> YoY compares adjacent fiscal-year roll-ups. Partial-year or mid-year re-runs would need a proration convention.</li>' +
+    '</ul>';
+
+  el("helpBody").innerHTML =
+    '<h3 style="font-size:13px;margin:2px 0 6px">How to read the canvas</h3>' +
+    '<p class="small">One lane per reportable program; time runs left to right (federal fiscal years, Oct 1 – Sep 30). Each lane carries two strands — solid blue = disbursement dollars, dashed teal = transaction volume — both indexed to FY2022 = 100 so shape, not magnitude, is what you read first. When the strands split apart, something changed shape: the amber-shaded wedge and a diamond flare mark it. Red diamonds = trigger breach; amber halo diamonds = volume-only breach (the kind a dollars-only rule misses). Arcs above a lane are each program&rsquo;s 3-year comprehensive-assessment clock. The top band holds context: extract ingestions, disaster declarations (before the window, left edge), and the Oct 2026 system-modernization milestone. Exact numbers live in the ledger below the canvas — the canvas is for shape, the ledger for lookup.</p>' +
+    '<h3 style="font-size:13px;margin:10px 0 6px">Keyboard</h3>' +
+    '<table class="evi-kv">' +
+    '<tr><td class="num">+ / −</td><td>zoom in / out (canvas focused)</td></tr>' +
+    '<tr><td class="num">&larr; / &rarr;</td><td>pan earlier / later</td></tr>' +
+    '<tr><td class="num">0</td><td>fit all fiscal years</td></tr>' +
+    '<tr><td class="num">Tab</td><td>walk every marker, flare, point, and control; Enter or Space activates</td></tr>' +
+    '<tr><td class="num">Esc</td><td>close dialog, then evidence panel</td></tr></table>' +
+    '<p class="small">Every canvas interaction has a keyboard path, and the detail ledger is the screen-reader-equivalent surface for the whole canvas.</p>';
+}
+
+/* ---------- event wiring ---------- */
+function setThreshold(v){
+  v = Math.max(1, Math.min(60, Math.round(+v || 0)));
+  APP.config.threshold = v;
+  el("thNum").value = v; el("thRange").value = v;
+  APP.renderAll();
+}
+APP.setThreshold = setThreshold;
+function zoom(f){ S.view.s *= f; APP.clampView(); APP.renderCanvas(); APP.renderLedger(); }
+function pan(df){ S.view.c += df; APP.clampView(); el("scrubber").value = S.view.c; APP.renderCanvas(); APP.renderLedger(); }
+
+function activate(t){
+  var g = t.closest ? t.closest("[data-act]") : null;
+  if (!g) return false;
+  var a = g.getAttribute("data-act"), p = g.getAttribute("data-prog"), fy = g.getAttribute("data-fy");
+  if (a === "focus"){ S.focused = (S.focused === p ? null : p); APP.renderCanvas(); return true; }
+  if (a === "pt"){ S.selection = { prog: p, fy: +fy }; APP.openDrawer("pt", { prog: p, fy: +fy }); APP.renderCanvas(); APP.renderLedger(); return true; }
+  if (a === "flare"){ APP.openDrawer("flare", { prog: p, fy: +fy }); return true; }
+  if (a === "cycle"){ APP.openDrawer("cycle", { prog: p }); return true; }
+  if (a === "pra"){ APP.openDrawer("pra", { prog: p }); return true; }
+  if (a === "exc"){ APP.openDrawer("exc", { prog: p }); return true; }
+  if (a === "extract"){ APP.openDrawer("extract", { fy: +fy }); return true; }
+  if (a === "modern"){ APP.openDrawer("modern", {}); return true; }
+  if (a === "drlist"){ APP.openDrawer("drlist", {}); return true; }
+  return false;
+}
+
+function wire(){
+  el("zoomIn").addEventListener("click", function(){ zoom(1/1.45); });
+  el("zoomOut").addEventListener("click", function(){ zoom(1.45); });
+  el("panLeft").addEventListener("click", function(){ pan(-Math.max(0.5, S.view.s/4)); });
+  el("panRight").addEventListener("click", function(){ pan(Math.max(0.5, S.view.s/4)); });
+  el("zoomAll").addEventListener("click", function(){ S.view = { c: 2024.5, s: 5.9 }; el("scrubber").value = 2024.5; APP.renderCanvas(); APP.renderLedger(); });
+  el("scrubber").addEventListener("input", function(){ S.view.c = +this.value; APP.clampView(); APP.renderCanvas(); APP.renderLedger(); });
+  el("thNum").addEventListener("change", function(){ setThreshold(this.value); });
+  el("thRange").addEventListener("input", function(){ setThreshold(this.value); });
+  el("dirSel").addEventListener("change", function(){ APP.config.direction = this.value; APP.renderAll(); });
+  el("mDollars").addEventListener("change", function(){ APP.config.mDollars = this.checked; noteMeasures(); APP.renderAll(); });
+  el("mCount").addEventListener("change", function(){ APP.config.mCount = this.checked; noteMeasures(); APP.renderAll(); });
+
+  el("btnExport").addEventListener("click", function(){ APP.renderExport(); APP.openModal("exportModal"); });
+  el("btnProvenance").addEventListener("click", function(){ APP.openModal("provModal"); });
+  el("btnAssumptions").addEventListener("click", function(){ APP.openModal("assumpModal"); });
+  el("btnHelp").addEventListener("click", function(){ APP.openModal("helpModal"); });
+  el("btnCopyBriefing").addEventListener("click", function(){ APP.toast("Briefing copied to hand-off (simulated — nothing leaves this page)."); });
+  el("overlay").addEventListener("click", APP.closeModals);
+  document.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", APP.closeModals); });
+  el("drawerClose").addEventListener("click", APP.closeDrawer);
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape"){
+      var anyModal = document.querySelector(".modal.open");
+      if (anyModal) APP.closeModals(); else APP.closeDrawer();
+    }
+  });
+
+  /* canvas: delegation for click + keyboard + wheel + drag-compare */
+  var cv = el("chronology");
+  cv.setAttribute("tabindex", "0");
+  cv.setAttribute("role", "application");
+  cv.setAttribute("aria-roledescription", "zoomable chronology canvas");
+  cv.addEventListener("click", function(e){ activate(e.target); });
+  cv.addEventListener("keydown", function(e){
+    if ((e.key === "Enter" || e.key === " ") && activate(e.target)){ e.preventDefault(); return; }
+    if (e.key === "+" || e.key === "=") { zoom(1/1.45); e.preventDefault(); }
+    else if (e.key === "-") { zoom(1.45); e.preventDefault(); }
+    else if (e.key === "ArrowLeft") { pan(-Math.max(0.25, S.view.s/6)); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { pan(Math.max(0.25, S.view.s/6)); e.preventDefault(); }
+    else if (e.key === "0") { S.view = { c: 2024.5, s: 5.9 }; APP.renderCanvas(); APP.renderLedger(); e.preventDefault(); }
+  });
+  cv.addEventListener("wheel", function(e){
+    e.preventDefault();
+    zoom(e.deltaY > 0 ? 1.18 : 1/1.18);
+  }, { passive: false });
+  var drag = null;
+  cv.addEventListener("mousedown", function(e){
+    var rect = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+    if (!rect || !rect.width) return;
+    drag = { x0: e.clientX - rect.left, w: rect.width };
+  });
+  cv.addEventListener("mouseup", function(e){
+    if (!drag) return;
+    var rect = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+    if (rect && rect.width){
+      var xEnd = e.clientX - rect.left;
+      if (Math.abs(xEnd - drag.x0) > 24){
+        var fa = APP.fyAtPx(Math.min(drag.x0, xEnd), drag.w), fb = APP.fyAtPx(Math.max(drag.x0, xEnd), drag.w);
+        if (fa != null && fb != null){
+          var A = Math.max(2022, Math.min(2026, Math.round(fa)));
+          var B = Math.max(2022, Math.min(2026, Math.round(fb)));
+          if (A !== B){ S.cmp = { a: A, b: B }; el("cmpA").value = A; el("cmpB").value = B; APP.renderCompare(); APP.toast("Compare window set: FY" + A + " → FY" + B); }
+        }
+      }
+    }
+    drag = null;
+  });
+
+  /* ledger */
+  el("ledgerHead").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("[data-sort]") : null;
+    if (!b) return;
+    var k = b.getAttribute("data-sort");
+    if (S.ledgerSort.key === k) S.ledgerSort.dir *= -1; else S.ledgerSort = { key: k, dir: 1 };
+    APP.renderLedger();
+  });
+  el("ledgerBody").addEventListener("click", function(e){
+    var tr = e.target.closest ? e.target.closest("tr[data-pid]") : null;
+    if (!tr) return;
+    var pid = tr.getAttribute("data-pid"), fy = +tr.getAttribute("data-fy");
+    S.selection = { prog: pid, fy: fy };
+    APP.openDrawer("pt", { prog: pid, fy: fy });
+    APP.renderCanvas(); APP.renderLedger();
+  });
+  el("ledgerFilter").addEventListener("input", function(){ S.ledgerFilter = this.value; APP.renderLedger(); });
+
+  /* compare selects */
+  ["cmpA","cmpB"].forEach(function(id){
+    var sel = el(id);
+    APP.FYS.forEach(function(fy){
+      var o = document.createElement("option"); o.value = fy; o.textContent = "FY" + fy; sel.appendChild(o);
+    });
+    sel.value = id === "cmpA" ? S.cmp.a : S.cmp.b;
+    sel.addEventListener("change", function(){
+      S.cmp[id === "cmpA" ? "a" : "b"] = +this.value;
+      APP.renderCompare();
+    });
+  });
+
+  /* drawer internal actions */
+  el("drawerBody").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("[data-do]") : null;
+    if (!b) return;
+    var act = b.getAttribute("data-do"), prog = b.getAttribute("data-prog"), q = b.getAttribute("data-q"), code = b.getAttribute("data-code");
+    var v;
+    if (act === "openPra") APP.openDrawer("pra", { prog: prog });
+    else if (act === "drill") APP.openDrawer("drill", { prog: prog, fy: +b.getAttribute("data-fy") });
+    else if (act === "dr") APP.openDrawer("dr", { dr: +b.getAttribute("data-dr") });
+    else if (act === "drTxns") APP.openDrawer("drTxns", { dr: +b.getAttribute("data-dr") });
+    else if (act === "backDrList") APP.openDrawer("drlist", {});
+    else if (act === "provModal") APP.openModal("provModal");
+    else if (act === "cmpSet"){ S.cmp = { a: +b.getAttribute("data-a"), b: +b.getAttribute("data-b") }; el("cmpA").value = S.cmp.a; el("cmpB").value = S.cmp.b; APP.renderCompare(); APP.toast("Compare window updated."); }
+    else if (act === "excConfirm" || act === "excReassign" || act === "excDefer"){
+      var rIn = el("excR-" + code), pSel = el("excP-" + code), errN = el("excE-" + code);
+      var reason = rIn ? rIn.value : "";
+      var target = act === "excConfirm" ? (APP.EXC.filter(function(x){ return x.code===code; })[0] || {}).program_id
+                 : act === "excReassign" ? (pSel ? pSel.value : null) : null;
+      var res = APP.resolveException(code, act === "excConfirm" ? "confirmed suggestion" : act === "excReassign" ? "reassigned" : "deferred to SME", target, reason);
+      if (!res.ok){ if (errN) errN.textContent = res.error; return; }
+      APP.renderAll(); APP.toast("Exception " + code + " resolved (in-memory this session).");
+    }
+    else if (act === "excUndo"){ delete S.excState[code]; APP.logAudit({ what: "Exception " + code + ": decision withdrawn" }); APP.renderAll(); }
+    else if (act === "praOverride"){
+      var vIn = el("praV-" + prog + "-" + q), rIn2 = el("praR-" + prog + "-" + q), eN = el("praE-" + prog + "-" + q);
+      var res2 = APP.praOverride(prog, q, vIn ? vIn.value : "", rIn2 ? rIn2.value : "");
+      if (!res2.ok){ if (eN) eN.textContent = res2.error; return; }
+      APP.renderDrawer(); APP.toast("Override recorded with reason.");
+    }
+    else if (act === "praClearOv"){ delete S.pra[prog].answers[q]; APP.renderDrawer(); }
+    else if (act === "praHuman"){
+      var hIn = el("praH-" + prog + "-" + q), eN2 = el("praE-" + prog + "-" + q);
+      var res3 = APP.praHuman(prog, q, hIn ? hIn.value : "");
+      if (!res3.ok){ if (eN2) eN2.textContent = res3.error; return; }
+      APP.renderDrawer(); APP.toast(q + " answered.");
+    }
+    else if (act === "praSign"){
+      var nIn = el("praSN-" + prog), sE = el("praSE-" + prog);
+      var res4 = APP.praSign(prog, nIn ? nIn.value : "");
+      if (!res4.ok){ if (sE) sE.textContent = res4.error; return; }
+      APP.renderCanvas(); APP.renderLedger(); APP.renderDrawer(); APP.toast("PRA signed off (simulated session).");
+    }
+    else if (act === "praUnsign"){ S.pra[prog].signed = false; APP.logAudit({ what: "PRA " + prog + " sign-off withdrawn" }); APP.renderCanvas(); APP.renderLedger(); APP.renderDrawer(); }
+  });
+}
+function noteMeasures(){
+  var n = el("ruleNote");
+  if (!APP.config.mDollars && !APP.config.mCount) n.textContent = "No measures selected — no trigger can fire (console honesty).";
+  else n.textContent = "2024 rule: dollars OR volume, either direction";
+}
+
+/* ---------- init ---------- */
+function init(){
+  fillStatics();
+  wire();
+  APP.renderAll();
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+})();
+</script>
+<script>
+/* ============================================================
+   Section 5: EMBEDDED SELF-TESTS  (window.__SELFTEST__)
+   Cross-check constants below are the planted verification
+   values from the synthetic data spec — used ONLY here, never
+   to render UI. Tests snapshot app state, force known config,
+   assert, then restore (side-effect-safe).
+   ============================================================ */
+(function(){
+"use strict";
+window.__SELFTEST__ = function(){
+  var APP = window.APP, T = [];
+  function t(name, pass, detail){ T.push({ name: name, pass: !!pass, detail: detail || "" }); }
+  function near(a, b, eps){ return Math.abs(a - b) <= (eps == null ? 1 : eps); }
+
+  /* ---- snapshot state & controls ---- */
+  var S = APP.state;
+  var snapState = JSON.parse(JSON.stringify(S));
+  var snapCfg = JSON.parse(JSON.stringify(APP.config));
+  var ids = ["thNum","thRange","dirSel","scrubber","cmpA","cmpB","ledgerFilter"];
+  var snapVals = {}; ids.forEach(function(id){ var e = document.getElementById(id); if (e) snapVals[id] = e.value; });
+  var snapChk = { mDollars: document.getElementById("mDollars").checked, mCount: document.getElementById("mCount").checked };
+
+  try {
+    /* ---- force a known state: defaults ---- */
+    APP.config.threshold = 20; APP.config.direction = "either"; APP.config.mDollars = true; APP.config.mCount = true;
+    S.view = { c: 2024.5, s: 5.9 }; S.focused = null; S.selection = null; S.drawer = null;
+    S.cmp = { a: 2025, b: 2026 }; S.ledgerFilter = ""; S.ledgerSort = { key: "fy", dir: 1 };
+    document.getElementById("mDollars").checked = true; document.getElementById("mCount").checked = true;
+    APP.renderAll();
+
+    /* 1 — payload loaded */
+    t("payload loaded: 1,459 transactions, 5 programs, FY2022–2026",
+      APP.TXNS.length === 1459 && APP.PROGS.length === 5 && APP.FYS.length === 5,
+      "txns=" + APP.TXNS.length);
+
+    /* 2 — computed FY2026 totals match planted cross-check values (±$1) */
+    var planted = {
+      "PROG-PA": { total: 1094293204.80, n: 188 }, "PROG-HM": { total: 166280284.80, n: 33 },
+      "PROG-IA": { total: 422002008.00, n: 44 },  "PROG-HS": { total: 469332864.00, n: 84 },
+      "PROG-UR": { total: 39617061.12, n: 12 }
+    };
+    var okTotals = true, det = [], grand = 0;
+    Object.keys(planted).forEach(function(pid){
+      var c = APP.CALC[pid][2026]; grand += c.total;
+      if (!near(c.total, planted[pid].total) || c.count !== planted[pid].n){ okTotals = false; det.push(pid + "=" + c.total + "/" + c.count); }
+    });
+    t("FY2026 totals & txn counts computed from transactions match spec (±$1)", okTotals, det.join(" "));
+    t("FY2026 grand total = $2,191,525,422.72 (±$1)", near(grand, 2191525422.72), "grand=" + grand.toFixed(2));
+
+    /* 3 — dual-measure trigger at defaults */
+    var bPA = APP.breach("PROG-PA", 2026), bHM = APP.breach("PROG-HM", 2026), bIA = APP.breach("PROG-IA", 2026),
+        bHS = APP.breach("PROG-HS", 2026), bUR = APP.breach("PROG-UR", 2026);
+    t("default trigger fires PA, HM (decrease), HS; not UR",
+      bPA.any && bPA.dollar && bPA.count && bHM.any && bHM.yoyD < 0 && bHS.any && !bUR.any,
+      "PA=" + bPA.any + " HM=" + bHM.any + " HS=" + bHS.any + " UR=" + bUR.any);
+    t("IA FY2026 is the COUNT-ONLY catch (dollars +8.0%, volume +37.5%)",
+      bIA.countOnly && near(bIA.yoyD, 8.0, 0.15) && near(bIA.yoyC, 37.5, 0.15),
+      "yoyD=" + (bIA.yoyD||0).toFixed(2) + " yoyC=" + (bIA.yoyC||0).toFixed(2) + " countOnly=" + bIA.countOnly);
+
+    /* 4 — primary navigation: zoom changes viewport; lane focus changes DOM */
+    var sBefore = S.view.s;
+    document.getElementById("zoomIn").click();
+    var zoomed = S.view.s < sBefore;
+    var focusBtn = document.querySelector('#chronology [data-act="focus"][data-prog="PROG-IA"]');
+    if (focusBtn) focusBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    var focused = S.focused === "PROG-IA" && !!document.querySelector("#chronology .lane-bg.focused");
+    t("navigation: zoom-in narrows viewport and lane-focus expands the lane DOM", zoomed && focused,
+      "span " + sBefore.toFixed(2) + "→" + S.view.s.toFixed(2) + " focused=" + S.focused);
+    S.focused = null; S.view = { c: 2024.5, s: 5.9 }; APP.renderCanvas();
+
+    /* 5 — drill-down reaches transaction rows */
+    var flare = document.querySelector('#chronology [data-act="flare"][data-prog="PROG-IA"][data-fy="2026"]');
+    if (flare) flare.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    var rows = document.querySelectorAll("#drawerBody .txn-table tbody tr");
+    t("flare click opens trigger evidence with transaction-level rows", !!flare && rows.length > 10,
+      "flare=" + !!flare + " rows=" + rows.length);
+
+    /* 6 — signature: dual strands, divergence geometry, live threshold recompute */
+    var strands = document.querySelectorAll("#chronology .strand-d, #chronology .strand-c");
+    var diverge = document.querySelectorAll("#chronology .diverge-fill");
+    var heroFlare = document.querySelector('#chronology .flare.countonly[data-prog="PROG-IA"][data-fy="2026"]');
+    t("signature: 10 strands (2 per lane) + divergence wedge + count-only flare rendered",
+      strands.length === 10 && diverge.length >= 1 && !!heroFlare,
+      "strands=" + strands.length + " wedges=" + diverge.length);
+    APP.setThreshold(40);
+    var hsGone = !APP.breach("PROG-HS", 2026).any && !document.querySelector('#chronology [data-act="flare"][data-prog="PROG-HS"][data-fy="2026"]');
+    APP.setThreshold(25);
+    var hmAt25 = APP.breach("PROG-HM", 2026).any && !APP.breach("PROG-HS", 2026).any;
+    t("live trigger console recomputes flares (HS off at 40%; at 25% HM stays, HS off)", hsGone && hmAt25,
+      "hsGone=" + hsGone + " hmAt25=" + hmAt25);
+    APP.setThreshold(20);
+    var cIA = APP.compare("PROG-IA", 2025, 2026);
+    t("compare tool FY2025→FY2026 reproduces the volume-only verdict", cIA.countOnly && near(cIA.cPct, 37.5, 0.15), "cPct=" + (cIA.cPct||0).toFixed(2));
+
+    /* 7 — override & decisions enforce reason capture */
+    var no = APP.praOverride("PROG-PA", "Q1", "999", "");
+    var yes = APP.praOverride("PROG-PA", "Q1", "999", "unit test reason");
+    var excNo = APP.resolveException("XR-88001-4339", "confirmed suggestion", "PROG-IA", "  ");
+    t("override/decision paths reject empty reasons and record with reasons",
+      !no.ok && yes.ok && !excNo.ok && APP.state.pra["PROG-PA"].answers.Q1.reason === "unit test reason",
+      "no.ok=" + no.ok + " yes.ok=" + yes.ok + " excNo.ok=" + excNo.ok);
+    var signBlocked = APP.praSign("PROG-PA", "");
+    t("PRA sign-off blocked until human-only Q9/Q10 answered", !signBlocked.ok, signBlocked.error || "");
+    APP.praHuman("PROG-PA", "Q9", "No significant rule changes this FY (test).");
+    APP.praHuman("PROG-PA", "Q10", "No major system changes beyond planned modernization (test).");
+    var signOk = APP.praSign("PROG-PA", "test certification");
+    t("PRA sign-off succeeds after Q9/Q10 human input", signOk.ok, signOk.error || "");
+
+    /* 8 — exception resolution updates the queue */
+    var openBefore = APP.excOpenCount();
+    var r = APP.resolveException("XR-88001-4339", "confirmed suggestion", "PROG-IA", "self-test confirmation");
+    t("exception resolution (with reason) shrinks the open queue", r.ok && APP.excOpenCount() === openBefore - 1,
+      openBefore + "→" + APP.excOpenCount());
+
+    /* 9 — export simulation carries the watermark and the story */
+    var brief = APP.buildBriefing();
+    t("export briefing contains SYNTHETIC-DEMO watermark and volume-only callout",
+      brief.indexOf("SYNTHETIC-DEMO") >= 0 && /VOLUME ALONE/.test(brief) && brief.indexOf("2,191,525,422.72") >= 0);
+
+    /* 10 — ledger is the precise surface: row select syncs selection */
+    APP.renderLedger();
+    var firstRow = document.querySelector("#ledgerBody tr[data-pid]");
+    if (firstRow) firstRow.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    t("ledger row select opens point evidence and sets canvas selection",
+      !!firstRow && !!APP.state.selection && !!document.querySelector("#ledgerBody tr.sel"),
+      firstRow ? firstRow.getAttribute("data-pid") : "no rows");
+  } catch (e) {
+    t("self-test suite threw", false, String(e && e.stack || e).slice(0, 240));
+  }
+
+  /* ---- restore snapshot ---- */
+  try {
+    Object.keys(snapState).forEach(function(k){ APP.state[k] = snapState[k]; });
+    Object.keys(snapCfg).forEach(function(k){ APP.config[k] = snapCfg[k]; });
+    ids.forEach(function(id){ var e = document.getElementById(id); if (e && snapVals[id] != null) e.value = snapVals[id]; });
+    document.getElementById("mDollars").checked = snapChk.mDollars;
+    document.getElementById("mCount").checked = snapChk.mCount;
+    APP.renderAll();
+  } catch (e) {
+    T.push({ name: "state restored after self-tests", pass: false, detail: String(e).slice(0, 200) });
+  }
+  return T;
+};
+})();
+</script>
+</body>
+</html>
