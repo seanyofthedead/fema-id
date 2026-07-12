@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Assessment Desk — FEMA OCFO PRA Case Management (Synthetic Demo)</title>
+<style>
+/* ============================================================
+   THE ASSESSMENT DESK — PRA case-management demo
+   Single offline file. All data synthetic (SYNTHETIC-DEMO).
+   Design language: purposeful case-work tool — dense but calm,
+   federal-credible, status-color driven.
+   ============================================================ */
+:root{
+  --ink:#16243d;           /* header navy */
+  --ink-2:#243a5e;
+  --text:#1f2937;
+  --text-soft:#4b5563;
+  --text-faint:#6b7280;
+  --bg:#f2f4f8;
+  --panel:#ffffff;
+  --line:#d7dde6;
+  --line-soft:#e5e9f0;
+  --accent:#1a4480;        /* federal blue */
+  --accent-soft:#e7eefa;
+  --focus:#8b6bd9;
+
+  /* lifecycle status colors */
+  --st-not:#64748b;
+  --st-evi:#0369a1;
+  --st-auto:#0e7490;
+  --st-qual:#b45309;
+  --st-rev:#6d28d9;
+  --st-signed:#15803d;
+
+  --ok:#15803d;  --ok-bg:#e8f5ec;
+  --warn:#b45309; --warn-bg:#fdf3e3;
+  --bad:#b91c1c;  --bad-bg:#fdeaea;
+  --info:#0369a1; --info-bg:#e8f2fa;
+  --violet:#6d28d9; --violet-bg:#f1ebfc;
+
+  --radius:6px;
+  --shadow:0 1px 2px rgba(22,36,61,.08), 0 2px 8px rgba(22,36,61,.06);
+  --mono:"Consolas","SFMono-Regular",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,"Public Sans",Roboto,Arial,sans-serif;
+  background:var(--bg); color:var(--text);
+  line-height:1.45; font-size:.92rem;
+}
+button{font:inherit;cursor:pointer}
+h1,h2,h3,h4{line-height:1.25;color:var(--ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:1px;border-radius:3px}
+.skip-link{position:absolute;left:-9999px;top:0;background:#fff;color:var(--ink);padding:.5rem .8rem;z-index:99}
+.skip-link:focus{left:8px;top:8px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- app header ---------- */
+.app-header{
+  background:var(--ink); color:#eef2f8;
+  display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+  padding:.55rem 1.1rem; position:sticky; top:0; z-index:40;
+}
+.brand{display:flex;flex-direction:column;min-width:220px}
+.brand .b-name{font-weight:700;font-size:1.02rem;letter-spacing:.01em;color:#fff}
+.brand .b-sub{font-size:.7rem;color:#aebad0;letter-spacing:.02em}
+.header-controls{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;margin-left:auto}
+.hc-group{display:flex;align-items:center;gap:.4rem}
+.hc-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#aebad0}
+.header-controls select{
+  background:#0f1a2e;color:#fff;border:1px solid #3a4f74;border-radius:4px;
+  padding:.28rem .45rem;font-size:.82rem;
+}
+.seg{display:inline-flex;border:1px solid #3a4f74;border-radius:5px;overflow:hidden}
+.seg button{
+  background:#0f1a2e;color:#c6d1e4;border:0;padding:.3rem .7rem;font-size:.82rem;
+}
+.seg button[aria-pressed="true"]{background:#e7eefa;color:var(--ink);font-weight:600}
+.btn-ghost-dark{
+  background:transparent;color:#c6d1e4;border:1px solid #3a4f74;border-radius:5px;
+  padding:.3rem .7rem;font-size:.82rem;
+}
+.btn-ghost-dark:hover{background:#243a5e;color:#fff}
+
+/* ---------- synthetic banner ---------- */
+.synth-banner{
+  background:#fff7e0;border-bottom:1px solid #ecd9a0;color:#6b5518;
+  font-size:.78rem;padding:.32rem 1.1rem;
+}
+.synth-banner strong{color:#584510}
+
+/* ---------- layout ---------- */
+main{max-width:1460px;margin:0 auto;padding:1rem 1.1rem 2.5rem}
+.view[hidden]{display:none}
+
+/* ---------- generic components ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:baseline;gap:.6rem;padding:.65rem .9rem .5rem;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.card-head h3{font-size:.88rem}
+.card-head .sub{font-size:.72rem;color:var(--text-faint)}
+.card-body{padding:.7rem .9rem .85rem}
+.btn{
+  border:1px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:5px;padding:.38rem .8rem;font-size:.84rem;font-weight:600;
+}
+.btn:hover{background:#f6f8fb}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#123563}
+.btn-primary:disabled,.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-success{background:var(--st-signed);border-color:var(--st-signed);color:#fff}
+.btn-success:hover{background:#116430}
+.btn-success:disabled{opacity:.45;cursor:not-allowed}
+.btn-small{padding:.22rem .55rem;font-size:.76rem}
+.btn-danger-ghost{border-color:#e2b7b7;color:var(--bad)}
+.btn-danger-ghost:hover{background:var(--bad-bg)}
+.link-btn{background:none;border:none;color:var(--accent);text-decoration:underline;font-size:.8rem;padding:.1rem .2rem}
+.chip{
+  display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;
+  font-size:.7rem;font-weight:600;padding:.13rem .55rem;border:1px solid transparent;white-space:nowrap;
+}
+.chip-ok{background:var(--ok-bg);color:var(--ok);border-color:#bfe3cb}
+.chip-warn{background:var(--warn-bg);color:var(--warn);border-color:#eed9ae}
+.chip-bad{background:var(--bad-bg);color:var(--bad);border-color:#efc4c4}
+.chip-info{background:var(--info-bg);color:var(--info);border-color:#bcd9ee}
+.chip-violet{background:var(--violet-bg);color:var(--violet);border-color:#d8c8f4}
+.chip-neutral{background:#eef1f5;color:#4b5563;border-color:#d7dde6}
+.chip-count-only{background:#3b0764;color:#fff;border-color:#3b0764}
+.tag-disaster{background:#eef1f5;color:#475569;border:1px solid #d7dde6}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--text-faint)}
+.small{font-size:.76rem}
+.sim-note{font-size:.68rem;color:#7c6a3f;background:#fbf4de;border:1px dashed #e2cf95;border-radius:4px;padding:.15rem .45rem;display:inline-block}
+
+/* ---------- board ---------- */
+.board-top{display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem}
+.board-top h1{font-size:1.25rem}
+.board-top .desc{font-size:.8rem;color:var(--text-soft);max-width:52ch}
+.kpis{display:flex;gap:.7rem;flex-wrap:wrap;margin-left:auto}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:.45rem .8rem;min-width:120px}
+.kpi .k-val{font-size:1.05rem;font-weight:700;color:var(--ink)}
+.kpi .k-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint)}
+.kpi.k-bad .k-val{color:var(--bad)}
+.board-filters{display:flex;gap:.7rem;align-items:center;margin-bottom:.8rem;flex-wrap:wrap}
+.board-filters input[type=search],.board-filters input[type=text]{
+  border:1px solid var(--line);border-radius:5px;padding:.34rem .6rem;font-size:.84rem;min-width:230px;background:#fff;
+}
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.7rem;align-items:start}
+.lane{background:#e9edf3;border:1px solid var(--line);border-radius:var(--radius);padding:.5rem .5rem .6rem;min-height:120px}
+.lane-head{display:flex;align-items:center;gap:.4rem;margin-bottom:.55rem;padding:0 .2rem}
+.lane-head .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.lane-head h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#374151;font-weight:700}
+.lane-head .lane-count{margin-left:auto;font-size:.7rem;background:#fff;border:1px solid var(--line);border-radius:999px;padding:0 .45rem;color:var(--text-soft)}
+.lane-empty{font-size:.72rem;color:#8a94a3;text-align:center;padding:.9rem .3rem;border:1px dashed #c6cedb;border-radius:5px;background:#f2f5f9}
+.case-card{
+  background:#fff;border:1px solid var(--line);border-left:4px solid var(--st-not);
+  border-radius:5px;box-shadow:var(--shadow);padding:.55rem .6rem .6rem;margin-bottom:.55rem;
+  cursor:pointer;transition:box-shadow .12s;
+}
+.case-card:hover{box-shadow:0 2px 10px rgba(22,36,61,.16)}
+.case-card .cc-prog{font-weight:700;font-size:.85rem;color:var(--ink);line-height:1.25}
+.case-card .cc-id{font-size:.67rem;color:var(--text-faint);font-family:var(--mono);margin-bottom:.25rem}
+.case-card .cc-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin:.3rem 0 .35rem}
+.case-card .cc-meta{font-size:.7rem;color:var(--text-soft);display:flex;flex-direction:column;gap:.12rem}
+.meter{height:6px;background:#e5e9f0;border-radius:4px;overflow:hidden;margin-top:.4rem}
+.meter>span{display:block;height:100%;background:var(--accent)}
+.meter-lbl{font-size:.66rem;color:var(--text-faint);margin-top:.15rem}
+
+/* ---------- case view ---------- */
+.crumbs{display:flex;align-items:center;gap:.55rem;font-size:.8rem;margin-bottom:.6rem;flex-wrap:wrap}
+.crumbs .sep{color:#9aa4b2}
+.case-header{margin-bottom:.8rem}
+.case-header h1{font-size:1.2rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.case-header .ch-meta{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.76rem;color:var(--text-soft);margin-top:.35rem;align-items:center}
+
+/* lifecycle rail */
+.rail{display:flex;gap:0;margin:.6rem 0 1rem;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff}
+.rail-step{flex:1;padding:.45rem .5rem .5rem;border-right:1px solid var(--line-soft);position:relative;min-width:0}
+.rail-step:last-child{border-right:0}
+.rail-step .rs-num{font-size:.62rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em}
+.rail-step .rs-lbl{font-size:.76rem;font-weight:600;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-step.done{background:#f2f8f3}
+.rail-step.done .rs-lbl{color:var(--st-signed)}
+.rail-step.current{background:var(--ink);}
+.rail-step.current .rs-lbl,.rail-step.current .rs-num{color:#fff}
+.rail-step.gated .rs-lbl{color:#9aa4b2}
+.rail-step .rs-gate{font-size:.6rem;color:var(--text-faint)}
+.rail-step.current .rs-gate{color:#c6d1e4}
+
+.case-grid{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:.9rem;align-items:start}
+.case-main{display:flex;flex-direction:column;gap:.9rem;min-width:0}
+.case-side{display:flex;flex-direction:column;gap:.9rem;min-width:0}
+
+/* why-created panel */
+.trigger-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.4rem 0 .5rem}
+.trigger-table th,.trigger-table td{padding:.3rem .5rem;border-bottom:1px solid var(--line-soft);text-align:right}
+.trigger-table th:first-child,.trigger-table td:first-child{text-align:left}
+.trigger-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint)}
+.verdict{border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-top:.4rem}
+.verdict-flag{background:var(--bad-bg);border:1px solid #efc4c4;color:#7c1d1d}
+.verdict-count-only{background:#f5f0fd;border:1px solid #d8c8f4;color:#3b0764}
+.verdict-ok{background:var(--ok-bg);border:1px solid #bfe3cb;color:#14532d}
+.whatif{margin-top:.6rem;border-top:1px dashed var(--line);padding-top:.55rem}
+.whatif label{font-size:.76rem;font-weight:600;color:var(--text-soft)}
+.whatif input[type=range]{width:100%;margin:.3rem 0}
+.whatif-out{font-size:.76rem;color:var(--text-soft)}
+
+/* two-pane question review */
+.qpanel{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:420px}
+.qlist{border-right:1px solid var(--line-soft);max-height:640px;overflow:auto}
+.qitem{
+  display:flex;gap:.5rem;align-items:flex-start;width:100%;text-align:left;
+  background:none;border:0;border-bottom:1px solid var(--line-soft);
+  padding:.5rem .6rem;cursor:pointer;
+}
+.qitem:hover{background:#f6f8fb}
+.qitem[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.qitem .qi-id{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--ink);width:30px;flex:none;padding-top:.1rem}
+.qitem .qi-txt{font-size:.76rem;color:var(--text-soft);flex:1;min-width:0}
+.qitem .qi-state{flex:none}
+.state-pill{display:inline-block;font-size:.62rem;font-weight:700;border-radius:3px;padding:.06rem .32rem;letter-spacing:.02em}
+.sp-auto{background:var(--info-bg);color:var(--info)}
+.sp-accepted{background:var(--ok-bg);color:var(--ok)}
+.sp-overridden{background:var(--warn-bg);color:var(--warn)}
+.sp-input{background:var(--bad-bg);color:var(--bad)}
+.sp-provided{background:var(--ok-bg);color:var(--ok)}
+.sp-pending{background:#eef1f5;color:#64748b}
+.qdetail{padding:.75rem .95rem;min-width:0}
+.qdetail h4{font-size:.95rem;margin-bottom:.15rem}
+.q-meta-row{display:flex;gap:.45rem;flex-wrap:wrap;margin:.4rem 0 .6rem;align-items:center}
+.answer-box{border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem;background:#f8fafc;margin-bottom:.6rem}
+.answer-box .ab-lbl{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint)}
+.answer-box .ab-val{font-size:1rem;font-weight:700;color:var(--ink);font-family:var(--mono);word-break:break-word}
+.answer-box.ab-override{border-color:#eed9ae;background:#fdfaf2}
+.answer-box .ab-reason{font-size:.78rem;color:var(--text-soft);margin-top:.25rem}
+.conf-badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.68rem;font-weight:700;border-radius:3px;padding:.08rem .4rem}
+.conf-high{background:var(--ok-bg);color:var(--ok)}
+.conf-med{background:var(--warn-bg);color:var(--warn)}
+.conf-low{background:var(--bad-bg);color:var(--bad)}
+.evidence{border:1px solid var(--line-soft);border-radius:6px;margin:.55rem 0}
+.evidence>summary{
+  cursor:pointer;padding:.45rem .65rem;font-size:.8rem;font-weight:600;color:var(--ink-2);
+  background:#f4f6fa;border-radius:6px;list-style:none;display:flex;align-items:center;gap:.4rem;
+}
+.evidence>summary::-webkit-details-marker{display:none}
+.evidence>summary::before{content:"▸";font-size:.7rem;color:var(--text-faint)}
+.evidence[open]>summary::before{content:"▾"}
+.evidence .ev-body{padding:.55rem .7rem .7rem;font-size:.8rem}
+.ev-table{width:100%;border-collapse:collapse;font-size:.74rem;margin:.35rem 0}
+.ev-table th,.ev-table td{padding:.24rem .45rem;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap}
+.ev-table th:first-child,.ev-table td:first-child,.ev-table td.tl,.ev-table th.tl{text-align:left}
+.ev-table th{font-size:.64rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint)}
+.ev-scroll{overflow-x:auto}
+.q-actions{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;align-items:center}
+.qual-input textarea{
+  width:100%;min-height:90px;border:1px solid var(--line);border-radius:5px;
+  padding:.5rem .6rem;font:inherit;font-size:.84rem;resize:vertical;background:#fff;
+}
+.field-err{color:var(--bad);font-size:.76rem;margin-top:.25rem;font-weight:600}
+.resolved-note{font-size:.76rem;color:var(--text-soft);margin-top:.5rem;border-left:3px solid var(--line);padding-left:.55rem}
+
+/* gate card */
+.gate-list{list-style:none;margin:.2rem 0 .6rem}
+.gate-list li{display:flex;gap:.5rem;align-items:flex-start;font-size:.79rem;padding:.22rem 0;color:var(--text-soft)}
+.gate-list li .g-ic{flex:none;width:17px;height:17px;border-radius:50%;font-size:.62rem;display:inline-flex;align-items:center;justify-content:center;font-weight:800;margin-top:.05rem}
+.gate-list li.met .g-ic{background:var(--ok-bg);color:var(--ok)}
+.gate-list li.unmet .g-ic{background:var(--bad-bg);color:var(--bad)}
+.gate-list li.met{color:var(--text-faint);text-decoration:none}
+.gate-actions{display:flex;flex-direction:column;gap:.45rem}
+.gate-hint{font-size:.72rem;color:var(--text-faint);margin-top:.4rem}
+
+/* exceptions */
+.exc-item{border:1px solid var(--line-soft);border-radius:6px;padding:.5rem .6rem;margin-bottom:.5rem;background:#fcfcfd}
+.exc-item .x-code{font-family:var(--mono);font-weight:700;font-size:.8rem;color:var(--ink)}
+.exc-item .x-sugg{font-size:.75rem;color:var(--text-soft);margin:.15rem 0 .35rem}
+.exc-item .x-actions{display:flex;gap:.4rem;flex-wrap:wrap}
+.exc-done{font-size:.74rem;font-weight:700}
+
+/* decision log */
+.timeline{list-style:none;margin:.2rem 0 0;position:relative;padding-left:1.05rem}
+.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.timeline li{position:relative;padding:.28rem 0 .28rem .35rem;font-size:.76rem}
+.timeline li::before{
+  content:"";position:absolute;left:-1.05rem;top:.55rem;width:8px;height:8px;border-radius:50%;
+  background:#fff;border:2px solid var(--accent);margin-left:1px;
+}
+.timeline li.t-sys::before{border-color:#8a94a3}
+.timeline li.t-gate::before{border-color:var(--st-signed);background:var(--st-signed)}
+.timeline .t-when{color:var(--text-faint);font-size:.68rem;font-family:var(--mono)}
+.timeline .t-what{color:var(--text)}
+.timeline .t-detail{color:var(--text-soft);font-size:.72rem}
+
+/* signature block */
+.sig-block{border:2px solid var(--st-signed);border-radius:6px;padding:.65rem .8rem;background:#f4faf5}
+.sig-block .s-title{font-weight:700;color:var(--st-signed);font-size:.85rem;display:flex;align-items:center;gap:.4rem}
+.sig-line{font-family:var(--mono);font-size:.8rem;margin-top:.35rem;color:var(--ink)}
+.sig-meta{font-size:.72rem;color:var(--text-soft);margin-top:.25rem}
+
+/* provenance card */
+.prov-list{list-style:none;font-size:.76rem}
+.prov-list li{display:flex;justify-content:space-between;gap:.7rem;padding:.22rem 0;border-bottom:1px dotted var(--line-soft)}
+.prov-list li:last-child{border-bottom:0}
+.prov-list .p-k{color:var(--text-faint)}
+.prov-list .p-v{text-align:right;color:var(--text);font-weight:600}
+
+/* drawer (transparency) */
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(460px,92vw);background:#fff;z-index:60;
+  border-left:1px solid var(--line);box-shadow:-6px 0 24px rgba(22,36,61,.18);
+  transform:translateX(102%);transition:transform .18s ease;overflow-y:auto;padding:1rem 1.1rem 2rem;
+}
+.drawer.open{transform:translateX(0)}
+.drawer h2{font-size:1rem;margin-bottom:.2rem}
+.drawer h3{font-size:.85rem;margin:1rem 0 .3rem}
+.drawer p,.drawer li{font-size:.8rem;color:var(--text-soft)}
+.drawer ul{padding-left:1.1rem;margin:.3rem 0}
+.drawer .close-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+
+/* modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:70;
+  display:flex;align-items:flex-start;justify-content:center;padding:6vh 1rem 1rem;
+}
+.modal{
+  background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);
+  width:min(640px,96vw);max-height:86vh;overflow-y:auto;padding:1rem 1.15rem 1.1rem;
+}
+.modal h3{font-size:1rem;margin-bottom:.5rem}
+.modal .m-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.9rem}
+.modal label{font-size:.78rem;font-weight:600;color:var(--text-soft);display:block;margin:.6rem 0 .2rem}
+.modal input[type=text],.modal textarea{
+  width:100%;border:1px solid var(--line);border-radius:5px;padding:.45rem .6rem;font:inherit;font-size:.85rem;background:#fff;
+}
+.modal textarea{min-height:84px;resize:vertical}
+.export-doc{
+  font-family:var(--mono);font-size:.7rem;white-space:pre-wrap;background:#0f1a2e;color:#d7e3f4;
+  border-radius:6px;padding:.8rem .9rem;max-height:46vh;overflow:auto;
+}
+.watermark-note{font-size:.72rem;color:var(--bad);font-weight:700;margin:.4rem 0}
+
+/* toast */
+.toast{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;font-size:.82rem;border-radius:6px;padding:.55rem 1rem;
+  opacity:0;pointer-events:none;transition:all .18s ease;z-index:90;box-shadow:0 6px 20px rgba(0,0,0,.3);
+  max-width:min(560px,90vw);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* svg charts */
+.chart-svg{display:block;max-width:100%;height:auto;margin:.3rem 0}
+.chart-cap{font-size:.68rem;color:var(--text-faint)}
+
+/* footer */
+.app-footer{
+  border-top:1px solid var(--line);background:#e9edf3;color:var(--text-soft);
+  font-size:.74rem;padding:.9rem 1.1rem 1.4rem;margin-top:1rem;
+}
+.app-footer .f-grid{max-width:1460px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:1.2rem}
+.app-footer h4{font-size:.76rem;color:var(--ink-2);margin-bottom:.25rem}
+.app-footer .wm{font-family:var(--mono);font-weight:700;color:var(--bad)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1240px){
+  .board{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .case-grid{grid-template-columns:minmax(0,1fr) 330px}
+}
+@media (max-width:1024px){
+  .case-grid{grid-template-columns:1fr}
+  .qpanel{grid-template-columns:260px minmax(0,1fr)}
+  .app-footer .f-grid{grid-template-columns:1fr 1fr}
+  .rail{flex-wrap:wrap}
+  .rail-step{flex:1 1 32%}
+}
+@media (max-width:820px){
+  .board{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .qpanel{grid-template-columns:1fr}
+  .qlist{max-height:260px;border-right:0;border-bottom:1px solid var(--line-soft)}
+  .app-footer .f-grid{grid-template-columns:1fr}
+  .kpis{margin-left:0}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- ============ APP HEADER ============ -->
+<header class="app-header">
+  <div class="brand">
+    <span class="b-name">The Assessment Desk</span>
+    <span class="b-sub">FEMA OCFO · Preliminary Risk Assessment (PRA) case management · synthetic demo</span>
+  </div>
+  <div class="header-controls">
+    <div class="hc-group">
+      <span class="hc-label" id="fy-label">Fiscal year</span>
+      <select id="fy-select" aria-labelledby="fy-label">
+        <option value="2026" selected>FY2026 (open)</option>
+        <option value="2025">FY2025 (closed)</option>
+        <option value="2024">FY2024 (closed)</option>
+        <option value="2023">FY2023 (closed)</option>
+      </select>
+    </div>
+    <div class="hc-group">
+      <span class="hc-label">Role <span title="Role model is illustrative">(simulated)</span></span>
+      <div class="seg" role="group" aria-label="Acting role (simulated)">
+        <button type="button" id="role-preparer" data-action="set-role" data-role="preparer" aria-pressed="true">Preparer</button>
+        <button type="button" id="role-reviewer" data-action="set-role" data-role="reviewer" aria-pressed="false">Reviewer</button>
+      </div>
+    </div>
+    <button type="button" class="btn-ghost-dark" data-action="toggle-drawer" aria-expanded="false" aria-controls="drawer">Assumptions &amp; transparency</button>
+  </div>
+</header>
+
+<!-- honest synthetic-data disclosure, always visible -->
+<div class="synth-banner">
+  <strong>SYNTHETIC-DEMO</strong> — every number on this screen is synthetic. Workflow records, owners, dates and the Preparer/Reviewer role model are <strong>illustrative and simulated</strong>, pending FEMA confirmation. The 10-question instrument is an illustrative placeholder, not FEMA's official form.
+</div>
+
+<main id="main">
+  <!-- ============ VIEW: ASSESSMENT QUEUE (BOARD) ============ -->
+  <section class="view" id="view-board" aria-label="Assessment queue"></section>
+
+  <!-- ============ VIEW: CASE FILE ============ -->
+  <section class="view" id="view-case" aria-label="Case file" hidden></section>
+</main>
+
+<!-- ============ TRANSPARENCY DRAWER ============ -->
+<aside class="drawer" id="drawer" aria-label="Assumptions and transparency" aria-hidden="true">
+  <div class="close-row">
+    <h2>Assumptions &amp; transparency</h2>
+    <button type="button" class="btn btn-small" data-action="toggle-drawer">Close</button>
+  </div>
+  <p>This panel says plainly what is real, what is synthetic, and what we are still asking FEMA about.</p>
+
+  <h3>What this demo is</h3>
+  <p>A design concept for running the Preliminary Risk Assessment (PRA) — the 10-question, per-program risk screen required for federal payment-integrity compliance (Payment Integrity Information Act, PIIA) — as managed <strong>case work</strong>: one case per program per fiscal year, with ownership, lifecycle stages, hard sign-off gates and a complete decision log.</p>
+
+  <h3>Working assumptions (plain language)</h3>
+  <ul>
+    <li>The 10-question instrument shown here is an <strong>illustrative placeholder</strong>. FEMA's real PRA form will replace it; the workflow does not depend on the exact questions.</li>
+    <li>The Preparer / Reviewer role split is our proposal. FEMA has not yet confirmed who prepares and who signs; the role switcher in the header is <strong>simulated</strong>.</li>
+    <li>Case owners, timestamps, due dates and prior-year assessment records are <strong>synthesized for the demo</strong>. Real assessment records exist at FEMA from 2018–19 onward and would be imported.</li>
+    <li>A comprehensive assessment is assumed due at least once every 3 years per program; the "comprehensive due" chips are computed from a simulated last-comprehensive year.</li>
+    <li>Fiscal-year spend enters as a file extract from the financial system (WebFMIS, currently modernizing). This demo treats the extract as already received; the ingestion is <strong>simulated</strong>.</li>
+    <li>Sub-groupings (e.g., debris removal, individual disaster declarations) are never presented as programs — they roll up to the five reportable programs.</li>
+  </ul>
+
+  <h3>Open questions for FEMA</h3>
+  <ul>
+    <li>Who holds sign-off authority for a PRA, and can preparer and approver be the same person?</li>
+    <li>What is the official due date for a PRA after fiscal-year close?</li>
+    <li>Does the 20% year-over-year (YoY) trigger threshold differ by program or by measure?</li>
+    <li>How should exception-queue dollars be treated in official totals before mapping is confirmed? (This demo excludes them and flags the exclusion.)</li>
+    <li>What evidence must be retained with a signed PRA for Inspector General review?</li>
+  </ul>
+
+  <h3>How the automated mapping earns trust</h3>
+  <p><em>Illustrative exhibit, precomputed:</em> in a holdout-year grading exercise, the mapping engine auto-mapped <strong>47 of 47</strong> codes correctly, routed <strong>10 low-confidence</strong> codes to human review, and made <strong>0 incorrect</strong> assignments. The grading answer key is never read by the inference itself. Any code below <strong>0.85 confidence</strong> is routed to the exception queue for a human decision — automation proposes, people decide.</p>
+
+  <h3>Where "AI" appears</h3>
+  <p>Every AI-flavored output here (mapping suggestions, confidence scores, pre-filled answers) is <strong>simulated and deterministic</strong> — precomputed for the demo. AI never owns a reportable number: the deterministic calculation engine computes every total live from the embedded transactions, and nothing becomes official without a named human sign-off.</p>
+</aside>
+
+<!-- ============ MODAL ROOT (contents rendered on demand) ============ -->
+<div id="modal-root"></div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============ FOOTER / PROVENANCE ============ -->
+<footer class="app-footer">
+  <div class="f-grid">
+    <div>
+      <h4>Data provenance</h4>
+      <p><span class="wm">SYNTHETIC-DEMO</span> — all spend data is synthetic, calibrated to public obligation envelopes. Program names and disaster declaration (DR) numbers are real public identifiers; TAFS (Treasury Appropriation Fund Symbol) values are clearly-synthetic stand-ins. No live systems are connected; ingestion, roles, records and exports are simulated.</p>
+    </div>
+    <div>
+      <h4>Extract contract (simulated)</h4>
+      <p id="footer-extract">Source: WebFMIS fiscal-year extract, file-in / file-out.</p>
+    </div>
+    <div>
+      <h4>Concept</h4>
+      <p>"The Assessment Desk" — PRA case management. Design alternative 02; a demonstration concept, not an operational system.</p>
+    </div>
+  </div>
+</footer>
+<script>
+/* Injected shared synthetic payload (built by inject.py). */
+window.FEMA_DATA = /*__FEMA_DATA__*/null;
+</script>
+<script>
+"use strict";
+/* ==================================================================
+   THE ASSESSMENT DESK — application code
+   Sections:
+     1. Data indexing & deterministic computation engine
+     2. Case model (SIMULATED workflow records synthesized here)
+     3. State & routing
+     4. Renderers (board, case file, question detail, evidence)
+     5. Actions (accept / override / qualitative input / route /
+        review / finalize / export — all gates enforced here)
+     6. Modal, drawer, toast plumbing
+     7. Self-tests (window.__SELFTEST__)
+   ================================================================== */
+
+/* ---------------- 1. DATA INDEXING & COMPUTATION ENGINE ----------------
+   Deterministic JS owns every reportable number: totals, YoY deltas and
+   trigger verdicts are computed live from the embedded transaction table.
+   fy_summary is used only as a cross-check in self-tests and for
+   pre-aggregated helper fields. */
+const D = window.FEMA_DATA;
+const TXC = {}; D.transaction_columns.forEach((c, i) => TXC[c] = i);
+
+const PROGRAMS = {};       D.programs.forEach(p => PROGRAMS[p.id] = p);
+const SUBPROGRAMS = {};    D.sub_programs.forEach(s => SUBPROGRAMS[s.id] = s);
+const EVENTS = {};         D.disaster_events.forEach(e => EVENTS[e.dr] = e);
+const CODES = {};          D.financial_codes.forEach(c => CODES[c.code] = c);
+const RULES = {};          D.mapping_rules.forEach(r => RULES[r.rule_id] = r);
+
+/* program_mapping index: code|fy -> mapping row */
+const MAP_BY_CODE_FY = {};
+D.program_mapping.forEach(m => { MAP_BY_CODE_FY[m.code + "|" + m.fy] = m; });
+
+/* fy_summary index: program|fy -> row (used for helper fields + cross-check) */
+const FYS = {};
+D.fy_summary.forEach(s => { FYS[s.program_id + "|" + s.fy] = s; });
+
+/* risk question / response indexes */
+const QUESTIONS = D.risk_questions;                       // ordered Q1..Q10
+const QBYID = {}; QUESTIONS.forEach(q => QBYID[q.id] = q);
+const RESP = {};                                          // program|q -> FY2026 response
+D.risk_responses.forEach(r => { RESP[r.program_id + "|" + r.question_id] = r; });
+
+/* Exception-queue mapping rows (FY2026, low-confidence suggestions only) */
+const EXCEPTION_ROWS = D.program_mapping.filter(m => m.status === "exception_queue");
+
+/* Strip requirement/assumption reference IDs from payload strings before
+   display — the UI speaks plain language; traceability lives in docs. */
+function cleanRefs(s) {
+  return String(s == null ? "" : s)
+    .replace(/\s*\(illustrative placeholder[^)]*\)/gi, "")
+    .replace(/\s*\((?:REQ|ASSUMP|SME|SRC)-[\w-]+\)/gi, "")
+    .replace(/,?\s*(?:REQ|ASSUMP|SME|SRC)-[\w-]+/g, "")
+    .trim();
+}
+
+/* Resolve a transaction row's confirmed program for a FY.
+   Exception-queue rows carry only a low-confidence SUGGESTION, so they are
+   EXCLUDED from official totals until a human confirms the mapping. */
+function mappingFor(code, fy) { return MAP_BY_CODE_FY[code + "|" + fy] || null; }
+function confirmedProgram(code, fy) {
+  const m = mappingFor(code, fy);
+  return (m && m.status !== "exception_queue") ? m.program_id : null;
+}
+
+/* Live aggregate: totals + counts per program-FY from raw transactions. */
+function computeProgramFY(pid, fy) {
+  let total = 0, count = 0;
+  for (const t of D.transactions) {
+    if (t[TXC.fiscal_year] !== fy) continue;
+    if (confirmedProgram(t[TXC.code], fy) !== pid) continue;
+    total += t[TXC.amount]; count++;
+  }
+  return { total: total, count: count };
+}
+
+/* Excluded (exception-queue) dollars affecting a program's FY total. */
+function exceptionImpact(pid, fy) {
+  let total = 0, count = 0;
+  for (const t of D.transactions) {
+    if (t[TXC.fiscal_year] !== fy) continue;
+    const m = mappingFor(t[TXC.code], fy);
+    if (m && m.status === "exception_queue" && m.program_id === pid) { total += t[TXC.amount]; count++; }
+  }
+  return { total: total, count: count };
+}
+
+/* Transactions for a program-FY (confirmed mapping), for lineage drill. */
+function txnsFor(pid, fy) {
+  return D.transactions.filter(t =>
+    t[TXC.fiscal_year] === fy && confirmedProgram(t[TXC.code], fy) === pid);
+}
+
+/* YoY percentage helper */
+function yoyPct(cur, prior) {
+  if (prior == null || prior === 0) return null;
+  return (cur - prior) / prior * 100;
+}
+
+/* Dual-measure trigger evaluation (2024 rule: dollars OR transaction count,
+   either direction). Computed live from transactions; threshold configurable. */
+function evalTrigger(pid, fy, thresholdPct) {
+  const th = (thresholdPct == null) ? D.meta.trigger_default.threshold_pct : thresholdPct;
+  const cur = computeProgramFY(pid, fy);
+  const pri = computeProgramFY(pid, fy - 1);
+  const dPct = yoyPct(cur.total, pri.total);
+  const cPct = yoyPct(cur.count, pri.count);
+  const dFlag = dPct != null && Math.abs(dPct) >= th;
+  const cFlag = cPct != null && Math.abs(cPct) >= th;
+  return {
+    threshold: th,
+    total: cur.total, priorTotal: pri.total, dollarPct: dPct, dollarFlag: dFlag,
+    count: cur.count, priorCount: pri.count, countPct: cPct, countFlag: cFlag,
+    flagged: dFlag || cFlag,
+    countOnly: cFlag && !dFlag
+  };
+}
+
+/* Extract / cleansing facts, computed live for provenance panels. */
+function extractFacts() {
+  let dirty = 0, legacy = 0;
+  for (const t of D.transactions) {
+    if (t[TXC.raw_code] !== t[TXC.code]) dirty++;
+    if (String(t[TXC.raw_code]).indexOf("LEG-") === 0) legacy++;
+  }
+  return { rows: D.transactions.length, dirty: dirty, legacy: legacy };
+}
+
+/* ---------------- formatting helpers ---------------- */
+const USD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const USD2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const NUM = new Intl.NumberFormat("en-US");
+function fmtUSD(v) { return USD.format(v); }
+function fmtUSD2(v) { return USD2.format(v); }
+function fmtPct(v, digits) {
+  if (v == null) return "n/a";
+  const d = (digits == null) ? 1 : digits;
+  return (v > 0 ? "+" : "") + v.toFixed(d) + "%";
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------------- 2. CASE MODEL (SIMULATED workflow records) ----------------
+   The payload has no workflow records; owners, stage timestamps, due dates,
+   prior-year signed assessments and the 3-year comprehensive cycle are
+   SYNTHESIZED here and labeled illustrative throughout the UI. */
+const STAGES = [
+  { id: "not_started", label: "Not started",               color: "var(--st-not)" },
+  { id: "evidence",    label: "Evidence gathering",        color: "var(--st-evi)" },
+  { id: "auto",        label: "Auto-populated",            color: "var(--st-auto)" },
+  { id: "qual",        label: "Awaiting qualitative input",color: "var(--st-qual)" },
+  { id: "review",      label: "In review",                 color: "var(--st-rev)" },
+  { id: "signed",      label: "Signed off",                color: "var(--st-signed)" }
+];
+const STAGE_IX = {}; STAGES.forEach((s, i) => STAGE_IX[s.id] = i);
+
+/* Illustrative people — roles pending FEMA confirmation. */
+const PEOPLE = {
+  preparer: "A. Rivera (Program Analyst)",
+  reviewer: "M. Chen (Branch Chief)"
+};
+
+/* Simulated last comprehensive assessment per program (3-year cycle). */
+const LAST_COMPREHENSIVE = {
+  "PROG-PA": 2024, "PROG-HM": 2023, "PROG-IA": 2023, "PROG-HS": 2024, "PROG-UR": 2022
+};
+const DEMO_TODAY = "2026-10-09"; // simulated 'today': just after FY2026 close
+const CYCLE_YEARS = 3;
+
+function compDue(pid, fy) {
+  const last = LAST_COMPREHENSIVE[pid];
+  const due = last + CYCLE_YEARS;
+  return { lastFY: last, dueFY: due, overdue: due < fy, dueNow: due === fy };
+}
+
+function mkAnswer(value, populatedBy, confidence) {
+  return {
+    value: value, populatedBy: populatedBy, confidence: confidence,
+    resolution: null,        // null | accepted | overridden | provided
+    overrideValue: null, overrideReason: null,
+    resolvedBy: null, resolvedRole: null, resolvedAt: null
+  };
+}
+
+/* Deterministic auto-answer for a prior-FY question, derived from fy_summary
+   (used only for synthesized historical cases). */
+function priorAnswer(pid, fy, qid) {
+  const s = FYS[pid + "|" + fy] || {};
+  switch (qid) {
+    case "Q1": return s.total != null ? s.total.toFixed(2) : "n/a";
+    case "Q2": return s.yoy_pct != null ? fmtPct(s.yoy_pct) : "n/a (first year on record)";
+    case "Q3": return s.trigger_flag ? "yes" : "no";
+    case "Q4": return (s.sub_program_count || 0) + " sub-programs; " + (s.financial_code_count || 0) + " financial codes";
+    case "Q5": return String(s.event_count || 0);
+    case "Q6": return (s.top_event_share_pct != null ? s.top_event_share_pct.toFixed(1) : "0.0") + "%";
+    case "Q7": return String(s.exception_queue_count || 0);
+    case "Q8": { const p = FYS[pid + "|" + (fy - 1)]; return p ? ("FY" + (fy - 1) + ": " + (p.trigger_flag ? "trigger breached — comprehensive assessment initiated" : "began and closed with the preliminary, no trigger")) : "no prior year on record"; }
+    case "Q9": return "No significant rule or regulation changes reported this FY. (Illustrative narrative.)";
+    case "Q10": return "No significant staffing or control-process changes reported. (Illustrative narrative.)";
+    default: return "n/a";
+  }
+}
+
+function buildAnswersFY2026(pid) {
+  const answers = {};
+  QUESTIONS.forEach(q => {
+    const r = RESP[pid + "|" + q.id];
+    answers[q.id] = mkAnswer(r ? r.answer_value : null, r ? r.populated_by : "human", r ? r.confidence : null);
+  });
+  return answers;
+}
+
+function logEntry(at, actor, role, action, detail, kind) {
+  return { at: at, actor: actor, role: role, action: action, detail: detail || "", kind: kind || "user" };
+}
+
+/* Build the full simulated case book. Deterministic; called at boot and
+   rebuilt by self-tests to guarantee a pristine state. */
+function buildCases() {
+  const cases = {};
+
+  /* ---- FY2026 open cases, staged for a realistic queue ---- */
+  const base2026 = {
+    "PROG-UR": { stage: "not_started", log: [
+      logEntry("2026-10-06 07:58", "System", "system", "Case created from FY2026 extract", "No YoY trigger breach (within threshold), but the 3-year comprehensive cycle is OVERDUE (last comprehensive FY2022). Case queued for mandatory cycle review.", "sys")
+    ]},
+    "PROG-HM": { stage: "evidence", log: [
+      logEntry("2026-10-06 07:58", "System", "system", "Case created from FY2026 extract", "Dual-measure trigger breached: disbursements −31.0%, transaction volume −28.3% (decreases count under the 2024 rule).", "sys"),
+      logEntry("2026-10-06 08:03", "System", "system", "Evidence assembly started (simulated)", "Mapping rules applied; 1 financial code routed to the exception queue.", "sys")
+    ]},
+    "PROG-IA": { stage: "auto", log: [
+      logEntry("2026-10-06 07:58", "System", "system", "Case created from FY2026 extract", "COUNT-ONLY trigger: dollars +8.0% (within threshold) but transaction volume +37.5%. Flagged only by the 2024 dual-measure rule.", "sys"),
+      logEntry("2026-10-06 08:07", "System", "system", "Evidence assembled; 8 of 10 answers auto-populated (simulated)", "Q9–Q10 require program-office input. 2 financial codes await exception-queue decisions.", "sys"),
+      logEntry("2026-10-06 09:15", "System", "system", "Assigned to " + PEOPLE.preparer + " (illustrative)", "", "sys")
+    ]},
+    "PROG-PA": { stage: "qual", log: [
+      logEntry("2026-10-06 07:58", "System", "system", "Case created from FY2026 extract", "Dual-measure trigger breached: disbursements +34.0%, transaction volume +32.4%.", "sys"),
+      logEntry("2026-10-06 08:07", "System", "system", "Evidence assembled; 8 of 10 answers auto-populated (simulated)", "", "sys"),
+      logEntry("2026-10-07 10:22", PEOPLE.preparer, "preparer", "Validated Q1–Q8 against evidence (simulated history)", "All eight auto-populated answers accepted.", "user"),
+      logEntry("2026-10-07 10:23", "System", "system", "Stage advanced to Awaiting qualitative input", "Q9 and Q10 still need program-office narrative.", "sys")
+    ]},
+    "PROG-HS": { stage: "review", log: [
+      logEntry("2026-10-06 07:58", "System", "system", "Case created from FY2026 extract", "Dual-measure trigger breached: disbursements +21.0%, transaction volume +20.0%. Non-disaster program.", "sys"),
+      logEntry("2026-10-06 08:07", "System", "system", "Evidence assembled; 8 of 10 answers auto-populated (simulated)", "", "sys"),
+      logEntry("2026-10-07 14:41", PEOPLE.preparer, "preparer", "Validated Q1–Q8 against evidence (simulated history)", "", "user"),
+      logEntry("2026-10-08 09:02", PEOPLE.preparer, "preparer", "Provided qualitative answers Q9–Q10 (simulated history)", "", "user"),
+      logEntry("2026-10-08 09:05", PEOPLE.preparer, "preparer", "Routed to reviewer", "All 10 answers human-resolved; awaiting reviewer decision.", "user")
+    ]}
+  };
+
+  const dueDates2026 = { "PROG-UR": "2026-10-31", "PROG-HM": "2026-11-07", "PROG-IA": "2026-11-07", "PROG-PA": "2026-11-14", "PROG-HS": "2026-11-14" };
+
+  D.programs.forEach(p => {
+    const cfg = base2026[p.id];
+    const answers = buildAnswersFY2026(p.id);
+    /* pre-resolve answers to match the staged history */
+    if (p.id === "PROG-PA" || p.id === "PROG-HS") {
+      for (let i = 1; i <= 8; i++) {
+        const a = answers["Q" + i];
+        a.resolution = "accepted"; a.resolvedBy = PEOPLE.preparer; a.resolvedRole = "preparer";
+        a.resolvedAt = p.id === "PROG-PA" ? "2026-10-07 10:22" : "2026-10-07 14:41";
+      }
+    }
+    if (p.id === "PROG-HS") {
+      answers.Q9.value = "SHSP allocation formula revised for FY2026; two new UASI urban areas added mid-year. (Illustrative program-office narrative.)";
+      answers.Q9.resolution = "provided"; answers.Q9.resolvedBy = PEOPLE.preparer; answers.Q9.resolvedRole = "preparer"; answers.Q9.resolvedAt = "2026-10-08 09:02";
+      answers.Q10.value = "Grants-processing team lost two of six reviewers in Q3; compensating manual review added. (Illustrative program-office narrative.)";
+      answers.Q10.resolution = "provided"; answers.Q10.resolvedBy = PEOPLE.preparer; answers.Q10.resolvedRole = "preparer"; answers.Q10.resolvedAt = "2026-10-08 09:02";
+    }
+    const exceptions = EXCEPTION_ROWS.filter(m => m.program_id === p.id).map(m => ({
+      code: m.code, suggestedSub: m.sub_program_id, suggestedProgram: m.program_id,
+      confidence: m.confidence, disposition: null, dispositionBy: null
+    }));
+    /* HS staged history already dispositioned nothing — it has 0 exceptions. */
+    cases["CASE-2026-" + p.id.slice(5)] = {
+      id: "CASE-2026-" + p.id.slice(5),
+      programId: p.id, fy: 2026,
+      stage: cfg.stage,
+      owner: PEOPLE.preparer, reviewer: PEOPLE.reviewer,
+      openedAt: "2026-10-06", dueAt: dueDates2026[p.id],
+      answers: answers, exceptions: exceptions,
+      log: cfg.log.slice(),
+      signedAt: null, signedBy: null, outcome: null
+    };
+  });
+
+  /* ---- Prior-FY signed-off cases (fully synthesized history) ---- */
+  const priors = [
+    { fy: 2025, pids: ["PROG-PA", "PROG-HM", "PROG-IA", "PROG-HS", "PROG-UR"] },
+    { fy: 2024, pids: ["PROG-IA"] }
+  ];
+  priors.forEach(batch => {
+    batch.pids.forEach(pid => {
+      const s = FYS[pid + "|" + batch.fy] || {};
+      const answers = {};
+      QUESTIONS.forEach(q => {
+        const a = mkAnswer(priorAnswer(pid, batch.fy, q.id), q.auto_populatable ? "auto" : "human", q.auto_populatable ? 1.0 : null);
+        a.resolution = q.auto_populatable ? "accepted" : "provided";
+        a.resolvedBy = PEOPLE.preparer; a.resolvedRole = "preparer"; a.resolvedAt = batch.fy + "-10-20 11:00";
+        answers[q.id] = a;
+      });
+      const signedAt = batch.fy + "-11-04 15:30";
+      const outcome = s.trigger_flag
+        ? "Trigger breached — comprehensive assessment initiated"
+        : "No trigger — closed at preliminary stage";
+      cases["CASE-" + batch.fy + "-" + pid.slice(5)] = {
+        id: "CASE-" + batch.fy + "-" + pid.slice(5),
+        programId: pid, fy: batch.fy,
+        stage: "signed",
+        owner: PEOPLE.preparer, reviewer: PEOPLE.reviewer,
+        openedAt: batch.fy + "-10-06", dueAt: batch.fy + "-11-14",
+        answers: answers, exceptions: [],
+        log: [
+          logEntry(batch.fy + "-10-06 08:00", "System", "system", "Case created from FY" + batch.fy + " extract (simulated history)", "", "sys"),
+          logEntry(batch.fy + "-10-20 11:00", PEOPLE.preparer, "preparer", "Validated all answers; provided qualitative input (simulated history)", "", "user"),
+          logEntry(batch.fy + "-10-28 09:12", PEOPLE.preparer, "preparer", "Routed to reviewer (simulated history)", "", "user"),
+          logEntry(signedAt, PEOPLE.reviewer, "reviewer", "Approved and signed off", outcome, "gate")
+        ],
+        signedAt: signedAt, signedBy: PEOPLE.reviewer, outcome: outcome
+      };
+    });
+  });
+
+  return cases;
+}
+
+/* ---------------- 3. STATE ---------------- */
+const state = {
+  role: "preparer",
+  fy: 2026,
+  view: "board",          // board | case
+  caseId: null,
+  selectedQ: "Q1",
+  search: "",
+  whatIfThreshold: D.meta.trigger_default.threshold_pct,
+  cases: buildCases()
+};
+
+function currentCase() { return state.caseId ? state.cases[state.caseId] : null; }
+function caseComplete(c) {
+  let resolved = 0;
+  QUESTIONS.forEach(q => { if (c.answers[q.id].resolution) resolved++; });
+  return { resolved: resolved, total: QUESTIONS.length };
+}
+function exceptionsOpen(c) { return c.exceptions.filter(x => !x.disposition).length; }
+
+/* Sign-off gate model — the HARD GATES. Each returns {label, met}. */
+function routeGate(c) {
+  const auto = QUESTIONS.filter(q => q.auto_populatable);
+  const autoDone = auto.every(q => c.answers[q.id].resolution);
+  const qualDone = ["Q9", "Q10"].every(id => c.answers[id].resolution);
+  return [
+    { label: "All 8 auto-populated answers human-resolved (accept or override)", met: autoDone },
+    { label: "Q9 and Q10 qualitative narratives provided", met: qualDone },
+    { label: "Every exception-queue code dispositioned", met: exceptionsOpen(c) === 0 }
+  ];
+}
+function finalizeGate(c) {
+  const g = routeGate(c);
+  return g.concat([
+    { label: "Case routed to reviewer (stage: In review)", met: c.stage === "review" },
+    { label: "Acting as Reviewer (sign-off authority — simulated role)", met: state.role === "reviewer" }
+  ]);
+}
+function gateMet(gates) { return gates.every(g => g.met); }
+</script>
+<script>
+"use strict";
+/* ---------------- 4. RENDERERS ---------------- */
+function el(id) { return document.getElementById(id); }
+
+/* memoized live aggregates (transactions are immutable) */
+const _aggCache = {};
+function agg(pid, fy) {
+  const k = pid + "|" + fy;
+  if (!_aggCache[k]) _aggCache[k] = computeProgramFY(pid, fy);
+  return _aggCache[k];
+}
+
+function stageOf(c) { return STAGES[STAGE_IX[c.stage]]; }
+function progOf(c) { return PROGRAMS[c.programId]; }
+
+function disasterTag(p) {
+  return '<span class="chip tag-disaster">' + (p.is_disaster ? "Disaster" : "Non-disaster") + "</span>";
+}
+
+function triggerChipsHTML(pid, fy) {
+  const t = evalTrigger(pid, fy);
+  if (t.dollarPct == null) return '<span class="chip chip-neutral">first year on record</span>';
+  let h = "";
+  h += '<span class="chip ' + (t.dollarFlag ? "chip-bad" : "chip-neutral") + '">$ ' + fmtPct(t.dollarPct) + "</span>";
+  h += '<span class="chip ' + (t.countFlag ? "chip-bad" : "chip-neutral") + '">txns ' + fmtPct(t.countPct) + "</span>";
+  if (t.countOnly) h += '<span class="chip chip-count-only">flagged by volume only</span>';
+  return h;
+}
+
+function compDueChipHTML(pid, fy) {
+  const cd = compDue(pid, fy);
+  if (cd.overdue) return '<span class="chip chip-bad">Comprehensive OVERDUE — was due FY' + cd.dueFY + "</span>";
+  if (cd.dueNow) return '<span class="chip chip-warn">Comprehensive due this FY (3-yr cycle)</span>';
+  return '<span class="chip chip-neutral">Comprehensive due FY' + cd.dueFY + "</span>";
+}
+
+/* ---------- board ---------- */
+function boardHTML() {
+  const fy = state.fy;
+  const fyCases = Object.values(state.cases).filter(c => c.fy === fy);
+  const flagged = fyCases.filter(c => evalTrigger(c.programId, fy).flagged).length;
+  const overdue = fyCases.filter(c => compDue(c.programId, fy).overdue).length;
+  let grand = 0; D.programs.forEach(p => grand += agg(p.id, fy).total);
+  let excl = 0, exclN = 0; D.programs.forEach(p => { const e = exceptionImpact(p.id, fy); excl += e.total; exclN += e.count; });
+
+  return '' +
+  '<div class="board-top">' +
+    '<div><h1>Assessment queue — FY' + fy + '</h1>' +
+    '<p class="desc">One case per reportable program per fiscal year. Move every case from <em>triggered</em> to <em>signed off</em> — nothing lost, nothing unreviewed.</p></div>' +
+    '<div class="kpis">' +
+      '<div class="kpi"><div class="k-val">' + fyCases.length + '</div><div class="k-lbl">Cases FY' + fy + "</div></div>" +
+      '<div class="kpi"><div class="k-val">' + flagged + '</div><div class="k-lbl">Trigger-flagged</div></div>' +
+      '<div class="kpi' + (overdue ? " k-bad" : "") + '"><div class="k-val">' + overdue + '</div><div class="k-lbl">Comprehensive overdue</div></div>' +
+      '<div class="kpi"><div class="k-val num">' + fmtUSD(grand) + '</div><div class="k-lbl">FY' + fy + " disbursements</div></div>" +
+    "</div>" +
+  "</div>" +
+  '<div class="board-filters">' +
+    '<label class="visually-hidden" for="board-search">Filter cases</label>' +
+    '<input type="search" id="board-search" placeholder="Filter by program or case ID…" value="' + esc(state.search) + '">' +
+    (exclN ? '<span class="chip chip-warn">Official totals exclude ' + fmtUSD(excl) + " across " + exclN + " transactions awaiting exception-queue decisions</span>" : "") +
+    '<span class="sim-note">Illustrative — workflow records simulated; roles pending FEMA confirmation</span>' +
+  "</div>" +
+  '<div class="board" id="board-lanes">' + lanesHTML() + "</div>";
+}
+
+function lanesHTML() {
+  const fy = state.fy;
+  const q = state.search.trim().toLowerCase();
+  const fyCases = Object.values(state.cases).filter(c => c.fy === fy)
+    .filter(c => !q || progOf(c).name.toLowerCase().indexOf(q) >= 0 || c.id.toLowerCase().indexOf(q) >= 0);
+  if (!Object.values(state.cases).some(c => c.fy === fy)) {
+    return '<div class="lane-empty" style="grid-column:1/-1;padding:2rem 1rem">No case records for FY' + fy +
+      ' in this demo dataset. <span class="muted">(Real assessment records exist at FEMA from 2018–19 onward and would appear here.)</span></div>';
+  }
+  return STAGES.map(st => {
+    const cs = fyCases.filter(c => c.stage === st.id);
+    return '<section class="lane" aria-label="' + esc(st.label) + '">' +
+      '<div class="lane-head"><span class="dot" style="background:' + st.color + '"></span><h2>' + esc(st.label) + '</h2>' +
+      '<span class="lane-count">' + cs.length + "</span></div>" +
+      (cs.length ? cs.map(caseCardHTML).join("") : '<div class="lane-empty">No cases</div>') +
+    "</section>";
+  }).join("");
+}
+
+function caseCardHTML(c) {
+  const p = progOf(c);
+  const st = stageOf(c);
+  const comp = caseComplete(c);
+  const openExc = exceptionsOpen(c);
+  const pct = Math.round(comp.resolved / comp.total * 100);
+  return '<div class="case-card" role="button" tabindex="0" data-action="open-case" data-case="' + c.id + '"' +
+    ' aria-label="Open case ' + esc(c.id) + " — " + esc(p.name) + ', stage ' + esc(st.label) + '"' +
+    ' style="border-left-color:' + st.color + '">' +
+    '<div class="cc-prog">' + esc(p.name) + "</div>" +
+    '<div class="cc-id">' + c.id + "</div>" +
+    '<div class="cc-chips">' + disasterTag(p) + triggerChipsHTML(c.programId, c.fy) + compDueChipHTML(c.programId, c.fy) +
+      (openExc ? '<span class="chip chip-warn">' + openExc + " exception" + (openExc > 1 ? "s" : "") + " open</span>" : "") +
+    "</div>" +
+    '<div class="cc-meta"><span>Owner: ' + esc(c.owner) + ' <span class="muted">(illustrative)</span></span>' +
+    "<span>" + (c.stage === "signed" ? "Signed " + esc(c.signedAt || "") : "PRA due " + esc(c.dueAt) + " (simulated)") + "</span></div>" +
+    '<div class="meter" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
+    '<div class="meter-lbl">' + comp.resolved + " of " + comp.total + " answers resolved</div>" +
+  "</div>";
+}
+
+/* ---------- case file ---------- */
+function caseHTML(c) {
+  if (!c) return '<p class="muted">No case selected. <button type="button" class="link-btn" data-action="back-board">Back to the assessment queue</button></p>';
+  const p = progOf(c);
+  return '' +
+  '<nav class="crumbs" aria-label="Breadcrumb">' +
+    '<button type="button" class="btn btn-small" data-action="back-board">&larr; Assessment queue</button>' +
+    '<span class="sep">/</span><span class="num">' + c.id + "</span>" +
+    '<span class="sep">/</span><span>' + esc(p.name) + " · FY" + c.fy + "</span>" +
+  "</nav>" +
+  '<header class="case-header">' +
+    "<h1>" + esc(p.name) +
+      '<span class="chip" style="background:' + stageOf(c).color + ';color:#fff">' + esc(stageOf(c).label) + "</span>" +
+      disasterTag(p) + compDueChipHTML(c.programId, c.fy) +
+    "</h1>" +
+    '<div class="ch-meta">' +
+      "<span>TAFS (Treasury Appropriation Fund Symbol): <span class=\"num\">" + esc(p.tafs) + "</span> — synthetic stand-in</span>" +
+      (p.listing ? "<span>Assistance listing " + esc(p.listing) + "</span>" : "<span>Umbrella program (no single assistance listing)</span>") +
+      "<span>Preparer: " + esc(c.owner) + "</span><span>Reviewer: " + esc(c.reviewer) + "</span>" +
+      "<span>Opened " + esc(c.openedAt) + " · PRA due " + esc(c.dueAt) + "</span>" +
+      '<span class="sim-note">Illustrative — workflow records simulated; roles pending FEMA confirmation</span>' +
+    "</div>" +
+  "</header>" +
+  railHTML(c) +
+  '<div class="case-grid">' +
+    '<div class="case-main">' +
+      whyCardHTML(c) +
+      questionPanelHTML(c) +
+    "</div>" +
+    '<div class="case-side">' +
+      gateCardHTML(c) +
+      (c.exceptions.length ? exceptionsCardHTML(c) : "") +
+      provenanceCardHTML(c) +
+      logCardHTML(c) +
+    "</div>" +
+  "</div>";
+}
+
+function railHTML(c) {
+  const cur = STAGE_IX[c.stage];
+  return '<ol class="rail" aria-label="Case lifecycle">' + STAGES.map((s, i) => {
+    const cls = i < cur ? "done" : (i === cur ? "current" : "gated");
+    const gate = s.id === "review" ? "hard gate: all inputs resolved" : (s.id === "signed" ? "hard gate: reviewer sign-off" : "");
+    return '<li class="rail-step ' + cls + '"><div class="rs-num">Stage ' + (i + 1) + (i < cur ? " ✓" : "") + '</div>' +
+      '<div class="rs-lbl">' + esc(s.label) + "</div>" +
+      (gate ? '<div class="rs-gate">' + gate + "</div>" : "") +
+    "</li>";
+  }).join("") + "</ol>";
+}
+
+function triggerTableHTML(pid, fy, th) {
+  const t = evalTrigger(pid, fy, th);
+  const row = (label, pri, cur, pct, flag, fmt) =>
+    "<tr><td>" + label + '</td><td class="num">' + fmt(pri) + '</td><td class="num">' + fmt(cur) + "</td>" +
+    '<td class="num">' + fmtPct(pct) + '</td><td class="num">&plusmn;' + t.threshold + '%</td>' +
+    "<td>" + (flag ? '<span class="chip chip-bad">BREACH</span>' : '<span class="chip chip-ok">within</span>') + "</td></tr>";
+  return '<div class="ev-scroll"><table class="trigger-table"><thead><tr><th>Measure</th><th>FY' + (fy - 1) + "</th><th>FY" + fy + "</th><th>YoY</th><th>Threshold</th><th>Verdict</th></tr></thead><tbody>" +
+    row("Disbursements ($)", t.priorTotal, t.total, t.dollarPct, t.dollarFlag, fmtUSD) +
+    row("Transaction volume (#)", t.priorCount, t.count, t.countPct, t.countFlag, NUM.format.bind(NUM)) +
+    "</tbody></table></div>";
+}
+
+function whyCardHTML(c) {
+  const t = evalTrigger(c.programId, c.fy);
+  const cd = compDue(c.programId, c.fy);
+  let verdict;
+  if (t.countOnly) {
+    verdict = '<div class="verdict verdict-count-only"><strong>Caught by volume, not dollars.</strong> Disbursements moved only ' + fmtPct(t.dollarPct) +
+      " — comfortably inside the &plusmn;" + t.threshold + "% threshold — but transaction volume jumped " + fmtPct(t.countPct) +
+      ". Under the 2024 dual-measure rule (dollars OR transaction count, either direction), that alone triggers this assessment. A dollars-only rule would have missed it.</div>";
+  } else if (t.flagged) {
+    verdict = '<div class="verdict verdict-flag"><strong>Trigger breached.</strong> Year-over-year (YoY) change exceeded the &plusmn;' + t.threshold +
+      "% threshold on " + (t.dollarFlag && t.countFlag ? "both measures" : (t.dollarFlag ? "dollars" : "transaction volume")) +
+      (t.dollarPct < 0 ? " — a decrease, which counts under the either-direction rule." : ".") + "</div>";
+  } else {
+    verdict = '<div class="verdict verdict-ok"><strong>No trigger breach</strong> — both measures are within the &plusmn;' + t.threshold + "% threshold" +
+      (cd.overdue ? ", <strong>but the 3-year comprehensive cycle is overdue</strong> (last comprehensive FY" + cd.lastFY + ", was due FY" + cd.dueFY + "). This case exists to satisfy the cycle." : ". Near-miss worth watching: dollars moved " + fmtPct(t.dollarPct) + ".") + "</div>";
+  }
+  return '<section class="card"><div class="card-head"><h3>Why this case exists</h3>' +
+    '<span class="sub">Dual-measure YoY trigger, computed live from ' + NUM.format(agg(c.programId, c.fy).count + agg(c.programId, c.fy - 1).count) + " transactions</span></div>" +
+    '<div class="card-body">' + triggerTableHTML(c.programId, c.fy) + verdict +
+    '<div class="whatif">' +
+      '<label for="whatif-range">What-if: re-test this trigger at a different threshold <span class="muted">(exploration only — the official record uses &plusmn;' + D.meta.trigger_default.threshold_pct + "%)</span></label>" +
+      '<input type="range" id="whatif-range" min="5" max="50" step="1" value="' + state.whatIfThreshold + '" aria-label="What-if trigger threshold percent">' +
+      '<div class="whatif-out" id="whatif-out">' + whatIfOutHTML() + "</div>" +
+    "</div></div></section>";
+}
+
+function whatIfOutHTML() {
+  const th = state.whatIfThreshold;
+  const names = { "PROG-PA": "PA", "PROG-HM": "HMGP", "PROG-IA": "IA", "PROG-HS": "HSGP", "PROG-UR": "US&R" };
+  const fy = (currentCase() ? currentCase().fy : state.fy);
+  const flagged = [], clear = [];
+  D.programs.forEach(p => {
+    const t = evalTrigger(p.id, fy, th);
+    (t.flagged ? flagged : clear).push(names[p.id] + (t.countOnly ? " (volume-only)" : ""));
+  });
+  return "At <strong>&plusmn;" + th + "%</strong> across FY" + fy + ": <strong>" + (flagged.length ? flagged.join(", ") : "none") +
+    "</strong> would flag" + (clear.length ? "; " + clear.join(", ") + " within threshold" : "") + ".";
+}
+
+/* ---------- gate card (the hard gates) ---------- */
+function gateCardHTML(c) {
+  let body = "";
+  const roleNote = '<p class="gate-hint">Acting as <strong>' + (state.role === "preparer" ? "Preparer" : "Reviewer") +
+    '</strong> — switch role in the header (simulated) to see the other side of the desk.</p>';
+
+  if (c.stage === "signed") {
+    body = '<div class="sig-block"><div class="s-title">✔ Signed off — read-only</div>' +
+      '<div class="sig-line">/s/ ' + esc(c.signedBy) + "</div>" +
+      '<div class="sig-meta">Signed ' + esc(c.signedAt) + ' · illustrative signature (simulated record)</div>' +
+      '<div class="sig-meta">Outcome: ' + esc(c.outcome) + "</div></div>" +
+      '<div class="gate-actions" style="margin-top:.6rem">' +
+        '<button type="button" class="btn btn-primary" data-action="open-export">Export signed PRA (simulated)</button>' +
+      "</div>";
+  } else if (c.stage === "not_started") {
+    body = '<p class="small muted">This case has not been opened. Opening it ingests the fiscal-year extract slice for this program and assembles evidence.</p>' +
+      '<div class="gate-actions"><button type="button" class="btn btn-primary" data-action="start-case">Open case &amp; assemble evidence (simulated)</button></div>' + roleNote;
+  } else if (c.stage === "evidence") {
+    body = '<p class="small muted">Evidence assembly in progress: mapping rules applied, aggregates computed. Next: pre-fill the 8 quantitative answers.</p>' +
+      '<div class="gate-actions"><button type="button" class="btn btn-primary" data-action="run-autopop">Run auto-population (simulated)</button></div>' + roleNote;
+  } else if (c.stage === "auto" || c.stage === "qual") {
+    const gates = routeGate(c);
+    const ready = gateMet(gates);
+    body = gateListHTML(gates) +
+      '<div class="gate-actions"><button type="button" class="btn btn-primary" data-action="route-review"' + (ready && state.role === "preparer" ? "" : " disabled") + ">Route to reviewer</button></div>" +
+      (state.role !== "preparer" ? '<p class="gate-hint">Routing is a Preparer action. Switch role (simulated) to route.</p>' : (ready ? "" : '<p class="gate-hint">The button unlocks when every condition above is met — the gate is physical, not advisory.</p>')) + roleNote;
+  } else if (c.stage === "review") {
+    const gates = finalizeGate(c);
+    const ready = gateMet(gates);
+    body = gateListHTML(gates) +
+      '<div class="gate-actions">' +
+        '<button type="button" class="btn btn-success" data-action="open-finalize"' + (ready ? "" : " disabled") + ">Approve &amp; sign off…</button>" +
+        '<button type="button" class="btn btn-danger-ghost" data-action="return-preparer"' + (state.role === "reviewer" ? "" : " disabled") + ">Return to preparer</button>" +
+      "</div>" +
+      (ready ? "" : '<p class="gate-hint">Sign-off stays locked until every condition is met — nothing finalizes without a human decision on all 10 answers.</p>') + roleNote;
+  }
+  return '<section class="card"><div class="card-head"><h3>Sign-off gate</h3><span class="sub">hard gates — not advisory</span></div><div class="card-body">' + body + "</div></section>";
+}
+
+function gateListHTML(gates) {
+  return '<ul class="gate-list">' + gates.map(g =>
+    '<li class="' + (g.met ? "met" : "unmet") + '"><span class="g-ic">' + (g.met ? "✓" : "✗") + "</span><span>" + esc(g.label) + "</span></li>"
+  ).join("") + "</ul>";
+}
+
+/* ---------- exceptions card ---------- */
+function exceptionsCardHTML(c) {
+  const impact = exceptionImpact(c.programId, c.fy);
+  return '<section class="card"><div class="card-head"><h3>Exception queue — blocking sign-off</h3>' +
+    '<span class="sub">' + fmtUSD(impact.total) + " in " + impact.count + " transactions excluded from official totals until decided</span></div>" +
+    '<div class="card-body">' +
+    '<p class="small muted" style="margin-bottom:.5rem">These financial codes could not be confidently mapped (similarity suggestion below the 0.85 routing threshold). A human must decide each one before this case can be signed.</p>' +
+    c.exceptions.map(x => {
+      const sub = SUBPROGRAMS[x.suggestedSub];
+      const codeMeta = CODES[x.code];
+      let act;
+      if (x.disposition === "confirmed") act = '<span class="exc-done" style="color:var(--ok)">✓ Suggestion confirmed by ' + esc(x.dispositionBy || "") + ' — included in totals at next recalculation (simulated)</span>';
+      else if (x.disposition === "sme") act = '<span class="exc-done" style="color:var(--warn)">→ Referred to subject-matter expert (simulated) by ' + esc(x.dispositionBy || "") + "</span>";
+      else act = '<div class="x-actions">' +
+        '<button type="button" class="btn btn-small" data-action="exc-confirm" data-code="' + esc(x.code) + '">Confirm suggested mapping</button>' +
+        '<button type="button" class="btn btn-small" data-action="exc-sme" data-code="' + esc(x.code) + '">Refer to SME (simulated)</button></div>';
+      return '<div class="exc-item"><span class="x-code">' + esc(x.code) + "</span>" +
+        ' <span class="chip conf-low" title="Similarity score — simulated">similarity ' + x.confidence.toFixed(2) + " — below 0.85 routing threshold</span>" +
+        '<div class="x-sugg">Suggested (simulated inference): <strong>' + esc(sub ? sub.name : x.suggestedSub) + "</strong>" +
+        (codeMeta ? ' · fund segment <span class="num">' + esc(codeMeta.fund_segment) + '</span>, event <span class="num">' + esc(codeMeta.event_segment) + "</span>" : "") + "</div>" + act + "</div>";
+    }).join("") + "</div></section>";
+}
+
+/* ---------- provenance card ---------- */
+function provenanceCardHTML(c) {
+  const xf = extractFacts();
+  const fyRows = D.transactions.filter(t => t[TXC.fiscal_year] === c.fy).length;
+  return '<section class="card"><div class="card-head"><h3>Evidence provenance</h3><span class="sub">file-in / file-out contract (simulated)</span></div>' +
+    '<div class="card-body"><ul class="prov-list">' +
+    '<li><span class="p-k">Source extract</span><span class="p-v num">webfmis_fy_extract.csv (simulated)</span></li>' +
+    '<li><span class="p-k">Received</span><span class="p-v">' + esc(c.openedAt) + " (simulated)</span></li>" +
+    '<li><span class="p-k">Rows in extract (all FY)</span><span class="p-v num">' + NUM.format(xf.rows) + "</span></li>" +
+    '<li><span class="p-k">Rows in FY' + c.fy + '</span><span class="p-v num">' + NUM.format(fyRows) + "</span></li>" +
+    '<li><span class="p-k">Format repairs by cleansing rules</span><span class="p-v num">' + NUM.format(xf.dirty) + " rows</span></li>" +
+    '<li><span class="p-k">…of which retired legacy aliases</span><span class="p-v num">' + NUM.format(xf.legacy) + " rows</span></li>" +
+    '<li><span class="p-k">Mapping rules applied</span><span class="p-v num">' + D.mapping_rules.length + " (" + D.mapping_rules.filter(r => r.status === "sme_confirmed").length + " SME-confirmed)</span></li>" +
+    '<li><span class="p-k">Dataset watermark</span><span class="p-v" style="color:var(--bad)">SYNTHETIC-DEMO</span></li>' +
+    "</ul></div></section>";
+}
+
+/* ---------- decision log ---------- */
+function logCardHTML(c) {
+  return '<section class="card"><div class="card-head"><h3>Decision log</h3><span class="sub">chronological — the audit story of this case</span></div>' +
+    '<div class="card-body"><ol class="timeline">' +
+    c.log.map(e => '<li class="' + (e.kind === "sys" ? "t-sys" : (e.kind === "gate" ? "t-gate" : "")) + '">' +
+      '<div class="t-when">' + esc(e.at) + " · " + esc(e.actor) + "</div>" +
+      '<div class="t-what">' + esc(e.action) + "</div>" +
+      (e.detail ? '<div class="t-detail">' + esc(e.detail) + "</div>" : "") +
+    "</li>").join("") +
+    "</ol></div></section>";
+}
+
+/* ---------- question panel (two-pane) ---------- */
+function answerState(c, qid) {
+  const a = c.answers[qid];
+  const q = QBYID[qid];
+  if (a.resolution === "accepted") return { cls: "sp-accepted", lbl: "ACCEPTED" };
+  if (a.resolution === "overridden") return { cls: "sp-overridden", lbl: "OVERRIDDEN" };
+  if (a.resolution === "provided") return { cls: "sp-provided", lbl: "PROVIDED" };
+  if (!q.auto_populatable) return { cls: "sp-input", lbl: "INPUT NEEDED" };
+  if (c.stage === "not_started" || c.stage === "evidence") return { cls: "sp-pending", lbl: "PENDING" };
+  return { cls: "sp-auto", lbl: "AUTO" };
+}
+
+function questionPanelHTML(c) {
+  if (c.stage === "not_started" || c.stage === "evidence") {
+    return '<section class="card"><div class="card-head"><h3>Preliminary Risk Assessment — 10 questions</h3>' +
+      '<span class="sub">illustrative instrument, not FEMA&#39;s official form</span></div>' +
+      '<div class="card-body"><div class="lane-empty" style="padding:2.2rem 1rem">' +
+      (c.stage === "not_started"
+        ? "The questionnaire opens once the case is started and evidence is assembled."
+        : "Evidence assembly in progress — the 8 quantitative answers will pre-fill when auto-population runs.") +
+      " Use the <strong>Sign-off gate</strong> panel to advance the case.</div></div></section>";
+  }
+  const comp = caseComplete(c);
+  return '<section class="card"><div class="card-head"><h3>Preliminary Risk Assessment — 10 questions</h3>' +
+    '<span class="sub">illustrative instrument, not FEMA&#39;s official form · ' + comp.resolved + " of " + comp.total + " resolved</span></div>" +
+    '<div class="qpanel">' +
+      '<div class="qlist" aria-label="PRA questions">' +
+        QUESTIONS.map(q => {
+          const st = answerState(c, q.id);
+          return '<button type="button" class="qitem" data-action="select-q" data-q="' + q.id + '" aria-current="' + (state.selectedQ === q.id) + '">' +
+            '<span class="qi-id">' + q.id + "</span>" +
+            '<span class="qi-txt">' + esc(shortQ(q)) + "</span>" +
+            '<span class="qi-state"><span class="state-pill ' + st.cls + '">' + st.lbl + "</span></span>" +
+          "</button>";
+        }).join("") +
+      "</div>" +
+      '<div class="qdetail" id="qdetail">' + qDetailHTML(c, state.selectedQ) + "</div>" +
+    "</div></section>";
+}
+
+function shortQ(q) {
+  const t = cleanRefs(q.text);
+  return t.length > 64 ? t.slice(0, 62) + "…" : t;
+}
+
+function confBadgeHTML(conf) {
+  if (conf == null) return "";
+  const cls = conf >= 0.95 ? "conf-high" : (conf >= D.meta.confidence_routing_threshold ? "conf-med" : "conf-low");
+  return '<span class="conf-badge ' + cls + '" title="Simulated confidence score">confidence ' + conf.toFixed(2) + "</span>";
+}
+
+function canEditAnswers(c) {
+  if (c.stage === "signed") return false;
+  if (state.role === "preparer") return c.stage === "auto" || c.stage === "qual";
+  return c.stage === "review"; // reviewer edits only while in review
+}
+
+function displayVal(v) {
+  if (v == null || v === "") return "—";
+  if (/^\d+(\.\d+)?$/.test(String(v))) return fmtUSD2(parseFloat(v));
+  return esc(String(v));
+}
+
+function qDetailHTML(c, qid) {
+  const q = QBYID[qid] || QUESTIONS[0];
+  const a = c.answers[q.id];
+  const editable = canEditAnswers(c);
+  let h = "<h4>" + q.id + ". " + esc(cleanRefs(q.text)) + "</h4>" +
+    '<div class="q-meta-row">' +
+      '<span class="chip chip-neutral">' + (q.qtype === "quantitative" ? "Quantitative" : "Qualitative") + "</span>" +
+      (q.auto_populatable
+        ? '<span class="chip chip-info">Auto-populated — simulated inference</span>' + confBadgeHTML(a.confidence)
+        : '<span class="chip chip-warn">Program-office input required — automation never answers this</span>') +
+      '<span class="muted small">Source: ' + esc(cleanRefs(q.source_binding)) + "</span>" +
+    "</div>";
+
+  if (!q.auto_populatable) {
+    /* ---- qualitative Q9/Q10 ---- */
+    if (a.resolution === "provided") {
+      h += '<div class="answer-box"><div class="ab-lbl">Answer — provided by ' + esc(a.resolvedBy) + " (" + esc(a.resolvedRole) + ") " + esc(a.resolvedAt) + '</div>' +
+        '<div style="font-size:.86rem;margin-top:.2rem">' + esc(a.value) + "</div></div>";
+      if (editable) h += qualFormHTML(q.id, a.value, "Update answer");
+    } else {
+      h += '<div class="answer-box"><div class="ab-lbl">Answer</div><div class="ab-val">— awaiting program-office input</div></div>';
+      if (editable) h += qualFormHTML(q.id, "", "Save answer");
+      else h += '<p class="small muted">Input is captured by the Preparer while the case is being worked' + (c.stage === "signed" ? " — this case is signed and read-only." : ".") + "</p>";
+    }
+    return h;
+  }
+
+  /* ---- quantitative Q1–Q8 ---- */
+  const effective = a.resolution === "overridden" ? a.overrideValue : a.value;
+  h += '<div class="answer-box' + (a.resolution === "overridden" ? " ab-override" : "") + '">' +
+    '<div class="ab-lbl">' + (a.resolution === "overridden" ? "Final answer — human override" : "Auto-populated answer (simulated inference; the number itself is computed deterministically)") + "</div>" +
+    '<div class="ab-val">' + displayVal(effective) + "</div>" +
+    (a.resolution === "overridden"
+      ? '<div class="ab-reason"><strong>Original auto value:</strong> ' + displayVal(a.value) + '<br><strong>Reason recorded:</strong> ' + esc(a.overrideReason) + "</div>"
+      : "") +
+  "</div>";
+
+  h += evidenceHTML(c, q.id);
+
+  if (a.resolution) {
+    h += '<div class="resolved-note">' + (a.resolution === "accepted" ? "Accepted" : "Overridden") + " by " + esc(a.resolvedBy) +
+      " (" + esc(a.resolvedRole) + ") at " + esc(a.resolvedAt) + ".</div>";
+  }
+  if (editable) {
+    h += '<div class="q-actions">' +
+      (a.resolution !== "accepted" ? '<button type="button" class="btn btn-primary btn-small" data-action="accept-q" data-q="' + q.id + '">Accept auto answer</button>' : "") +
+      '<button type="button" class="btn btn-small" data-action="open-override" data-q="' + q.id + '">Override… <span class="muted">(reason required)</span></button>' +
+      (a.resolution === "overridden" ? '<button type="button" class="btn btn-small" data-action="revert-q" data-q="' + q.id + '">Revert to auto value</button>' : "") +
+    "</div>";
+  } else if (c.stage !== "signed") {
+    h += '<p class="small muted" style="margin-top:.6rem">Read-only for your current role/stage. ' +
+      (state.role === "reviewer" ? "Reviewer acts once the case is routed to review." : "Preparer acts while the case is in preparation.") + "</p>";
+  }
+  return h;
+}
+
+function qualFormHTML(qid, existing, cta) {
+  return '<div class="qual-input">' +
+    '<label class="visually-hidden" for="qual-input-' + qid + '">Answer for ' + qid + "</label>" +
+    '<textarea id="qual-input-' + qid + '" placeholder="Program-office narrative for ' + qid + ' — plain language, will appear verbatim in the signed PRA…">' + esc(existing) + "</textarea>" +
+    '<div class="field-err" id="qual-err-' + qid + '" hidden>An answer is required — a blank narrative cannot be saved.</div>' +
+    '<div class="q-actions"><button type="button" class="btn btn-primary btn-small" data-action="save-qual" data-q="' + qid + '">' + cta + "</button></div>" +
+  "</div>";
+}
+</script>
+<script>
+"use strict";
+/* ---------------- 4b. EVIDENCE RENDERERS ----------------
+   Every evidence block is computed live from the embedded transactions —
+   the same deterministic engine that owns the reportable numbers. */
+
+function subProgramBreakdown(pid, fy) {
+  const bySub = {};
+  for (const t of txnsFor(pid, fy)) {
+    const code = CODES[t[TXC.code]];
+    const sid = code ? code.sub_program_id : null;
+    if (!sid) continue;
+    if (!bySub[sid]) bySub[sid] = { total: 0, count: 0, codes: {} };
+    bySub[sid].total += t[TXC.amount]; bySub[sid].count++;
+    bySub[sid].codes[t[TXC.code]] = true;
+  }
+  return Object.keys(bySub).map(sid => ({
+    sid: sid, name: SUBPROGRAMS[sid] ? SUBPROGRAMS[sid].name : sid,
+    total: bySub[sid].total, count: bySub[sid].count, codeCount: Object.keys(bySub[sid].codes).length
+  })).sort((a, b) => b.total - a.total);
+}
+
+function eventBreakdown(pid, fy) {
+  const byDr = {};
+  for (const t of txnsFor(pid, fy)) {
+    const dr = t[TXC.disaster_number];
+    const k = dr == null ? "nd" : String(dr);
+    if (!byDr[k]) byDr[k] = { dr: dr, total: 0, count: 0 };
+    byDr[k].total += t[TXC.amount]; byDr[k].count++;
+  }
+  return Object.values(byDr).sort((a, b) => b.total - a.total);
+}
+
+/* transaction drill table (lineage: aggregate -> raw rows) */
+function txnTableHTML(pid, fy, limit) {
+  const rows = txnsFor(pid, fy);
+  const lim = limit || 12;
+  const shown = rows.slice(0, lim);
+  return '<div class="ev-scroll"><table class="ev-table"><thead><tr>' +
+    '<th class="tl">Txn ID</th><th class="tl">Date</th><th class="tl">Financial code</th><th class="tl">Raw code (as received)</th><th class="tl">Sub-program</th><th class="tl">DR</th><th class="tl">Type</th><th>Amount</th>' +
+    "</tr></thead><tbody>" +
+    shown.map(t => {
+      const code = CODES[t[TXC.code]];
+      const sub = code && code.sub_program_id ? SUBPROGRAMS[code.sub_program_id] : null;
+      const dirty = t[TXC.raw_code] !== t[TXC.code];
+      return '<tr class="txn-row"><td class="tl num">' + esc(t[TXC.txn_id]) + '</td><td class="tl num">' + esc(t[TXC.date]) + "</td>" +
+        '<td class="tl num">' + esc(t[TXC.code]) + "</td>" +
+        '<td class="tl num">' + (dirty ? '<span title="Repaired by cleansing rule">' + esc(t[TXC.raw_code]) + " ⚙</span>" : '<span class="muted">same</span>') + "</td>" +
+        '<td class="tl">' + esc(sub ? sub.name : "—") + "</td>" +
+        '<td class="tl num">' + (t[TXC.disaster_number] == null ? "—" : "DR-" + t[TXC.disaster_number]) + "</td>" +
+        '<td class="tl">' + esc(t[TXC.disbursement_type]) + "</td>" +
+        '<td class="num">' + fmtUSD2(t[TXC.amount]) + "</td></tr>";
+    }).join("") +
+    "</tbody></table></div>" +
+    (rows.length > lim ? '<p class="chart-cap">Showing first ' + lim + " of " + NUM.format(rows.length) + " transactions (full lineage available; truncated for display). ⚙ = raw code repaired by a cleansing rule.</p>" : '<p class="chart-cap">All ' + rows.length + " transactions shown. ⚙ = raw code repaired by a cleansing rule.</p>");
+}
+
+/* 5-year trend bar chart — SVG with explicit coordinate math (no layout deps) */
+function fyTrendSVG(pid, currentFy) {
+  const years = D.meta.fiscal_years;
+  const vals = years.map(fy => agg(pid, fy).total);
+  const max = Math.max.apply(null, vals.concat([1]));
+  const W = 360, H = 130, padL = 6, padB = 20, padT = 16;
+  const bw = Math.floor((W - padL * 2) / years.length) - 10;
+  const bars = years.map((fy, i) => {
+    const h = Math.max(2, Math.round((vals[i] / max) * (H - padB - padT)));
+    const x = padL + i * (bw + 10) + 5;
+    const y = H - padB - h;
+    const cur = fy === currentFy;
+    return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="2" fill="' + (cur ? "#1a4480" : "#b9c6da") + '"></rect>' +
+      '<text x="' + (x + bw / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="#4b5563">FY' + String(fy).slice(2) + "</text>" +
+      '<text x="' + (x + bw / 2) + '" y="' + (y - 4) + '" text-anchor="middle" font-size="9" fill="' + (cur ? "#16243d" : "#6b7280") + '">' + Math.round(vals[i] / 1e6) + "M</text>";
+  }).join("");
+  return '<svg class="chart-svg" viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Disbursements by fiscal year for ' + esc(PROGRAMS[pid].name) + '">' + bars + "</svg>" +
+    '<p class="chart-cap">Disbursements by fiscal year, $ millions — computed live from transactions (synthetic data).</p>';
+}
+
+function evWrap(title, inner, open) {
+  return '<details class="evidence"' + (open ? " open" : "") + "><summary>" + title + '</summary><div class="ev-body">' + inner + "</div></details>";
+}
+
+function inferredRuleNoteHTML(pid) {
+  const notes = [];
+  D.mapping_rules.forEach(r => {
+    if (r.status !== "inferred") return;
+    const m = /->\s*(SUB-[\w-]+)/.exec(r.expression);
+    const sid = m ? m[1] : null;
+    if (sid && SUBPROGRAMS[sid] && SUBPROGRAMS[sid].program_id === pid) {
+      notes.push("Rule <span class=\"num\">" + r.rule_id + "</span> feeding <strong>" + esc(SUBPROGRAMS[sid].name) +
+        "</strong> is <strong>machine-inferred</strong> (confidence " + r.confidence.toFixed(2) + ", simulated) — SME confirmation pending.");
+    }
+  });
+  if (!notes.length) return "";
+  return '<div class="verdict verdict-count-only" style="margin-top:.5rem;font-size:.76rem">' + notes.join("<br>") + "</div>";
+}
+
+function evidenceHTML(c, qid) {
+  const pid = c.programId, fy = c.fy;
+  const a = agg(pid, fy);
+  const excl = exceptionImpact(pid, fy);
+  switch (qid) {
+    case "Q1": {
+      const subs = subProgramBreakdown(pid, fy);
+      const answerNum = parseFloat(c.answers.Q1.value);
+      const matches = !isNaN(answerNum) && Math.abs(answerNum - a.total) < 1;
+      let inner = "<p>Computed live from <strong>" + NUM.format(a.count) + " transactions</strong>: <strong class=\"num\">" + fmtUSD2(a.total) + "</strong>" +
+        (matches ? ' <span class="chip chip-ok">equals the auto-populated answer</span>' : "") + "</p>";
+      if (excl.count) inner += '<div class="verdict verdict-flag" style="font-size:.76rem;margin:.45rem 0">Excludes <strong>' + fmtUSD2(excl.total) + "</strong> across " + excl.count + " transactions whose codes sit in the exception queue — those dollars enter the official total only after a human confirms the mapping (see Exception queue panel).</div>";
+      inner += '<div class="ev-scroll"><table class="ev-table"><thead><tr><th class="tl">Sub-program / sub-grouping (never a program)</th><th>Codes</th><th>Txns</th><th>FY' + fy + " disbursements</th></tr></thead><tbody>" +
+        subs.map(s => '<tr><td class="tl">' + esc(s.name) + '</td><td class="num">' + s.codeCount + '</td><td class="num">' + s.count + '</td><td class="num">' + fmtUSD2(s.total) + "</td></tr>").join("") +
+        "</tbody></table></div>";
+      return evWrap("Evidence: how this total is built", inner, true) +
+        evWrap("Five-year trend", fyTrendSVG(pid, fy), false) +
+        evWrap("Underlying transactions (" + NUM.format(a.count) + ") — full lineage", txnTableHTML(pid, fy), false);
+    }
+    case "Q2": {
+      const p = agg(pid, fy - 1);
+      const pct = yoyPct(a.total, p.total);
+      const inner = '<div class="ev-scroll"><table class="ev-table"><thead><tr><th class="tl">Measure</th><th>FY' + (fy - 1) + "</th><th>FY" + fy + '</th><th>Change</th></tr></thead><tbody>' +
+        '<tr><td class="tl">Disbursements</td><td class="num">' + fmtUSD2(p.total) + '</td><td class="num">' + fmtUSD2(a.total) + '</td><td class="num">' + fmtPct(pct) + "</td></tr>" +
+        "</tbody></table></div>" +
+        "<p class=\"small\">Both fiscal years computed from the same embedded transaction table — no hand-keyed numbers.</p>";
+      return evWrap("Evidence: year-over-year computation", inner, true) +
+        evWrap("Five-year trend", fyTrendSVG(pid, fy), false) +
+        evWrap("Underlying FY" + fy + " transactions (" + NUM.format(a.count) + ")", txnTableHTML(pid, fy), false);
+    }
+    case "Q3": {
+      const t = evalTrigger(pid, fy);
+      let inner = triggerTableHTML(pid, fy);
+      if (t.countOnly) inner += '<div class="verdict verdict-count-only" style="font-size:.78rem"><strong>The count-only catch:</strong> dollars stayed inside the threshold (' + fmtPct(t.dollarPct) + ") but transaction volume breached it (" + fmtPct(t.countPct) + "). Only the 2024 dual-measure rule — dollars OR transaction count, either direction — surfaces this program.</div>";
+      else if (t.flagged) inner += '<p class="small">Breach on ' + (t.dollarFlag && t.countFlag ? "both measures" : (t.dollarFlag ? "dollars" : "volume")) + "; either alone is sufficient under the 2024 rule.</p>";
+      else inner += '<p class="small">No breach at the official &plusmn;' + t.threshold + "% threshold.</p>";
+      return evWrap("Evidence: dual-measure trigger math", inner, true);
+    }
+    case "Q4": {
+      const subs = subProgramBreakdown(pid, fy);
+      const codeCount = subs.reduce((n, s) => n + s.codeCount, 0);
+      const inner = "<p><strong>" + subs.length + "</strong> sub-programs actively disbursing in FY" + fy + " through <strong>" + codeCount + "</strong> financial codes (confirmed mappings only)." + (excl.count ? " " + c.exceptions.length + " further codes await exception-queue decisions." : "") + "</p>" +
+        '<div class="ev-scroll"><table class="ev-table"><thead><tr><th class="tl">Sub-program</th><th>Financial codes</th><th>Transactions</th></tr></thead><tbody>' +
+        subs.map(s => '<tr><td class="tl">' + esc(s.name) + '</td><td class="num">' + s.codeCount + '</td><td class="num">' + s.count + "</td></tr>").join("") +
+        "</tbody></table></div>" + inferredRuleNoteHTML(pid);
+      return evWrap("Evidence: rollup composition", inner, true);
+    }
+    case "Q5": {
+      const evs = eventBreakdown(pid, fy).filter(e => e.dr != null);
+      const inner = evs.length
+        ? "<p><strong>" + evs.length + "</strong> disaster declarations (DR numbers) contributed to FY" + fy + " disbursements:</p>" +
+          '<div class="ev-scroll"><table class="ev-table"><thead><tr><th class="tl">Declaration</th><th class="tl">Incident</th><th class="tl">State</th><th>Declared</th><th>FY' + fy + ' disbursements</th></tr></thead><tbody>' +
+          evs.map(e => { const meta = EVENTS[e.dr] || {}; return '<tr><td class="tl num">DR-' + e.dr + '</td><td class="tl">' + esc(meta.title || meta.incident_type || "—") + '</td><td class="tl">' + esc(meta.state || "—") + '</td><td class="num">FY' + (meta.fy_declared || "—") + '</td><td class="num">' + fmtUSD2(e.total) + "</td></tr>"; }).join("") +
+          "</tbody></table></div>"
+        : '<p class="small">Non-disaster program — disbursements are not tied to disaster declarations (event segment "ND").</p>';
+      return evWrap("Evidence: contributing disaster events", inner, true);
+    }
+    case "Q6": {
+      const evs = eventBreakdown(pid, fy).filter(e => e.dr != null);
+      if (!evs.length) return evWrap("Evidence: event concentration", '<p class="small">Non-disaster program — event concentration is 0% by definition.</p>', true);
+      const top = evs[0];
+      const share = a.total ? top.total / a.total * 100 : 0;
+      const meta = EVENTS[top.dr] || {};
+      const inner = "<p>Top event <strong>DR-" + top.dr + (meta.title ? " (" + esc(meta.title) + ")" : "") + "</strong> carries <strong>" + share.toFixed(1) + "%</strong> of FY" + fy + " disbursements (" + fmtUSD2(top.total) + " of " + fmtUSD2(a.total) + ").</p>" +
+        '<div class="ev-scroll"><table class="ev-table"><thead><tr><th class="tl">Declaration</th><th>Disbursements</th><th>Share</th></tr></thead><tbody>' +
+        evs.map(e => '<tr><td class="tl num">DR-' + e.dr + '</td><td class="num">' + fmtUSD2(e.total) + '</td><td class="num">' + (a.total ? (e.total / a.total * 100).toFixed(1) : "0.0") + "%</td></tr>").join("") +
+        "</tbody></table></div>" +
+        '<p class="small">High concentration in a single declaration is a risk signal — one event drives the program&#39;s spend.</p>';
+      return evWrap("Evidence: event concentration", inner, true);
+    }
+    case "Q7": {
+      const inner = (c.exceptions.length
+        ? "<p><strong>" + c.exceptions.length + "</strong> financial codes for this program could not be confidently mapped and sit in the exception queue (" + fmtUSD2(excl.total) + " excluded from official totals):</p>" +
+          '<div class="ev-scroll"><table class="ev-table"><thead><tr><th class="tl">Code</th><th>Similarity</th><th class="tl">Suggested sub-program</th><th class="tl">Status</th></tr></thead><tbody>' +
+          c.exceptions.map(x => '<tr><td class="tl num">' + esc(x.code) + '</td><td class="num">' + x.confidence.toFixed(2) + '</td><td class="tl">' + esc(SUBPROGRAMS[x.suggestedSub] ? SUBPROGRAMS[x.suggestedSub].name : x.suggestedSub) + '</td><td class="tl">' + (x.disposition === "confirmed" ? "confirmed" : (x.disposition === "sme" ? "referred to SME" : "open — blocks sign-off")) + "</td></tr>").join("") +
+          "</tbody></table></div>" +
+          '<p class="small">Every code below the 0.85 confidence routing threshold requires a human decision — resolve them in the Exception queue panel.</p>'
+        : '<p class="small">No exception-queue records for this program in FY' + fy + " — every financial code mapped above the 0.85 confidence routing threshold.</p>");
+      return evWrap("Evidence: exception queue", inner, true);
+    }
+    case "Q8": {
+      const cd = compDue(pid, fy);
+      const lines = [];
+      for (let y = fy - 1; y >= D.meta.fiscal_years[0] + 1; y--) {
+        const t = evalTrigger(pid, y);
+        lines.push("<li>FY" + y + ": " + (t.flagged ? "<strong>trigger breached</strong> (" + [t.dollarFlag ? "$ " + fmtPct(t.dollarPct) : null, t.countFlag ? "txns " + fmtPct(t.countPct) : null].filter(Boolean).join(", ") + ") — comprehensive assessment initiated" : "no trigger — closed at preliminary stage") + "</li>");
+      }
+      const inner = "<ul style=\"padding-left:1.1rem;font-size:.8rem\">" + lines.join("") + "</ul>" +
+        '<p class="small" style="margin-top:.4rem">Last comprehensive assessment: <strong>FY' + cd.lastFY + "</strong> (simulated record) — 3-year cycle " +
+        (cd.overdue ? '<strong style="color:var(--bad)">OVERDUE since FY' + cd.dueFY + "</strong>" : (cd.dueNow ? "<strong>due this FY</strong>" : "next due FY" + cd.dueFY)) +
+        '. "Preliminary" is a starting point in a lifecycle, not a terminal status.</p>';
+      return evWrap("Evidence: assessment history (trigger verdicts computed; records simulated)", inner, true);
+    }
+    default:
+      return "";
+  }
+}
+</script>
+<script>
+"use strict";
+/* ---------------- 5. ACTIONS (all gates enforced here) ----------------
+   Every state change flows through these functions; they return
+   {ok, error} so the UI and the self-tests share one code path. */
+
+let _clock = 0; // deterministic simulated clock for new log entries
+function stamp() {
+  _clock++;
+  const mins = 12 + _clock;
+  const h = 10 + Math.floor(mins / 60), m = mins % 60;
+  return DEMO_TODAY + " " + (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+}
+function actorName() { return state.role === "preparer" ? PEOPLE.preparer : PEOPLE.reviewer; }
+
+function pushLog(c, action, detail, kind) {
+  c.log.push(logEntry(stamp(), kind === "sys" ? "System" : actorName(), kind === "sys" ? "system" : state.role, action, detail, kind || "user"));
+}
+
+function maybeAdvance(c) {
+  if (c.stage === "auto") {
+    const autoDone = QUESTIONS.filter(q => q.auto_populatable).every(q => c.answers[q.id].resolution);
+    if (autoDone) {
+      c.stage = "qual";
+      pushLog(c, "Stage advanced to Awaiting qualitative input", "All 8 auto-populated answers human-resolved; Q9–Q10 narrative still required.", "sys");
+    }
+  }
+}
+
+function acceptAnswer(c, qid) {
+  if (!c || c.stage === "signed") return { ok: false, error: "Case is signed and read-only." };
+  if (!canEditAnswers(c)) return { ok: false, error: "Your current role cannot act at this stage (simulated role model)." };
+  const q = QBYID[qid];
+  if (!q || !q.auto_populatable) return { ok: false, error: "Only auto-populated answers can be accepted." };
+  const a = c.answers[qid];
+  a.resolution = "accepted"; a.overrideValue = null; a.overrideReason = null;
+  a.resolvedBy = actorName(); a.resolvedRole = state.role; a.resolvedAt = stamp();
+  pushLog(c, "Accepted auto answer " + qid, 'Value "' + String(a.value) + '" confirmed against evidence.');
+  maybeAdvance(c);
+  return { ok: true };
+}
+
+function applyOverride(c, qid, newValue, reason) {
+  if (!c || c.stage === "signed") return { ok: false, error: "Case is signed and read-only." };
+  if (!canEditAnswers(c)) return { ok: false, error: "Your current role cannot act at this stage (simulated role model)." };
+  if (!reason || !String(reason).trim()) return { ok: false, error: "Override refused — a reason is required. The decision log records why every human overruled the machine." };
+  if (newValue == null || !String(newValue).trim()) return { ok: false, error: "Override refused — provide the corrected value." };
+  const a = c.answers[qid];
+  a.resolution = "overridden";
+  a.overrideValue = String(newValue).trim();
+  a.overrideReason = String(reason).trim();
+  a.resolvedBy = actorName(); a.resolvedRole = state.role; a.resolvedAt = stamp();
+  pushLog(c, "Overrode " + qid, 'Auto value "' + String(a.value) + '" replaced with "' + a.overrideValue + '". Reason: ' + a.overrideReason);
+  maybeAdvance(c);
+  return { ok: true };
+}
+
+function revertToAuto(c, qid) {
+  if (!c || c.stage === "signed" || !canEditAnswers(c)) return { ok: false, error: "Not editable now." };
+  const a = c.answers[qid];
+  if (a.resolution !== "overridden") return { ok: false, error: "Nothing to revert." };
+  a.resolution = null; a.overrideValue = null; a.overrideReason = null;
+  a.resolvedBy = null; a.resolvedRole = null; a.resolvedAt = null;
+  pushLog(c, "Reverted " + qid + " to the auto-populated value", "Override withdrawn; the answer must be re-resolved before sign-off.");
+  return { ok: true };
+}
+
+function saveQual(c, qid, text) {
+  if (!c || c.stage === "signed") return { ok: false, error: "Case is signed and read-only." };
+  if (!canEditAnswers(c)) return { ok: false, error: "Your current role cannot act at this stage (simulated role model)." };
+  if (!text || !String(text).trim()) return { ok: false, error: "An answer is required — a blank narrative cannot be saved." };
+  const a = c.answers[qid];
+  const isUpdate = a.resolution === "provided";
+  a.value = String(text).trim();
+  a.resolution = "provided";
+  a.resolvedBy = actorName(); a.resolvedRole = state.role; a.resolvedAt = stamp();
+  pushLog(c, (isUpdate ? "Updated" : "Provided") + " qualitative answer " + qid, "");
+  maybeAdvance(c);
+  return { ok: true };
+}
+
+function excDisposition(c, code, kind) {
+  if (!c || c.stage === "signed") return { ok: false, error: "Case is signed and read-only." };
+  const x = c.exceptions.find(e => e.code === code);
+  if (!x || x.disposition) return { ok: false, error: "Already dispositioned." };
+  x.disposition = kind; x.dispositionBy = actorName();
+  pushLog(c, (kind === "confirmed" ? "Confirmed suggested mapping for " : "Referred exception code to SME (simulated): ") + code,
+    kind === "confirmed"
+      ? "Low-confidence suggestion accepted by a human; dollars enter official totals at the next recalculation (simulated)."
+      : "Held out of totals pending subject-matter-expert decision.");
+  return { ok: true };
+}
+
+function startCase(c) {
+  if (!c || c.stage !== "not_started") return { ok: false, error: "Case already opened." };
+  c.stage = "evidence";
+  pushLog(c, "Case opened — evidence assembly started (simulated)", "FY" + c.fy + " extract slice ingested; mapping rules applied; aggregates computed.", "sys");
+  return { ok: true };
+}
+
+function runAutopop(c) {
+  if (!c || c.stage !== "evidence") return { ok: false, error: "Evidence assembly must run first." };
+  c.stage = "auto";
+  pushLog(c, "Auto-population complete (simulated)", "8 of 10 answers pre-filled from computed evidence; Q9–Q10 await program-office input.", "sys");
+  return { ok: true };
+}
+
+function routeToReview(c) {
+  if (!c || (c.stage !== "auto" && c.stage !== "qual")) return { ok: false, error: "Case is not in preparation." };
+  if (state.role !== "preparer") return { ok: false, error: "Routing is a Preparer action (simulated role model)." };
+  const gates = routeGate(c);
+  if (!gateMet(gates)) return { ok: false, error: "Hard gate: " + gates.filter(g => !g.met).map(g => g.label).join("; ") };
+  c.stage = "review";
+  pushLog(c, "Routed to reviewer", "All 10 answers human-resolved and every exception dispositioned; awaiting reviewer decision.");
+  return { ok: true };
+}
+
+function returnToPreparer(c) {
+  if (!c || c.stage !== "review") return { ok: false, error: "Case is not in review." };
+  if (state.role !== "reviewer") return { ok: false, error: "Only the Reviewer can return a case (simulated role model)." };
+  c.stage = "qual";
+  pushLog(c, "Returned to preparer", "Reviewer requested rework before sign-off.");
+  return { ok: true };
+}
+
+function finalizeCase(c, signName) {
+  if (!c || c.stage === "signed") return { ok: false, error: "Already signed." };
+  const gates = finalizeGate(c);
+  if (!gateMet(gates)) return { ok: false, error: "Hard gate: " + gates.filter(g => !g.met).map(g => g.label).join("; ") };
+  const t = evalTrigger(c.programId, c.fy);
+  const cd = compDue(c.programId, c.fy);
+  c.stage = "signed";
+  c.signedAt = stamp();
+  c.signedBy = (signName && String(signName).trim()) || PEOPLE.reviewer;
+  c.outcome = t.flagged
+    ? "Trigger breached — comprehensive assessment initiated" + (t.countOnly ? " (flagged by transaction volume only)" : "")
+    : (cd.overdue || cd.dueNow ? "No trigger — comprehensive assessment proceeds on the 3-year cycle" : "No trigger — closed at preliminary stage");
+  pushLog(c, "Approved and signed off", "Outcome: " + c.outcome + " · Signature (illustrative): /s/ " + c.signedBy, "gate");
+  return { ok: true };
+}
+
+/* ---------------- export simulation ---------------- */
+function buildExportText(c) {
+  const p = progOf(c);
+  const t = evalTrigger(c.programId, c.fy);
+  const L = [];
+  L.push("============================================================");
+  L.push("  SYNTHETIC-DEMO * SYNTHETIC DATA * NOT FOR OFFICIAL USE");
+  L.push("============================================================");
+  L.push("FEMA OCFO - PRELIMINARY RISK ASSESSMENT (PRA) - EXPORT SIMULATION");
+  L.push("Illustrative instrument - not FEMA's official form");
+  L.push("");
+  L.push("Case ........: " + c.id);
+  L.push("Program .....: " + p.name + " (" + (p.is_disaster ? "disaster" : "non-disaster") + ")");
+  L.push("TAFS ........: " + p.tafs + " (synthetic stand-in)");
+  L.push("Fiscal year .: FY" + c.fy + " (federal: Oct 1 - Sep 30)");
+  L.push("Trigger .....: dollars " + fmtPct(t.dollarPct) + " / volume " + fmtPct(t.countPct) +
+    " vs +/-" + t.threshold + "% -> " + (t.flagged ? (t.countOnly ? "FLAGGED (volume only)" : "FLAGGED") : "within threshold"));
+  L.push("");
+  L.push("---- ANSWERS ----");
+  QUESTIONS.forEach(q => {
+    const a = c.answers[q.id];
+    const val = a.resolution === "overridden" ? a.overrideValue : a.value;
+    L.push(q.id + ". " + cleanRefs(q.text));
+    L.push("    Answer ....: " + (val == null ? "(none)" : val));
+    L.push("    Resolution : " + (a.resolution || "unresolved") + (a.resolvedBy ? " by " + a.resolvedBy + " (" + a.resolvedRole + ") at " + a.resolvedAt : ""));
+    if (a.resolution === "overridden") {
+      L.push("    Auto value : " + a.value);
+      L.push("    Reason ....: " + a.overrideReason);
+    }
+  });
+  L.push("");
+  L.push("---- EXCEPTION-QUEUE DECISIONS ----");
+  if (c.exceptions.length) c.exceptions.forEach(x => {
+    L.push(x.code + " (similarity " + x.confidence.toFixed(2) + ") -> " +
+      (x.disposition === "confirmed" ? "mapping confirmed" : (x.disposition === "sme" ? "referred to SME" : "OPEN")) +
+      (x.dispositionBy ? " by " + x.dispositionBy : ""));
+  });
+  else L.push("(none for this program-FY)");
+  L.push("");
+  L.push("---- SIGN-OFF ----");
+  L.push("Prepared by : " + c.owner + " (illustrative)");
+  L.push("Signed .....: " + (c.signedBy ? "/s/ " + c.signedBy + " at " + c.signedAt : "(not signed)"));
+  L.push("Outcome ....: " + (c.outcome || "(pending)"));
+  L.push("");
+  L.push("---- DECISION LOG ----");
+  c.log.forEach(e => L.push("- " + e.at + " " + e.actor + ": " + e.action + (e.detail ? " | " + e.detail : "")));
+  L.push("");
+  L.push("Watermark: SYNTHETIC-DEMO (export simulation - no file leaves this demo)");
+  return L.join("\n");
+}
+
+/* ---------------- 6. MODALS, DRAWER, TOAST, WIRING ---------------- */
+let _toastTimer = null;
+function showToast(msg) {
+  const t = el("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+function openModal(html, labelledBy) {
+  el("modal-root").innerHTML =
+    '<div class="modal-overlay" data-overlay="1"><div class="modal" role="dialog" aria-modal="true"' +
+    (labelledBy ? ' aria-labelledby="' + labelledBy + '"' : "") + ">" + html + "</div></div>";
+  const first = el("modal-root").querySelector("[data-autofocus]") || el("modal-root").querySelector("button");
+  if (first && first.focus) first.focus();
+}
+function closeModal() { el("modal-root").innerHTML = ""; }
+function modalOpen() { return el("modal-root").innerHTML !== ""; }
+
+function showView(v) {
+  state.view = v;
+  el("view-board").hidden = v !== "board";
+  el("view-case").hidden = v !== "case";
+}
+function renderBoardView() { el("view-board").innerHTML = boardHTML(); showView("board"); }
+function renderCaseView() { el("view-case").innerHTML = caseHTML(currentCase()); showView("case"); }
+function rerenderCurrent() { if (state.view === "case") renderCaseView(); else renderBoardView(); }
+function renderHeader() {
+  el("role-preparer").setAttribute("aria-pressed", String(state.role === "preparer"));
+  el("role-reviewer").setAttribute("aria-pressed", String(state.role === "reviewer"));
+  el("fy-select").value = String(state.fy);
+}
+function refreshQPanel(c) {
+  /* targeted update: question list states + detail pane (keeps focus stable) */
+  renderCaseView();
+}
+
+/* result helper: toast errors, rerender on success */
+function uiResult(r, successMsg) {
+  if (!r.ok) { showToast(r.error || "Action refused."); return false; }
+  if (successMsg) showToast(successMsg);
+  renderCaseView();
+  return true;
+}
+
+const ACTIONS = {
+  "set-role": btn => {
+    state.role = btn.getAttribute("data-role") === "reviewer" ? "reviewer" : "preparer";
+    renderHeader();
+    if (state.view === "case") renderCaseView();
+  },
+  "toggle-drawer": () => {
+    const d = el("drawer");
+    const open = !d.classList.contains("open");
+    d.classList.toggle("open", open);
+    d.setAttribute("aria-hidden", String(!open));
+    const t = document.querySelector('[data-action="toggle-drawer"][aria-controls]');
+    if (t) t.setAttribute("aria-expanded", String(open));
+  },
+  "open-case": btn => {
+    const id = btn.getAttribute("data-case");
+    if (!state.cases[id]) return;
+    state.caseId = id; state.selectedQ = "Q1";
+    renderCaseView();
+  },
+  "back-board": () => { state.caseId = null; renderBoardView(); },
+  "select-q": btn => {
+    const c = currentCase(); if (!c) return;
+    state.selectedQ = btn.getAttribute("data-q") || "Q1";
+    const detail = el("qdetail");
+    if (detail) detail.innerHTML = qDetailHTML(c, state.selectedQ);
+    document.querySelectorAll(".qitem").forEach(b => b.setAttribute("aria-current", String(b.getAttribute("data-q") === state.selectedQ)));
+  },
+  "accept-q": btn => {
+    const c = currentCase(); if (!c) return;
+    uiResult(acceptAnswer(c, btn.getAttribute("data-q")), "Answer accepted — recorded in the decision log.");
+  },
+  "revert-q": btn => {
+    const c = currentCase(); if (!c) return;
+    uiResult(revertToAuto(c, btn.getAttribute("data-q")), "Reverted to the auto-populated value.");
+  },
+  "save-qual": btn => {
+    const c = currentCase(); if (!c) return;
+    const qid = btn.getAttribute("data-q");
+    const ta = el("qual-input-" + qid);
+    const err = el("qual-err-" + qid);
+    const r = saveQual(c, qid, ta ? ta.value : "");
+    if (!r.ok) { if (err) { err.hidden = false; err.textContent = r.error; } return; }
+    showToast("Narrative saved for " + qid + ".");
+    renderCaseView();
+  },
+  "open-override": btn => {
+    const c = currentCase(); if (!c) return;
+    const qid = btn.getAttribute("data-q");
+    if (!canEditAnswers(c)) { showToast("Your current role cannot act at this stage (simulated role model)."); return; }
+    const q = QBYID[qid]; const a = c.answers[qid];
+    state.pendingQ = qid;
+    openModal(
+      '<h3 id="ov-title">Override ' + qid + " — reason required</h3>" +
+      '<p class="small muted">' + esc(cleanRefs(q.text)) + "</p>" +
+      '<p class="small">Auto-populated value: <strong class="num">' + displayVal(a.value) + "</strong></p>" +
+      '<label for="ov-value">Corrected value</label>' +
+      '<input type="text" id="ov-value" data-autofocus value="' + esc(a.resolution === "overridden" ? a.overrideValue : (a.value == null ? "" : a.value)) + '">' +
+      '<label for="ov-reason">Reason for overriding the machine (required — becomes part of the audit record)</label>' +
+      '<textarea id="ov-reason" placeholder="e.g., Known late-posting corrections for DR-4339 not yet in the extract…"></textarea>' +
+      '<div class="field-err" id="ov-err" hidden></div>' +
+      '<div class="m-actions"><button type="button" class="btn" data-action="close-modal">Cancel</button>' +
+      '<button type="button" class="btn btn-primary" data-action="confirm-override">Record override</button></div>',
+      "ov-title");
+  },
+  "confirm-override": () => {
+    const c = currentCase(); if (!c || !state.pendingQ) { closeModal(); return; }
+    const val = el("ov-value") ? el("ov-value").value : "";
+    const reason = el("ov-reason") ? el("ov-reason").value : "";
+    const r = applyOverride(c, state.pendingQ, val, reason);
+    if (!r.ok) { const err = el("ov-err"); if (err) { err.hidden = false; err.textContent = r.error; } return; }
+    state.pendingQ = null;
+    closeModal();
+    showToast("Override recorded with reason — visible in the decision log.");
+    renderCaseView();
+  },
+  "exc-confirm": btn => {
+    const c = currentCase(); if (!c) return;
+    uiResult(excDisposition(c, btn.getAttribute("data-code"), "confirmed"), "Mapping suggestion confirmed — decision logged.");
+  },
+  "exc-sme": btn => {
+    const c = currentCase(); if (!c) return;
+    uiResult(excDisposition(c, btn.getAttribute("data-code"), "sme"), "Referred to subject-matter expert (simulated).");
+  },
+  "start-case": () => {
+    const c = currentCase(); if (!c) return;
+    uiResult(startCase(c), "Simulated: extract slice ingested, evidence assembling.");
+  },
+  "run-autopop": () => {
+    const c = currentCase(); if (!c) return;
+    uiResult(runAutopop(c), "Simulated: 8 of 10 answers pre-filled with evidence attached.");
+  },
+  "route-review": () => {
+    const c = currentCase(); if (!c) return;
+    uiResult(routeToReview(c), "Routed to reviewer. Switch role (simulated) to act on it.");
+  },
+  "return-preparer": () => {
+    const c = currentCase(); if (!c) return;
+    uiResult(returnToPreparer(c), "Returned to preparer for rework.");
+  },
+  "open-finalize": () => {
+    const c = currentCase(); if (!c) return;
+    const gates = finalizeGate(c);
+    if (!gateMet(gates)) { showToast("Hard gate: sign-off is locked until every condition is met."); return; }
+    openModal(
+      '<h3 id="fin-title">Approve &amp; sign off — ' + esc(progOf(c).name) + " FY" + c.fy + "</h3>" +
+      '<p class="small">Signing freezes this case read-only and stamps the decision log. The signature below is <strong>illustrative</strong> (simulated record; roles pending FEMA confirmation).</p>' +
+      gateListHTML(gates) +
+      '<label for="fin-name">Sign as (illustrative)</label>' +
+      '<input type="text" id="fin-name" value="' + esc(PEOPLE.reviewer) + '" data-autofocus>' +
+      '<label style="display:flex;gap:.45rem;align-items:flex-start;font-weight:400;margin-top:.7rem">' +
+      '<input type="checkbox" id="fin-attest" style="margin-top:.2rem">' +
+      '<span class="small">I have reviewed all 10 answers and their evidence; overrides carry recorded reasons; exception-queue codes are dispositioned.</span></label>' +
+      '<div class="field-err" id="fin-err" hidden></div>' +
+      '<div class="m-actions"><button type="button" class="btn" data-action="close-modal">Cancel</button>' +
+      '<button type="button" class="btn btn-success" data-action="confirm-finalize">Sign &amp; finalize</button></div>',
+      "fin-title");
+  },
+  "confirm-finalize": () => {
+    const c = currentCase(); if (!c) { closeModal(); return; }
+    const attest = el("fin-attest");
+    const err = el("fin-err");
+    if (!attest || !attest.checked) { if (err) { err.hidden = false; err.textContent = "Attestation is required before signing."; } return; }
+    const r = finalizeCase(c, el("fin-name") ? el("fin-name").value : "");
+    if (!r.ok) { if (err) { err.hidden = false; err.textContent = r.error; } return; }
+    closeModal();
+    showToast("Signed off. The case is now read-only with a complete decision log.");
+    renderCaseView();
+  },
+  "open-export": () => {
+    const c = currentCase(); if (!c) return;
+    if (c.stage !== "signed") { showToast("Export is available once the case is signed off — the gate applies to outputs too."); return; }
+    openModal(
+      '<h3 id="ex-title">Export signed PRA — simulation</h3>' +
+      '<p class="watermark-note">Watermarked SYNTHETIC-DEMO — no real file is produced by this demo.</p>' +
+      '<div class="export-doc">' + esc(buildExportText(c)) + "</div>" +
+      '<div class="m-actions"><button type="button" class="btn" data-action="close-modal">Close</button>' +
+      '<button type="button" class="btn btn-primary" data-action="sim-download">Download file (simulated)</button></div>',
+      "ex-title");
+  },
+  "sim-download": () => {
+    showToast("Simulated download — the export carries the SYNTHETIC-DEMO watermark; no file leaves this demo.");
+  },
+  "close-modal": () => { state.pendingQ = null; closeModal(); }
+};
+
+/* delegated events — safe for detached nodes and any click order */
+document.addEventListener("click", e => {
+  const overlay = e.target && e.target.closest ? e.target.closest("[data-overlay]") : null;
+  if (overlay && e.target === overlay) { state.pendingQ = null; closeModal(); return; }
+  const btn = e.target && e.target.closest ? e.target.closest("[data-action]") : null;
+  if (!btn) return;
+  const fn = ACTIONS[btn.getAttribute("data-action")];
+  if (fn) fn(btn, e);
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (modalOpen()) { state.pendingQ = null; closeModal(); return; }
+    const d = el("drawer");
+    if (d && d.classList.contains("open")) { d.classList.remove("open"); d.setAttribute("aria-hidden", "true"); }
+    return;
+  }
+  if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute) {
+    const tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "button" || tag === "a" || tag === "input" || tag === "textarea" || tag === "select" || tag === "summary") return;
+    if (e.target.getAttribute("role") === "button" && e.target.getAttribute("data-action")) {
+      e.preventDefault();
+      e.target.click();
+    }
+  }
+});
+
+document.addEventListener("input", e => {
+  if (!e.target || !e.target.id) return;
+  if (e.target.id === "board-search") {
+    state.search = e.target.value || "";
+    const lanes = el("board-lanes");
+    if (lanes) lanes.innerHTML = lanesHTML();
+  } else if (e.target.id === "whatif-range") {
+    state.whatIfThreshold = parseInt(e.target.value, 10) || D.meta.trigger_default.threshold_pct;
+    const out = el("whatif-out");
+    if (out) out.innerHTML = whatIfOutHTML();
+  }
+});
+
+document.addEventListener("change", e => {
+  if (e.target && e.target.id === "fy-select") {
+    state.fy = parseInt(e.target.value, 10) || 2026;
+    state.caseId = null;
+    renderBoardView();
+  }
+});
+
+/* ---------------- boot ---------------- */
+(function boot() {
+  const xf = extractFacts();
+  el("footer-extract").textContent =
+    "WebFMIS fiscal-year extract (simulated file-in): " + NUM.format(xf.rows) + " rows across FY" +
+    D.meta.fiscal_years[0] + "–FY" + D.meta.fiscal_years[D.meta.fiscal_years.length - 1] + " · " +
+    NUM.format(xf.dirty) + " raw codes repaired by cleansing rules (" + NUM.format(xf.legacy) +
+    " retired legacy aliases recovered) · reportable outputs leave as watermarked file exports (simulated).";
+  renderHeader();
+  renderBoardView();
+})();
+</script>
+<script>
+"use strict";
+/* ==================================================================
+   7. SELF-TESTS — window.__SELFTEST__
+   Run by the shared QA harness. Side-effect-safe: snapshots app
+   state, rebuilds a pristine case book, exercises the real action
+   functions and DOM, then restores everything.
+   ================================================================== */
+window.__SELFTEST__ = function () {
+  const out = [];
+  const T = (name, pass, detail) => out.push({ name: name, pass: !!pass, detail: detail === undefined ? "" : String(detail) });
+  const snap = {
+    role: state.role, fy: state.fy, view: state.view, caseId: state.caseId,
+    selectedQ: state.selectedQ, search: state.search, whatIf: state.whatIfThreshold,
+    cases: JSON.parse(JSON.stringify(state.cases))
+  };
+  try {
+    /* pristine, deterministic fixture */
+    state.cases = buildCases();
+    state.role = "preparer"; state.fy = 2026; state.search = ""; state.caseId = null;
+
+    /* (1) payload loaded */
+    T("payload loaded (1,459 transactions)", D.transactions.length === 1459, "len=" + D.transactions.length);
+
+    /* (2) FY2026 totals computed live match planted values (±$1) */
+    const planted = {
+      "PROG-PA": { total: 1094293204.80, count: 188 },
+      "PROG-HM": { total: 166280284.80, count: 33 },
+      "PROG-IA": { total: 422002008.00, count: 44 },
+      "PROG-HS": { total: 469332864.00, count: 84 },
+      "PROG-UR": { total: 39617061.12, count: 12 }
+    };
+    let grand = 0;
+    Object.keys(planted).forEach(pid => {
+      const a = computeProgramFY(pid, 2026);
+      grand += a.total;
+      T("FY2026 " + pid + " total & txn count match planted facts",
+        Math.abs(a.total - planted[pid].total) < 1 && a.count === planted[pid].count,
+        "computed " + a.total.toFixed(2) + " / " + a.count);
+    });
+    T("FY2026 grand total matches planted $2,191,525,422.72", Math.abs(grand - 2191525422.72) < 1, grand.toFixed(2));
+    T("cross-check: computed totals equal fy_summary aggregates",
+      D.programs.every(p => Math.abs(computeProgramFY(p.id, 2026).total - FYS[p.id + "|2026"].total) < 1));
+    T("trust chain: IA auto-populated Q1 answer equals computed total",
+      Math.abs(parseFloat(RESP["PROG-IA|Q1"].answer_value) - computeProgramFY("PROG-IA", 2026).total) < 1);
+
+    /* (3) dual-measure trigger at default config */
+    const tr = {}; D.programs.forEach(p => tr[p.id] = evalTrigger(p.id, 2026));
+    T("trigger fires for PA, HM, IA, HS at default ±20%",
+      tr["PROG-PA"].flagged && tr["PROG-HM"].flagged && tr["PROG-IA"].flagged && tr["PROG-HS"].flagged);
+    T("trigger does NOT fire for UR (near-miss +19% dollars)", !tr["PROG-UR"].flagged,
+      "dollars " + fmtPct(tr["PROG-UR"].dollarPct) + ", txns " + fmtPct(tr["PROG-UR"].countPct));
+    T("IA is the count-only catch (dollars within, volume breach)",
+      tr["PROG-IA"].countOnly && !tr["PROG-IA"].dollarFlag && tr["PROG-IA"].countFlag,
+      "dollars " + fmtPct(tr["PROG-IA"].dollarPct) + ", txns " + fmtPct(tr["PROG-IA"].countPct));
+    T("HM decrease (−31%) counts under either-direction rule", tr["PROG-HM"].dollarFlag && tr["PROG-HM"].dollarPct < 0);
+    T("what-if: at ±36% IA still flags, PA does not",
+      evalTrigger("PROG-IA", 2026, 36).flagged && !evalTrigger("PROG-PA", 2026, 36).flagged);
+
+    /* (4) primary navigation: queue -> case file */
+    renderBoardView();
+    T("board renders all 6 lifecycle lanes",
+      document.querySelectorAll("#view-board .lane").length === 6);
+    T("board shows 5 FY2026 case cards",
+      document.querySelectorAll("#view-board .case-card").length === 5);
+    ACTIONS["open-case"]({ getAttribute: k => (k === "data-case" ? "CASE-2026-IA" : null) });
+    const caseVisible = !el("view-case").hidden && el("view-board").hidden;
+    T("opening a case switches to the case-file view",
+      caseVisible && el("view-case").textContent.indexOf("Individual Assistance") >= 0);
+    T("case file explains the count-only catch in plain language",
+      el("view-case").textContent.indexOf("Caught by volume, not dollars") >= 0);
+
+    /* (5) drill-down reaches transaction rows (Q1 evidence lineage) */
+    T("evidence drill-down reaches underlying transaction rows",
+      document.querySelectorAll("#view-case .txn-row").length > 0,
+      document.querySelectorAll("#view-case .txn-row").length + " rows rendered");
+
+    /* (6) signature interaction: accept-with-audit-trail changes state */
+    const c = state.cases["CASE-2026-IA"];
+    const logBefore = c.log.length;
+    const acc = acceptAnswer(c, "Q1");
+    T("accepting an auto answer resolves it and writes the decision log",
+      acc.ok && c.answers.Q1.resolution === "accepted" && c.log.length === logBefore + 1);
+
+    /* (7) override path enforces reason capture */
+    const bad = applyOverride(c, "Q2", "+9.9%", "   ");
+    T("override with empty reason is refused", !bad.ok && c.answers.Q2.resolution === null, bad.error);
+    const good = applyOverride(c, "Q2", "+9.9%", "Known late-posting corrections for DR-4339 not yet in the extract (demo).");
+    T("override with reason is recorded with actor and audit entry",
+      good.ok && c.answers.Q2.resolution === "overridden" && c.answers.Q2.overrideReason.length > 0);
+
+    /* (8) hard gates: finalize unreachable until everything is resolved */
+    T("sign-off gate initially locked (unmet conditions listed)",
+      !gateMet(finalizeGate(c)) && finalizeGate(c).filter(g => !g.met).length >= 2);
+    const early = finalizeCase(c, "X");
+    T("finalize refused while gate unmet", !early.ok && c.stage !== "signed", early.error);
+    ["Q3", "Q4", "Q5", "Q6", "Q7", "Q8"].forEach(q => acceptAnswer(c, q));
+    T("resolving all 8 auto answers advances stage to Awaiting qualitative input", c.stage === "qual");
+    const blankQual = saveQual(c, "Q9", "");
+    T("blank qualitative narrative refused", !blankQual.ok);
+    saveQual(c, "Q9", "No significant rule changes this FY (demo narrative).");
+    saveQual(c, "Q10", "Staffing stable; controls unchanged (demo narrative).");
+    const routedEarly = routeGate(c);
+    T("route gate still blocked by open exception-queue codes",
+      !gateMet(routedEarly) && exceptionsOpen(c) === 2);
+    excDisposition(c, c.exceptions[0].code, "confirmed");
+    excDisposition(c, c.exceptions[1].code, "sme");
+    const route = routeToReview(c);
+    T("route to reviewer succeeds once every gate condition is met", route.ok && c.stage === "review");
+    const asPreparer = finalizeCase(c, "X");
+    T("finalize refused for Preparer role (sign-off authority gate)", !asPreparer.ok && c.stage === "review");
+    state.role = "reviewer";
+    const fin = finalizeCase(c, "M. Chen (Branch Chief)");
+    T("reviewer sign-off finalizes the case (read-only, signed, outcome recorded)",
+      fin.ok && c.stage === "signed" && !!c.signedAt && String(c.outcome).indexOf("volume only") > 0);
+    T("post-signature edits are refused", !acceptAnswer(c, "Q1").ok && !applyOverride(c, "Q1", "1", "x").ok);
+
+    /* (9) export simulation carries the watermark */
+    const exp = buildExportText(c);
+    T("export simulation output contains SYNTHETIC-DEMO", exp.indexOf("SYNTHETIC-DEMO") >= 0);
+    T("export includes override reason and signature block",
+      exp.indexOf("Reason ....:") >= 0 && exp.indexOf("/s/ M. Chen") >= 0);
+    const expPrior = buildExportText(state.cases["CASE-2025-PA"]);
+    T("prior-FY signed case also exports with watermark", expPrior.indexOf("SYNTHETIC-DEMO") >= 0);
+
+    /* (10) comprehensive 3-year cycle */
+    const cdUR = compDue("PROG-UR", 2026);
+    T("US&R comprehensive cycle is OVERDUE (last FY2022, 3-year rule)", cdUR.overdue && cdUR.dueFY === 2025);
+  } catch (e) {
+    T("self-test suite threw", false, String(e && e.stack ? e.stack : e).slice(0, 300));
+  } finally {
+    /* restore everything */
+    state.role = snap.role; state.fy = snap.fy; state.search = snap.search;
+    state.whatIfThreshold = snap.whatIf; state.cases = snap.cases;
+    state.caseId = snap.caseId; state.selectedQ = snap.selectedQ;
+    state.pendingQ = null;
+    closeModal();
+    renderHeader();
+    if (snap.view === "case" && snap.caseId && state.cases[snap.caseId]) renderCaseView();
+    else renderBoardView();
+  }
+  return out;
+};
+</script>
+</body>
+</html>
