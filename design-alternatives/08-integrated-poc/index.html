@@ -372,8 +372,8 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
 .exc-form textarea{min-height:56px}
 .exc-err{color:var(--critical-text);font-size:12px;font-weight:600;margin-top:4px}
 /* 07-d — per-figure "what could not be verified" disclosure */
-.cv{border:1px solid var(--line);border-radius:8px;background:var(--well);padding:7px 11px;margin-top:10px;font-size:12.4px;color:var(--ink2)}
-.cv summary{cursor:pointer;font-weight:600;font-size:12px;color:var(--ink)}
+.cv{border:0;border-left:2px solid var(--line);border-radius:0;background:transparent;padding:4px 0 4px 9px;margin-top:8px;font-size:12px;color:var(--ink2)}
+.cv summary{cursor:pointer;font-weight:500;font-size:11.8px;color:var(--ink2)}
 .cv .cv-line{padding:5px 0;border-bottom:1px solid #e7e9ec}
 .cv .cv-line:last-child{border-bottom:0}
 .cv .cv-clean{color:var(--good-text);font-weight:600}
@@ -452,7 +452,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       </header>
       <!-- 01-c — deterministic headline lede: filled by renderS1, re-derived on every refresh() -->
       <div id="s1-lede" class="headline"></div>
-      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> It automates the fiscal-year-end program-integrity flow: the FY-end extract is already ingested, mapped to programs and assessed. Follow the screens in order — ingestion and mapping (2–5), the variance trigger (6), the auto-populated preliminary risk assessment (7), reviewer sign-off (8), exports (10). Nothing finalizes without human review on screen 8. You can also ingest your own CSV extract on screen 2 and watch everything recompute. <button class="btn sm" data-tour-start style="margin-left:6px;vertical-align:1px">Take the tour &rarr;</button></div>
+      <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> The FY-end extract is already ingested, mapped and assessed; the remaining screens show the trace from ledger rows to trigger, PRA evidence, human sign-off and export. Nothing finalizes without human review on screen 8.</div>
       <div class="kpis" id="s1-kpis"></div>
       <div class="cols c2">
         <div class="card">
@@ -496,7 +496,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <div class="kpis" id="s2-kpis"></div>
       <div class="card">
         <h3>Load your own extract (CSV)</h3>
-        <p class="hint">Ingestion, live: drop a record-level CSV and the rules in this file cleanse, validate, map and aggregate it — every screen recomputes. Required columns: <span class="mono">raw_code, disaster_number, fiscal_year, disbursement_amount, disbursement_date</span> (<span class="mono">txn_id</span> and <span class="mono">disbursement_type</span> optional; leave <span class="mono">disaster_number</span> blank for non-disaster spend; any <span class="mono">code</span> column is ignored — the cleansing rules recompute it). Fiscal years and disaster numbers must belong to the embedded reference set; unknown codes are held out in the exception queue.</p>
+        <p class="hint">Drop a record-level CSV and every screen recomputes through the same cleansing, mapping, aggregation, trigger and PRA bindings. Required columns: <span class="mono">raw_code, disaster_number, fiscal_year, disbursement_amount, disbursement_date</span>; unknown codes are held out in the exception queue.</p>
         <div class="flexrow">
           <button class="btn primary" id="s2-upload-btn">Choose CSV to ingest&hellip;</button>
           <input type="file" id="s2-upload" accept=".csv,text/csv" hidden aria-label="Select a CSV extract to ingest">
@@ -744,7 +744,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
           <th scope="col" title="Paired five-year trends — dollars and transaction volume. Red dot = breach on that measure; amber dot = flagged that year by the other measure only.">5-yr trend ($ &middot; txns)</th>
           <th scope="col" title="Trigger path plus the 3-year comprehensive cycle — a quiet program can still owe a comprehensive assessment.">Assessment path &middot; cycle</th>
           <th scope="col" title="This program's flag state under the live configuration vs the immutable shipped default — the baseline never changes; only the comparison badge does.">vs shipped default</th>
-          <th scope="col">Why (AI-suggested)</th>
+          <th scope="col">Rationale (AI-suggested)</th>
         </tr></thead><tbody></tbody></table></div>
         <p class="small" style="margin:8px 0 0">Comprehensive-cycle chips follow the 3-year rule (REQ-034). <b>Illustrative — historical assessment records simulated; FEMA holds real records from 2018–19 onward.</b></p>
       </div>
@@ -775,7 +775,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <header>
         <div class="eyebrow">Assess &middot; Screen 8</div>
         <h2 id="s8-h">Human review &amp; override — the input surface</h2>
-        <p class="lede">Auto-populated is <b>not</b> auto-accepted. This is the <b>only</b> place decisions happen: a reviewer approves or overrides every answer — overrides capture a reason — the program office enters Q9–Q10, and nothing finalizes without sign-off. (Screen 7 shows how each value was computed.)</p>
+        <p class="lede">Auto-populated is <b>not</b> auto-accepted. This is the <b>only</b> place PRA answer decisions happen: a reviewer approves or overrides every answer — overrides capture a reason — the program office enters Q9–Q10, and nothing finalizes without sign-off. (Screen 7 shows how each value was computed.)</p>
       </header>
       <div id="s8-rail"></div>
       <div class="card">
@@ -2106,7 +2106,6 @@ function renderS1(){
   ledeEl.innerHTML = lede.html;
   ledeEl.dataset.flagCount = lede.count;
   /* 07-c — trust-posture tile (same session map as the screen-3 registry) */
-  const tp = trustPosture();
   $('#s1-kpis').innerHTML =
     kpi(`Total disbursements · FY${fy}`, fmtM(tot), `${fmtPct(totPct)} vs FY${fy-1}`) +
     kpi('Reporting programs', PROGS.length, '<span title="Programs FEMA must assess for improper-payment risk under PIIA / OMB A-123 Appendix C">improper-payment testing population</span>') +
@@ -2116,10 +2115,7 @@ function renderS1(){
     kpi('Comprehensive due on 3-yr cycle', cyc.length,
       `<span title="${esc(CYCLE_LABEL)}">separate from the trigger count — ${cyc.length ? cyc.map(p => esc(shortName(p.name))).join(', ') : 'no program is cycle-due'} · illustrative history (REQ-034)</span>`,
       cyc.some(p => compDue(p.id, fy).state === 'overdue') ? 'alert' : '') +
-    kpi('Exception queue', unmCodes, `${unmCodes} unmapped codes · ${unm.count} records held out of rollups`, unmCodes ? '' : 'ok') +
-    kpi(`Dollars under confirmed rules · FY${PRA_FY}`, tp.pct == null ? '—' : tp.pct.toFixed(1) + '%',
-      `<span title="Three-bucket walk over every FY${PRA_FY} dollar — unmapped exception-queue dollars count against the denominator, so the metric cannot flatter itself.">${fmtM(tp.confirmed)} confirmed (sme_confirmed / sop_validated / session decisions) · ${fmtM(tp.inferred)} on inferred rules · ${fmtM(tp.unmapped)} unmapped</span> — confirm or escalate rules on screen 3`,
-      tp.pct != null && tp.inferred + tp.unmapped < 0.005 ? 'ok' : '');
+    kpi('Exception queue', unmCodes, `${unmCodes} unmapped codes · ${unm.count} records held out of rollups`, unmCodes ? '' : 'ok');
   $('#s1-chart-hint').textContent = `FY${fy} disbursements per program, computed live from ${TX.length.toLocaleString()} ledger rows. Red = breaches the trigger in force.`;
   hbars('#s1-chart', rows.map(r => ({
     label: shortName(progById.get(r.progId).name),
@@ -2532,7 +2528,7 @@ function renderS4(){
   const odd = evs.filter(e => !baseSet.has(e.dr));
   $('#s4-anomaly').innerHTML = odd.length
     ? `<div class="note amber"><b>Event-mismatch flag (AI anomaly detection):</b> ${odd.map(e => 'DR-' + e.dr).join(', ')} ${odd.length > 1 ? 'are' : 'is'} outside this program's historical event set — usually a sign of a remapped code. Flags add a review reason; they never change a number. ${aiTag()}</div>`
-    : `<div class="note"><b>No event anomalies</b> at the mapping in force: every event with spend appears in this program's FY${FYS[0]}–FY${FYS[FYS.length-1]} history. Remap a code on screen 3 to see the anomaly flag fire. <span class="ai-tag">AI-SUGGESTED</span></div>`;
+    : `<div class="note"><b>No event anomalies</b> at the mapping in force: every event with spend appears in this program's FY${FYS[0]}–FY${FYS[FYS.length-1]} history. Remap a code on screen 3 to see the anomaly flag fire. <span class="ai-tag" title="Deterministic stand-in text — in the connected product a model would draft the review note, not change a number">AI-SUGGESTED · PRECOMPUTED</span></div>`;
   const drs = DR_ORDER.filter(dr => FYS.some(fy => agg.progFyDr[progId + '|' + fy + '|' + dr]));
   $('#s4-table tbody').innerHTML = drs.map(dr => {
     const cells = FYS.map(fy => {
@@ -2555,45 +2551,41 @@ function renderS5(){
   psel.disabled = mode === 'program';
   const agg = aggregate(), fy = state.fy;
   const head = $('#s5-table thead'), body = $('#s5-table tbody'), foot = $('#s5-table tfoot');
-  const bar = (v, max) => `<span style="display:inline-block;width:${Math.max(2, v / max * 120)}px;height:8px;border-radius:3px;background:#86b6ef;vertical-align:0"></span>`;
   let rows = [], tot = 0;
   if (mode === 'program'){
-    head.innerHTML = `<tr><th>Program</th><th>Listing</th><th title="Treasury Account Fund Symbol — synthetic stand-in pending SME confirmation">TAFS</th><th>Disaster?</th><th class="num">Txns</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th></th></tr>`;
+    head.innerHTML = `<tr><th>Program</th><th>Listing</th><th title="Treasury Account Fund Symbol — synthetic stand-in pending SME confirmation">TAFS</th><th>Disaster?</th><th class="num">Txns</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th></tr>`;
     rows = PROGS.map(p => ({label: shortName(p.name), listing: p.listing, tafs: p.tafs, isDis: p.isDisaster,
       tx: agg.progFyTx[p.id + '|' + fy] || 0,
       codes: (agg.progFyCodes[p.id + '|' + fy] || new Set()).size,
       v: totalOf(agg, p.id, fy)})).sort((a, b) => b.v - a.v);
     tot = rows.reduce((s, r) => s + r.v, 0);
-    const max = Math.max(...rows.map(r => r.v), 1);
     body.innerHTML = rows.map(r => `<tr><td>${esc(r.label)}</td><td class="mono">${r.listing || '—'}</td>
       <td class="mono">${esc(r.tafs || '—')}</td>
       <td>${r.isDis ? '<span class="badge gray">disaster</span>' : '<span class="badge info">non-disaster</span>'}</td>
       <td class="num">${r.tx.toLocaleString()}</td><td class="num">${r.codes}</td>
-      <td class="num">${fmtFull(r.v)}</td><td>${bar(r.v, max)}</td></tr>`).join('');
-    foot.innerHTML = `<tr><td colspan="6">Total (${PROGS.length} programs)</td><td class="num">${fmtFull(tot)}</td><td></td></tr>`;
+      <td class="num">${fmtFull(r.v)}</td></tr>`).join('');
+    foot.innerHTML = `<tr><td colspan="6">Total (${PROGS.length} programs)</td><td class="num">${fmtFull(tot)}</td></tr>`;
   } else if (mode === 'sub'){
-    head.innerHTML = `<tr><th>Sub-program</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th class="num">Share of program</th><th></th></tr>`;
+    head.innerHTML = `<tr><th>Sub-program</th><th class="num">Codes</th><th class="num">FY${fy} disbursements</th><th class="num">Share of program</th></tr>`;
     const subs = subsSpend(progId, fy, agg);
     tot = subs.reduce((s, r) => s + r.amt, 0);
-    const max = Math.max(...subs.map(r => r.amt), 1);
     body.innerHTML = subs.map(r => {
       const codes = DATA.codes.filter(c => resolveSub(c.code) === r.subId).length;
       return `<tr><td>${esc(shortName(subById.get(r.subId).name))} <span class="mono small">${r.subId}</span></td>
         <td class="num">${codes}</td><td class="num">${fmtFull(r.amt)}</td>
-        <td class="num">${(r.amt / Math.max(tot, 1) * 100).toFixed(1)}%</td><td>${bar(r.amt, max)}</td></tr>`;
+        <td class="num">${(r.amt / Math.max(tot, 1) * 100).toFixed(1)}%</td></tr>`;
     }).join('');
-    foot.innerHTML = `<tr><td>${esc(shortName(progById.get(progId).name))} — rollup</td><td></td><td class="num">${fmtFull(tot)}</td><td class="num">100%</td><td></td></tr>`;
+    foot.innerHTML = `<tr><td>${esc(shortName(progById.get(progId).name))} — rollup</td><td></td><td class="num">${fmtFull(tot)}</td><td class="num">100%</td></tr>`;
   } else {
-    head.innerHTML = `<tr><th>Event</th><th>Incident</th><th class="num">FY${fy} disbursements</th><th class="num">Share</th><th></th></tr>`;
+    head.innerHTML = `<tr><th>Event</th><th>Incident</th><th class="num">FY${fy} disbursements</th><th class="num">Share</th></tr>`;
     const evs = eventsOf(progId, fy, agg).sort((a, b) => b.amt - a.amt);
     const nd = agg.progFyDr[progId + '|' + fy + '|null'] || 0;
     if (nd) evs.push({dr: null, amt: nd});
     tot = evs.reduce((s, r) => s + r.amt, 0);
-    const max = Math.max(...evs.map(r => r.amt), 1);
     body.innerHTML = evs.map(r => `<tr><td class="mono">${r.dr == null ? 'non-disaster' : 'DR-' + r.dr}</td>
       <td>${r.dr == null ? 'Annual / preparedness funding — no disaster split' : esc(eventByDr.get(r.dr).type) + ' (' + esc(eventByDr.get(r.dr).state) + ')'}</td>
-      <td class="num">${fmtFull(r.amt)}</td><td class="num">${(r.amt / Math.max(tot, 1) * 100).toFixed(1)}%</td><td>${bar(r.amt, max)}</td></tr>`).join('');
-    foot.innerHTML = `<tr><td colspan="2">${esc(shortName(progById.get(progId).name))} — event split</td><td class="num">${fmtFull(tot)}</td><td class="num">100%</td><td></td></tr>`;
+      <td class="num">${fmtFull(r.amt)}</td><td class="num">${(r.amt / Math.max(tot, 1) * 100).toFixed(1)}%</td></tr>`).join('');
+    foot.innerHTML = `<tr><td colspan="2">${esc(shortName(progById.get(progId).name))} — event split</td><td class="num">${fmtFull(tot)}</td><td class="num">100%</td></tr>`;
   }
   const unm = agg.unmapped;
   const unmCodes = Object.keys(unm.byCode).length;
@@ -2668,7 +2660,7 @@ function renderS7(){
   const progId = state.praProg;
   const A = praAnswers(progId);
   const autoCount = A.filter(a => !a.human).length;
-  $('#s7-autorate').textContent = `${autoCount - 1} deterministic + 1 history-based auto · ${A.length - autoCount} program-office · split is parameterizable`;
+  $('#s7-autorate').textContent = `${autoCount - 1} ledger-bound + 1 simulated history-based auto · ${A.length - autoCount} program-office · split is parameterizable`;
   const y = A.find(a => a.qid === 'Q3');
   $('#s7-summary').innerHTML = fyPinNote() + `<div class="note ${y.value.startsWith('Yes') ? 'amber' : ''}">
     <b>${esc(shortName(progById.get(progId).name))}</b> — FY${PRA_FY} preliminary risk assessment. ${esc(y.value)}.
