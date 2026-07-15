@@ -1376,7 +1376,7 @@ function praAnswers(progId){
   const name = shortName(p.name);
   const A = [];
   A.push({qid: 'Q1', value: fmtFull(y.cur), conf: 1,
-    evidence: `Σ <b>disbursement_amount</b> over ${nTx.toLocaleString()} mapped ledger rows · ${codes.size} financial codes · FY${PRA_FY}. Binding: <span class="mono">fiscal_year_spend_summary.total_disbursement</span>.`,
+    evidence: `The <b>disbursement_amount</b> of all ${nTx.toLocaleString()} mapped ledger rows for FY${PRA_FY}, added together (${codes.size} financial codes). Binding: <span class="mono">fiscal_year_spend_summary.total_disbursement</span>.`,
     rationale: `${name} disbursed ${fmtM(y.cur)} of FY${PRA_FY} funds across ${codes.size} codes; the figure is a deterministic ledger sum, not a model output. Measure = disbursements.`});
   A.push({qid: 'Q2', value: fmtPct(y.pct), conf: 1, spark: progId,
     evidence: `Dollars: FY${PRA_FY} ${fmtFull(y.cur)} vs FY${PRA_FY-1} ${fmtFull(y.prior || 0)}. Transaction volume: ${row.nCur.toLocaleString()} vs ${(row.nPrior || 0).toLocaleString()} rows (${fmtPct(row.cpct)}). Binding: <span class="mono">fiscal_year_spend_summary.yoy_pct_change / count_yoy_pct_change</span>.`,
@@ -1388,7 +1388,7 @@ function praAnswers(progId){
   A.push({qid: 'Q3', value: flag ? 'Yes — comprehensive assessment required from the start'
       : cycleDue3 ? `No trigger breach — but a comprehensive is due on the 3-year cycle (last comprehensive FY${cd3.last}; ${cd3.label})`
       : 'No — begins with the preliminary assessment', conf: 1,
-    evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). Dollars: |${fmtPct(y.pct)}| ${row.dflag ? '≥' : '<'} ${state.cfg.threshold}%. Txn volume: |${fmtPct(row.cpct)}| ${row.cflag ? '≥' : '<'} ${state.cfg.threshold}% — either measure breaching flags the program (2024 rule).${cycleDue3 ? ` Comprehensive cycle: last comprehensive assessment FY${cd3.last}, 3-year rule (REQ-034) — ${cd3.label}. ${CYCLE_LABEL}` : ''}`,
+    evidence: `Trigger in force: ${cfgTxt} (configurable — screen 6). Dollars ${row.dflag ? 'moved past' : 'stayed within'} the ${state.cfg.threshold}% threshold (${fmtPct(y.pct)} this year). Transaction volume ${row.cflag ? 'moved past' : 'stayed within'} the ${state.cfg.threshold}% threshold (${fmtPct(row.cpct)} this year). Either measure crossing the threshold flags the program (2024 rule).${cycleDue3 ? ` Comprehensive cycle: last comprehensive assessment FY${cd3.last}, 3-year rule (REQ-034) — ${cd3.label}. ${CYCLE_LABEL}` : ''}`,
     rationale: flag
       ? (row.dflag
           ? `${fmtPct(y.pct)} breaches the ±${state.cfg.threshold}% corridor on dollars${row.cflag ? ` (transaction volume ${fmtPct(row.cpct)} breaches too)` : ''}, so ${name} is flagged for a comprehensive risk assessment at data-land time — weeks-to-months earlier than the manual close.`
