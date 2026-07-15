@@ -155,6 +155,9 @@ textarea.inline{font:inherit;font-size:12.5px;width:100%;border:1px solid var(--
 /* charts */
 .chart{width:100%}
 .chart svg{display:block;width:100%;height:auto}
+/* let the disbursements chart consume the card height the c2 grid stretches it to */
+.chart-fill{display:flex;flex-direction:column}
+.chart-fill .chart{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
 .chart text{font-family:var(--sans);fill:var(--ink2)}
 .chart .axis text{font-size:11px;fill:var(--muted)}
 .chart .gridline{stroke:var(--grid);stroke-width:1}
@@ -465,7 +468,7 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
       <div class="note blue" style="margin:0 0 18px"><b>About this console.</b> The FY-end extract is already ingested, mapped and assessed; the remaining screens show the trace from ledger rows to trigger, PRA evidence, human sign-off and export. Nothing finalizes without human review on screen 8.</div>
       <div class="kpis" id="s1-kpis"></div>
       <div class="cols c2">
-        <div class="card">
+        <div class="card chart-fill">
           <h3>Disbursements by program</h3>
           <p class="hint" id="s1-chart-hint"></p>
           <div class="chart" id="s1-chart"></div>
@@ -1468,8 +1471,11 @@ function hbars(container, rows, opts){
   opts = opts || {};
   const el = $(container); el.innerHTML = '';
   if (!rows.length){ el.innerHTML = '<p class="small">No data for this selection.</p>'; return; }
-  const labW = opts.labelWidth || 210, valW = 116, W = 760, rowH = 26, gap = 6;
-  const H = rows.length * (rowH + gap) + 26;
+  /* Bars sized to fill the card: thicker rows, trimmed label/value gutters and a
+     narrower viewBox so width:100% renders a taller, more legible chart. */
+  const labW = opts.labelWidth || 188, valW = opts.valueWidth || 108, W = opts.width || 660,
+    rowH = opts.rowH || 40, gap = opts.gap || 16;
+  const H = rows.length * (rowH + gap) + 30;
   const max = Math.max(...rows.map(r => r.value), 1);
   const plotW = W - labW - valW - 10;
   const svg = svgNode('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': opts.aria || 'Bar chart'});
