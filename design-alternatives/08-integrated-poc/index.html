@@ -368,9 +368,19 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
 
 /* ============ wave-2 integration (INTEGRATION-DEBATE §2, items 7–13) ============ */
 /* 03-e — reason-gated exception resolution */
-.exc-form{margin-top:8px;background:var(--well);border:1px solid var(--grid);border-radius:8px;padding:8px 10px;max-width:430px}
-.exc-form textarea{min-height:56px}
+/* row actions stack vertically so all three stay visible without horizontal scroll */
+.exc-actions{display:flex;flex-direction:column;gap:5px;align-items:stretch;min-width:150px}
+.exc-actions .btn{width:100%;justify-content:center;white-space:nowrap}
 .exc-err{color:var(--critical-text);font-size:12px;font-weight:600;margin-top:4px}
+/* the record-decision step is a pop-up, not an inline form */
+#exc-modal{position:fixed;inset:0;z-index:90;background:rgba(21,34,56,.55);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto}
+#exc-modal[hidden]{display:none}
+.exc-modal-box{background:var(--page);border-radius:10px;max-width:560px;width:100%;box-shadow:0 18px 60px rgba(0,0,0,.35);overflow:hidden;margin-bottom:6vh}
+.exc-modal-head{display:flex;gap:12px;align-items:center;padding:14px 18px 10px;border-bottom:1px solid var(--grid)}
+.exc-modal-head h3{font:700 17px/1.25 var(--serif);margin:0;flex:1}
+.exc-modal-body{padding:14px 18px}
+.exc-modal-body textarea{min-height:88px}
+.exc-modal-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--grid);background:var(--well)}
 /* 07-d — per-figure "what could not be verified" disclosure */
 .cv{border:0;border-left:2px solid var(--line);border-radius:0;background:transparent;padding:4px 0 4px 9px;margin-top:8px;font-size:12px;color:var(--ink2)}
 .cv summary{cursor:pointer;font-weight:500;font-size:11.8px;color:var(--ink2)}
@@ -895,6 +905,31 @@ mark.fixed{background:#e7f4e7;color:var(--good-text);border-radius:3px;padding:0
     </div>
     <div class="lin-body" id="lin-stations"></div>
     <p class="lin-foot">Every hop cites the rule that performed it. Rules are configuration — when the SOP arrives, these rule cards swap out. Deterministic maths only; the AI-labeled suggestion appears solely on exception routing.</p>
+  </div>
+</div>
+
+<!-- 03-e — exception decision pop-up: the record-decision step, moved out of the table row -->
+<div id="exc-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exc-modal-title">
+  <div class="exc-modal-box">
+    <div class="exc-modal-head">
+      <h3 id="exc-modal-title">Record decision</h3>
+      <button class="btn sm" id="exc-modal-close" aria-label="Cancel — close without recording">Cancel (Esc)</button>
+    </div>
+    <div class="exc-modal-body">
+      <div class="small" id="exc-modal-label" style="margin-bottom:10px"></div>
+      <div id="exc-modal-sub-wrap" hidden style="margin:0 0 10px">
+        <label class="small" for="exc-modal-sub" style="display:block;margin-bottom:4px">Governing sub-program</label>
+        <select class="inline" id="exc-modal-sub" style="width:100%" aria-label="Reassign to sub-program"></select>
+      </div>
+      <div class="small" style="margin:0 0 4px"><span class="ai-tag" title="Deterministic template text — the connected product would draft this live; a human owns the final wording either way">AI-SUGGESTED · PRECOMPUTED</span> rationale template — edit freely; <b>required</b>, recorded verbatim in the audit trail</div>
+      <textarea class="inline" id="exc-modal-reason" style="width:100%" aria-label="Rationale for the decision (required)"></textarea>
+      <div class="exc-err" id="exc-modal-err" hidden>A rationale is required — the decision is refused without one (screen-8 overrides already require reasons; this queue is held to the same bar).</div>
+    </div>
+    <div class="exc-modal-foot">
+      <span class="small" style="margin-right:auto">Maps the code in-session; every downstream total recomputes and the rationale is written to the audit trail.</span>
+      <button class="btn sm" id="exc-modal-cancel">Cancel</button>
+      <button class="btn sm primary" id="exc-modal-commit">Record decision</button>
+    </div>
   </div>
 </div>
 
@@ -2077,7 +2112,7 @@ function yoyCell(pct){
 function confChip(conf){
   if (conf >= 1) return '<span class="badge info" title="Pure ledger math — no model involved">deterministic</span>';
   const low = conf < DATA.config.prefill_threshold;
-  return `<span class="conf ${low ? 'low' : ''}" title="AI confidence score"><span class="bar"><i style="width:${(conf*100).toFixed(0)}%"></i></span>${conf.toFixed(2)}${low ? ' <span class="badge warn">below 0.85 — mandatory review</span>' : ''}</span>`;
+  return `<span class="conf ${low ? 'low' : ''}" title="AI confidence score${low ? ' — below the 0.85 auto-map threshold, so mandatory human review' : ''}"><span class="bar"><i style="width:${(conf*100).toFixed(0)}%"></i></span>${conf.toFixed(2)}${low ? ' <span class="badge warn">below 0.85</span>' : ''}</span>`;
 }
 function fyOptions(sel, list, cur){
   sel.innerHTML = list.map(fy => `<option value="${fy}" ${fy === cur ? 'selected' : ''}>FY${fy}</option>`).join('');
@@ -2218,6 +2253,65 @@ function renderS2(){
   }
 }
 
+/* 03-e — exception decision pop-up. The record-decision step (sub-program
+   pick + required rationale) opens in #exc-modal instead of inline, so the
+   three row actions never get pushed off-screen. One shared modal; the active
+   code and mode ride on its dataset. Persistent controls are bound once (below,
+   with the other overlay handlers), not per-render. */
+function excSubOptionsHtml(){
+  return PROGS.map(p =>
+    `<optgroup label="${esc(shortName(p.name))}">` +
+    (subsOfProg.get(p.id) || []).map(s => `<option value="${s.id}">${esc(shortName(s.name))}</option>`).join('') +
+    '</optgroup>').join('');
+}
+function excModalOpen(code, mode){
+  const e = excByCode.get(code), m = $('#exc-modal');
+  if (!e || !m) return;
+  m.dataset.code = code;
+  m.dataset.mode = mode;
+  $('#exc-modal-title').textContent = mode === 'reassign' ? 'Reassign code' : 'Accept suggestion';
+  $('#exc-modal-label').innerHTML = mode === 'accept'
+    ? `Accepting the AI suggestion for <span class="mono">${esc(code)}</span>: <b>${esc(shortName(subById.get(e.subId).name))}</b> &rarr; ${esc(shortName(progById.get(e.progId).name))}`
+    : `Reassigning <span class="mono">${esc(code)}</span> — pick the governing sub-program below.`;
+  const wrap = $('#exc-modal-sub-wrap'), sel = $('#exc-modal-sub');
+  wrap.hidden = mode !== 'reassign';
+  if (mode === 'reassign'){
+    if (!sel.options.length) sel.innerHTML = excSubOptionsHtml();
+    sel.value = e.subId;
+  }
+  const ta = $('#exc-modal-reason');
+  ta.value = excRationaleTemplate(code, mode);
+  $('#exc-modal-err').hidden = true;
+  m.hidden = false;
+  ta.focus();
+}
+function excModalClose(){
+  const m = $('#exc-modal');
+  if (m){ m.hidden = true; m.dataset.code = ''; }
+}
+function excModalCommit(){
+  const m = $('#exc-modal');
+  const code = m.dataset.code, mode = m.dataset.mode || 'accept';
+  const e = excByCode.get(code);
+  if (!e) return;
+  const subId = mode === 'reassign' ? $('#exc-modal-sub').value : e.subId;
+  const reason = $('#exc-modal-reason').value;
+  const dsnap = resolveException(code, subId, reason, mode);
+  if (!dsnap){                                               // empty/whitespace rationale → refusal, shown in the pop-up
+    $('#exc-modal-err').hidden = false;
+    return;
+  }
+  excModalClose();
+  const progId = subById.get(subId).progId;
+  const t = totalOf(aggregate(), progId, state.fy);
+  toast(`<b>${esc(code)}</b> mapped to ${esc(shortName(progById.get(progId).name))} — its spend joined the rollups. FY${state.fy} program total is now <b>${fmtM(t)}</b>. Rationale recorded in the audit trail.`);
+  refresh();
+  openDiffDrawer(`Exception ${mode === 'reassign' ? 'reassigned' : 'accepted'}: <span class="mono">${esc(code)}</span> &rarr; ${esc(subId)}`, dsnap, () => {
+    state.excDecisions.delete(code);                         // the revert path the drawer has always used
+    invalidate();
+    logAudit('program_mapping', `Exception decision on ${code} reverted via what-changed drawer`, code + ';revert');
+  });
+}
 function renderS3(){
   const tab = ['work', 'flow', 'inf'].includes(state.s3Tab) ? state.s3Tab : 'work';
   for (const k of ['work', 'flow', 'inf']){
@@ -2263,81 +2357,27 @@ function renderS3Work(){
       status = d && d.action === 'queued'
         ? '<span class="badge gray" title="Deferral recorded in the audit trail — the code stays open; its spend stays out of every total">kept in queue · deferred</span>'
         : '<span class="badge warn">exception_queue</span>';
-      action = `<div class="flexrow">
+      action = `<div class="exc-actions">
           <button class="btn sm primary" data-exc-open="accept|${e.code}" title="Accept the AI suggestion — a rationale is required (prefilled, editable)">Accept suggestion&hellip;</button>
           <button class="btn sm" data-exc-open="reassign|${e.code}" title="Map this code to a different sub-program — a rationale is required (prefilled, editable)">Reassign&hellip;</button>
           <button class="btn sm" data-exc-keep="${e.code}" title="Recorded deferral — no rationale required">Keep in queue</button>
-        </div>
-        <div class="exc-form" data-exc-form="${e.code}" hidden>
-          <div class="small" data-exc-mode-label="${e.code}"></div>
-          <div data-exc-sub-wrap="${e.code}" hidden style="margin:5px 0"><select class="inline" data-exc-sub="${e.code}" aria-label="Reassign ${esc(e.code)} to sub-program">${allSubOpts}</select></div>
-          <div class="small" style="margin:5px 0 3px"><span class="ai-tag" title="Deterministic template text — the connected product would draft this live; a human owns the final wording either way">AI-SUGGESTED · PRECOMPUTED</span> rationale template — edit freely; <b>required</b>, recorded verbatim in the audit trail</div>
-          <textarea class="inline" data-exc-reason="${e.code}" aria-label="Rationale for the ${esc(e.code)} decision (required)"></textarea>
-          <div class="exc-err" data-exc-err="${e.code}" hidden>A rationale is required — the decision is refused without one (screen-8 overrides already require reasons; this queue is held to the same bar).</div>
-          <div class="flexrow" style="margin-top:5px">
-            <button class="btn sm primary" data-exc-commit="${e.code}">Record decision</button>
-            <button class="btn sm" data-exc-cancel="${e.code}">Cancel</button>
-          </div>
         </div>`;
     }
     return `<tr><td class="mono">${esc(e.code)}</td>
       <td class="num">${fmtFull(spend)} <span class="small">(${nTx} txns)</span></td>
       <td>${esc(shortName(sub.name))} → ${esc(shortName(prog.name))} <span class="ai-tag" title="Similarity match over segment structure, co-occurring codes and amount profile — deterministic stand-in; the connected product scores this live">AI-SUGGESTED · PRECOMPUTED</span></td>
-      <td>${confChip(e.conf)}</td><td>${status}</td><td style="min-width:250px">${action}</td></tr>`;
+      <td>${confChip(e.conf)}</td><td>${status}</td><td>${action}</td></tr>`;
   }).join('') + Object.entries(agg.unmapped.byCode).filter(([c]) => !excByCode.has(c)).sort((a, b) => b[1].amt - a[1].amt).map(([c, b]) => `
     <tr><td class="mono">${esc(c)}</td>
       <td class="num">${fmtFull(b.amt)} <span class="small">(${b.count} txns)</span></td>
       <td><span class="small">none — code not in the embedded reference data (from the ingested extract)</span></td>
       <td>—</td><td><span class="badge warn">unknown code</span></td>
       <td><span class="small">held out of every total — fix the extract or restore the embedded one (screen 2)</span></td></tr>`).join('');
-  /* 03-e — open the inline disclosure; prefill the editable AI-SUGGESTED rationale */
+  /* 03-e — open the record-decision pop-up (see excModalOpen); the rationale
+     form now lives in #exc-modal, so all three row buttons stay visible. */
   $$('#s3-exceptions [data-exc-open]').forEach(b => b.addEventListener('click', () => {
     const parts = b.dataset.excOpen.split('|');
-    const mode = parts[0], code = parts[1];
-    const f = $(`[data-exc-form="${code}"]`);
-    const e = excByCode.get(code);
-    if (!f || !e) return;
-    f.hidden = false;
-    f.dataset.mode = mode;
-    const wrap = $(`[data-exc-sub-wrap="${code}"]`);
-    if (wrap) wrap.hidden = mode !== 'reassign';
-    const sel = $(`[data-exc-sub="${code}"]`);
-    if (sel && mode === 'reassign') sel.value = e.subId;
-    $(`[data-exc-mode-label="${code}"]`).innerHTML = mode === 'accept'
-      ? `Accepting the AI suggestion: <b>${esc(shortName(subById.get(e.subId).name))}</b> → ${esc(shortName(progById.get(e.progId).name))}`
-      : `Reassigning <span class="mono">${esc(code)}</span> — pick the governing sub-program:`;
-    const ta = $(`[data-exc-reason="${code}"]`);
-    ta.value = excRationaleTemplate(code, mode);
-    $(`[data-exc-err="${code}"]`).hidden = true;
-    ta.focus();
-  }));
-  $$('#s3-exceptions [data-exc-cancel]').forEach(b => b.addEventListener('click', () => {
-    const f = $(`[data-exc-form="${b.dataset.excCancel}"]`);
-    if (f) f.hidden = true;
-  }));
-  $$('#s3-exceptions [data-exc-commit]').forEach(b => b.addEventListener('click', () => {
-    const code = b.dataset.excCommit;
-    const f = $(`[data-exc-form="${code}"]`);
-    const e = excByCode.get(code);
-    if (!f || !e) return;
-    const mode = f.dataset.mode || 'accept';
-    const subId = mode === 'reassign' ? ($(`[data-exc-sub="${code}"]`) || {value: e.subId}).value : e.subId;
-    const reason = ($(`[data-exc-reason="${code}"]`) || {value: ''}).value;
-    const dsnap = resolveException(code, subId, reason, mode);
-    if (!dsnap){                                             // empty/whitespace rationale → inline refusal
-      const err = $(`[data-exc-err="${code}"]`);
-      if (err) err.hidden = false;
-      return;
-    }
-    const progId = subById.get(subId).progId;
-    const t = totalOf(aggregate(), progId, state.fy);
-    toast(`<b>${esc(code)}</b> mapped to ${esc(shortName(progById.get(progId).name))} — its spend joined the rollups. FY${state.fy} program total is now <b>${fmtM(t)}</b>. Rationale recorded in the audit trail.`);
-    refresh();
-    openDiffDrawer(`Exception ${mode === 'reassign' ? 'reassigned' : 'accepted'}: <span class="mono">${esc(code)}</span> &rarr; ${esc(subId)}`, dsnap, () => {
-      state.excDecisions.delete(code);                       // the revert path the drawer has always used
-      invalidate();
-      logAudit('program_mapping', `Exception decision on ${code} reverted via what-changed drawer`, code + ';revert');
-    });
+    excModalOpen(parts[1], parts[0]);
   }));
   $$('#s3-exceptions [data-exc-keep]').forEach(b => b.addEventListener('click', () => {
     const code = b.dataset.excKeep;
@@ -3956,6 +3996,11 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
     setScreen(3);
   });
   $('#lineage').addEventListener('click', ev => { if (ev.target === $('#lineage')) closeLineage(); });
+  /* 03-e — exception decision pop-up: bind persistent controls once */
+  $('#exc-modal-commit').addEventListener('click', excModalCommit);
+  $('#exc-modal-cancel').addEventListener('click', excModalClose);
+  $('#exc-modal-close').addEventListener('click', excModalClose);
+  $('#exc-modal').addEventListener('click', ev => { if (ev.target === $('#exc-modal')) excModalClose(); });
   /* what-changed drawer (FLOW-07) */
   $('#dd-keep').addEventListener('click', () => closeDiffDrawer(true));
   $('#dd-close').addEventListener('click', () => closeDiffDrawer(false));
@@ -3970,6 +4015,7 @@ function refresh(){ refreshChip(); RENDER[state.screen](); }
   });
   document.addEventListener('keydown', ev => {
     if (ev.key !== 'Escape') return;
+    if (!$('#exc-modal').hidden){ excModalClose(); return; }
     if (!$('#lineage').hidden){ closeLineage(); return; }
     if ($('#diff-drawer').classList.contains('open')){ closeDiffDrawer(false); return; }
     if (!$('#cs-pop').hidden){ csClose(); return; }
@@ -4215,16 +4261,22 @@ window.__SELFTEST__ = function(){
     t('03-e: queue rows offer Accept / Reassign / Keep-in-queue',
       !!openA && !!$(`#s3-exceptions [data-exc-open="reassign|${e0.code}"]`) && !!$(`#s3-exceptions [data-exc-keep="${e0.code}"]`));
     openA.click();
-    const ta0 = $(`[data-exc-reason="${e0.code}"]`);
+    const ta0 = $('#exc-modal-reason');
     const prefill = ta0 ? ta0.value : '';
-    t('03-e: rationale prefilled with editable template text, labeled AI-SUGGESTED',
-      !!ta0 && prefill.trim().length > 40 && !!$(`[data-exc-form="${e0.code}"] .ai-tag`));
-    $(`[data-exc-commit="${e0.code}"]`).click();
+    t('03-e: decision opens as a pop-up with an editable AI-SUGGESTED rationale prefilled',
+      !$('#exc-modal').hidden && !!ta0 && prefill.trim().length > 40 && !!$('#exc-modal .ai-tag'));
+    ta0.value = '   ';
+    $('#exc-modal-commit').click();
+    t('03-e: empty rationale in the pop-up is refused — pop-up stays open, error shown, nothing recorded',
+      !$('#exc-modal').hidden && !$('#exc-modal-err').hidden && !state.excDecisions.has(e0.code));
+    ta0.value = prefill;
+    $('#exc-modal-commit').click();
     const d0 = state.excDecisions.get(e0.code);
     const aud0 = state.audit.slice().reverse().find(a => a.entity === 'program_mapping' && (a.refs || '').indexOf(e0.code) === 0);
     t('03-e: prefilled rationale accepted — decision recorded, rationale in the audit detail',
       !!d0 && d0.action === 'approved' && d0.subId === e0.subId && !!aud0 && aud0.decision.includes('rationale:') && aud0.decision.includes(prefill.trim().slice(0, 40)),
       aud0 && aud0.decision.slice(0, 100));
+    t('03-e: recording the decision closes the pop-up', $('#exc-modal').hidden);
     closeDiffDrawer(false);
     state.excDecisions.delete(e0.code); invalidate(); refresh();
     /* reassign records the CHOSEN sub-program; the diff-drawer revert restores */
@@ -4233,9 +4285,11 @@ window.__SELFTEST__ = function(){
     const altProg = subById.get(altSub).progId;
     const beforeTot = totalOf(aggregate(), altProg, state.fy);
     $(`#s3-exceptions [data-exc-open="reassign|${e1.code}"]`).click();
-    const sel1 = $(`[data-exc-sub="${e1.code}"]`);
+    const sel1 = $('#exc-modal-sub');
+    t('03-e: reassign pop-up exposes the sub-program picker',
+      !$('#exc-modal').hidden && !$('#exc-modal-sub-wrap').hidden && sel1.options.length > 0);
     sel1.value = altSub;
-    $(`[data-exc-commit="${e1.code}"]`).click();
+    $('#exc-modal-commit').click();
     const d1 = state.excDecisions.get(e1.code);
     t('03-e: reassign records the chosen sub-program (not the AI suggestion)',
       !!d1 && d1.action === 'approved' && d1.subId === altSub && $('#diff-drawer').classList.contains('open'), JSON.stringify(d1));
