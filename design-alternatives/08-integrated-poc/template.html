@@ -1741,7 +1741,7 @@ function wireGrid(rootSel){
 
 /* ---- 05-c — trigger-evidence drill card math (screen 6) ---- */
 function drillBreakdown(progId, fy){
-  const bySub = new Map(), byEv = new Map();
+  const bySub = new Map(), byEv = new Map(), subDrs = new Map();
   for (const t of TX){
     if (t.fy !== fy && t.fy !== fy - 1) continue;
     const sub = resolveSub(t.code);
@@ -1750,8 +1750,28 @@ function drillBreakdown(progId, fy){
     let e = byEv.get(t.dr); if (!e) byEv.set(t.dr, e = {amt: 0, pamt: 0, n: 0, pn: 0});
     if (t.fy === fy){ s.amt += t.amt; s.n++; e.amt += t.amt; e.n++; }
     else { s.pamt += t.amt; s.pn++; e.pamt += t.amt; e.pn++; }
+    let ds = subDrs.get(sub); if (!ds) subDrs.set(sub, ds = new Set()); ds.add(t.dr);
   }
-  return {bySub, byEv};
+  /* The by-sub-program and by-disaster-event breakdowns are the SAME partition
+     whenever this program's sub-programs map one-to-one onto its disaster
+     declarations — which is exactly how Public Assistance is modelled (each
+     sub-program IS a single DR, e.g. SUB-PA-4339 = "DR-4339 · Hurricane Maria").
+     When that bijection holds we render one table instead of two identical ones.
+     Programs with functional sub-programs (IA: IHP / Mass Care / DCM) or a single
+     non-disaster bucket (HSGP) are NOT a bijection, so both views are shown. */
+  let sameGrouping = bySub.size === byEv.size && bySub.size > 0;
+  if (sameGrouping){
+    const drSeen = new Set();
+    for (const ds of subDrs.values()){
+      if (ds.size !== 1){ sameGrouping = false; break; }   // a sub-program spanning >1 DR
+      const dr = [...ds][0];
+      if (drSeen.has(dr)){ sameGrouping = false; break; }   // a DR shared by >1 sub-program
+      drSeen.add(dr);
+    }
+  }
+  const disasterScoped = sameGrouping && bySub.size > 1 &&
+    [...subDrs.values()].every(ds => [...ds][0] != null);
+  return {bySub, byEv, sameGrouping, disasterScoped};
 }
 function renderS6Drill(){
   const holder = $('#s6-drill');
@@ -1794,17 +1814,30 @@ function renderS6Drill(){
   const top = evRows[0];
   const totD = r.cur - (r.prior || 0);
   const topMover = top ? `<p class="topmover"><b>Largest contributor to the FY${fy} change:</b> ${evLabel(top[0])} — Δ ${(top[1].amt - top[1].pamt >= 0 ? '+' : '−') + fmtM(Math.abs(top[1].amt - top[1].pamt))} of the program's ${(totD >= 0 ? '+' : '−') + fmtM(Math.abs(totD))} total move. Deterministic arithmetic over the ledger — the trigger itself remains program-scoped.</p>` : '';
-  const varTables = `<div class="cols c2">
-    <div><h5>By sub-program</h5><div class="tblwrap" style="max-height:220px"><table>${varHead}<tbody>${subRows.map(([s, x]) => varRow(esc(shortName(subById.get(s).name)), x)).join('')}</tbody></table></div></div>
-    <div><h5>By disaster event</h5><div class="tblwrap" style="max-height:220px"><table>${varHead}<tbody>${evRows.map(([dr, x]) => varRow(evLabel(dr), x)).join('')}</tbody></table></div></div>
-  </div>${topMover}`;
+  const subTable = `<div class="tblwrap" style="max-height:220px"><table>${varHead}<tbody>${subRows.map(([s, x]) => varRow(esc(shortName(subById.get(s).name)), x)).join('')}</tbody></table></div>`;
+  const evTable = `<div class="tblwrap" style="max-height:220px"><table>${varHead}<tbody>${evRows.map(([dr, x]) => varRow(evLabel(dr), x)).join('')}</tbody></table></div>`;
+  let varTables;
+  if (b.sameGrouping){
+    /* one partition — show a single table instead of two identical ones */
+    const heading = b.disasterScoped ? 'By sub-program (one per disaster declaration)' : 'By sub-program';
+    const note = b.disasterScoped
+      ? `For ${esc(name)}, each sub-program corresponds to a single disaster declaration, so grouping by sub-program and by disaster event produces the same breakdown. It is shown once rather than as two identical tables.`
+      : `${esc(name)} has no sub-disaster split, so there is a single breakdown to show.`;
+    varTables = `<div><h5>${heading}</h5>
+      <p class="small" style="margin:0 0 8px">${note}</p>${subTable}</div>${topMover}`;
+  } else {
+    varTables = `<div class="cols c2">
+      <div><h5>By sub-program</h5>${subTable}</div>
+      <div><h5>By disaster event</h5>${evTable}</div>
+    </div>${topMover}`;
+  }
   holder.innerHTML = `<div class="drill" role="region" aria-label="Trigger evidence for ${esc(name)}">
     <div class="drill-head"><h4>Why this verdict — ${esc(name)}, FY${fy} vs FY${fy - 1}</h4>
       <span class="small">re-derives live as the trigger configuration changes</span>
       <button class="btn sm" data-drill-close aria-label="Close the evidence card">Close</button></div>
     <h5>Per-measure trigger math</h5>${trigTable}
     <h5 style="margin-top:16px">Contribution to variance</h5>
-    <p class="small" style="margin:0 0 8px">FY${fy} vs FY${fy - 1} by sub-program and by disaster event — dollars, transaction counts and Δ% per row. The 20% statute is program-scoped, so no row below program level carries a breach badge.</p>
+    <p class="small" style="margin:0 0 8px">FY${fy} vs FY${fy - 1} ${b.sameGrouping ? 'within the program' : 'by sub-program and by disaster event'} — dollars, transaction counts and Δ% per row. The 20% statute is program-scoped, so no row below program level carries a breach badge.</p>
     ${varTables}
     <h5 style="margin-top:16px">The transactions behind the numbers</h5>
     ${recordGrid(progId, fy)}
@@ -4133,6 +4166,18 @@ window.__SELFTEST__ = function(){
     t('drill card shows variance contribution without sub-program breach badges',
       $('#s6-drill').textContent.includes('Contribution to variance') && !$('#s6-drill .tblwrap .badge.crit'));
     t('drill card computes a top-mover sentence', !!$('#s6-drill .topmover'));
+    t('drill card shows BOTH breakdowns when sub-programs differ from events (IA)',
+      $('#s6-drill').textContent.includes('By sub-program') && $('#s6-drill').textContent.includes('By disaster event'));
+    /* PA sub-programs are one-per-disaster — the two breakdowns are the same
+       partition, so the card must collapse them to a single table, not repeat it */
+    const iaBd = drillBreakdown('PROG-IA', state.fy), paBd = drillBreakdown('PROG-PA', state.fy);
+    t('drillBreakdown flags PA as one partition (sub-program == disaster) and IA as two',
+      paBd.sameGrouping === true && paBd.disasterScoped === true && iaBd.sameGrouping === false);
+    state.s6open = 'PROG-PA'; renderS6Drill();
+    t('drill card collapses PA to a single breakdown — no duplicate "By disaster event" table',
+      !$('#s6-drill').textContent.includes('By disaster event') &&
+      $('#s6-drill').textContent.includes('one per disaster declaration'));
+    state.s6open = 'PROG-IA'; renderS6Drill();
     const gw = $('#s6-drill .gridwrap');
     const expTot = totalOf(aggregate(), 'PROG-IA', state.fy);
     t('drill record-grid sum equals the program-FY aggregate',
