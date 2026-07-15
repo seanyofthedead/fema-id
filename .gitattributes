@@ -7,3 +7,17 @@ solution-design/fema-program-id-risk-assessment/data/** text eol=lf
 # fema-demo.html byte-identically from a fresh clone, so the template,
 # builder and generated file keep LF endings on every platform.
 solution-design/fema-program-id-risk-assessment/leavebehind/** text eol=lf
+
+# Binary assets must never be EOL-normalized — doing so strips CR bytes from
+# the compressed ZIP data and corrupts the file (Word reports it as damaged).
+# Last match wins, so these override the broad "leavebehind/** text eol=lf"
+# rule above, which was mistakenly treating the .docx as text.
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.zip  binary
