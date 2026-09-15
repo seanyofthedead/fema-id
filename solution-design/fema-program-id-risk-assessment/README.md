@@ -42,6 +42,8 @@ The package separates **verified facts** (`SRC-`), **requirements** (`REQ-`), **
 | 15 | `15-risks-and-limitations.md` | Risk register + demo-vs-production limits |
 | 16 | `16-decision-log.md` | Decisions made, rationale, alternatives, validation needed |
 | 17 | `17-appendix.md` | Glossary, acronyms, example rules/data, diagrams, references |
+| 18 | `18-databricks-implementation-plan.md` | **Funded pilot** — implementation plan on FEMA's Databricks (FEMADex): platform decisions, catalog layout, pipeline, sprints against the POP, acceptance criteria, risks |
+| — | `review/PILOT_FUNDING_DOCS_REVIEW.md` | Findings from the draft SOW/ROM and FFP pricing template that shape file 18 |
 | — | `progress-tracker.md` | Status of all 19 files + commit hash |
 | — | `README.md` | This file |
 
