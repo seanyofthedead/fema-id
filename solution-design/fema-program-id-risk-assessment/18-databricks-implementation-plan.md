@@ -2,7 +2,7 @@
 
 **Package:** FEMA Program ID & Preliminary Risk Assessment (PRA) Automation
 **Document date:** 2026-09-15
-**Status:** Planning draft for the **funded pilot**. Written against the two draft funding documents (the consolidated SOW/ROM, "FEMA PIIA" section, and the FSM firm-fixed-price pricing template with its Assumptions tab) and the repo at commit `36ebff2`. Nothing in this file is built yet. Companion review of the two documents: `review/PILOT_FUNDING_DOCS_REVIEW.md`.
+**Status:** Implementation plan for the **funded pilot**, now **under an executed award** — modification **P00001** to task order **70FA3126F00000042** (GSA schedule `GS00F045DA`), signed 2026-06-18, effective for a period of performance of **2026-09-18 – 2027-02-18** (§0a). Originally written against the two draft funding documents (the consolidated SOW/ROM, "FEMA PIIA" section, and the FSM firm-fixed-price pricing template with its Assumptions tab) at repo commit `36ebff2`; dates and contract facts below are now keyed to the award. Pipeline tasks 3–8 are built and the parity gate is green (§3b); the rest of this file is still plan. Companion review of the two draft documents: `review/PILOT_FUNDING_DOCS_REVIEW.md`.
 **Cross-references:** `REQ-` (02, updates/), `ASSUMP-` (03, updates/), `SME-` (13, updates/), `DEC-` (16). IDs coined here: `PLT-` (platform decisions), `AC-` (proposed acceptance criteria), `DBX-R-` (pilot-specific risks), `DQ-` (decisions needed).
 
 ---
@@ -13,10 +13,10 @@ The July package designed a laptop concept demo. The September documents fund a 
 
 | Dimension | Repo design (July) | Funded pilot (September documents) | Consequence for the build |
 |---|---|---|---|
-| Vehicle | Concept demo, Option A laptop stack (DEC-11) | FSM contract modification, firm-fixed price, one of **four** solutions sharing one team | Fixed end date; scope discipline matters more than polish |
+| Vehicle | Concept demo, Option A laptop stack (DEC-11) | FSM contract modification, firm-fixed price, one of **four** solutions sharing one team — **awarded** as CLIN 0010 of mod P00001, $868,414.35 (§0a) | Fixed end date; scope discipline matters more than polish |
 | Platform | Cloud unconfirmed (`SME-09`, `ASSUMP-11`) | **FEMADex = FEMA's Databricks**; Unity Catalog governance is stated as provided | `SME-09` answered. Option B's "Databricks Lakehouse" cell becomes the whole stack |
 | Data | Synthetic, watermarked, 5 FYs, 5 programs | **Real WebIFMIS extracts** (FIMS if delivered by Dec 15), **20 programs, FY2024–FY2026**, CUI handling applies | Synthetic set becomes the CI fixture, not the demo data. Three FYs, not five (`DBX-R-04`) |
-| Timeline | Demo "next week" | Period of performance **Sept 30 2026 – Feb 18 2027** (20 weeks, two federal holiday weeks inside) | The SOW's 16-week Phase 1 must land in ~18 working weeks with handover at the end |
+| Timeline | Demo "next week" | Period of performance **Sept 18 2026 – Feb 18 2027** per the award (21.9 weeks, **103 working days**, two federal holiday weeks inside) — 12 calendar days earlier than the draft POP tab said | The SOW's 16-week Phase 1 lands in 22 working weeks with handover at the end; **the dependency clock starts 8 working days earlier too** (§0a) |
 | Scope | 10-screen storyboard | SOW Phase 1 POC deliverables; pricing Assumptions tab: **POC only, production deployment excluded** | Phase 2 items (RBAC rollout, FIMS reconciliation, training) are not funded in this modification (`DBX-R-01`) |
 | Effort | Developer-days | ~1,076 hours for the PIIA POC per the SOW ROM, shared team across four solutions | ≈ one full-time Senior Consultant plus ~0.35 manager for the POP (`DBX-R-08`) |
 | Identity | None | FEMA identity provider, PIV/CAC; approvals identity-asserted | Reviewer sign-off (`ASSUMP-17`) binds to a real identity for the first time |
@@ -25,17 +25,59 @@ The July package designed a laptop concept demo. The September documents fund a 
 | Trigger | Dual-measure, 20 %, hedged (`REQ-031`, `SME-01/28`) | Defined in joint workshops; "confirmation of the trigger measure (obligations versus disbursements)" is a listed dependency | Config stays as designed; workshop output seeds `config.variance_trigger` |
 | Deliverables | HTML leave-behind | Documented repeatable methodology; PRA responses with lineage for FEMA sign-off; summary deliverable (approach, confidence levels, validated codes, items needing validation); results briefing; go/no-go | Every deliverable maps to a table or a document in this plan (§5) |
 
-**Date ladder** (business days counted from the POP start of Sept 30; note one tab of the pricing file says Sept 18, see review F-03):
+**Date ladder** (business days counted from the **awarded** POP start of **Fri Sept 18 2026**; review F-03 is resolved, and against its own recommendation — see §0a):
 
 | Date | Event | Source |
 |---|---|---|
+| **Sept 18 2026** | **POP start (awarded)** | Mod P00001, CLIN 0010 |
 | ~Oct 1 2026 | Modernized system of record go-live (`ASSUMP-22`) collides with kickoff | July feedback |
-| Oct 14 | Acceptance criteria proposed by Guidehouse (10 business days) | Pricing Assumptions #2 |
-| Oct 14 | FEMA provides sample data, environment access, approved LLM endpoint, named product owner (10 business days) | Pricing Assumptions #3, #4 |
+| **Oct 1–2** (was Oct 14) | Acceptance criteria proposed by Guidehouse (10 business days) | Pricing Assumptions #2 |
+| **Oct 1–2** (was Oct 14) | FEMA provides sample data, environment access, approved LLM endpoint, named product owner (10 business days) | Pricing Assumptions #3, #4 |
 | Nov 26–27 | Thanksgiving | — |
 | Dec 15 | FIMS extracts due, else PIIA tool is delivered against WebIFMIS only | Pricing Assumptions #4 |
 | Dec 24 – Jan 1 | Federal holiday period | — |
 | Feb 18 2027 | POP end; all code, configuration and ownership handed to FEMA | Pricing Assumptions #6 |
+
+> Counting from Fri Sept 18, ten business days is **Thu Oct 1** (start counted) or **Fri Oct 2** (start not counted); federal holidays in the window are excluded. Both dependency dates move **8 working days earlier** than this file previously assumed. Which convention the CO counts by is worth settling in the kickoff email rather than discovering in October.
+
+---
+
+## 0a. The executed award (Mod P00001, read 2026-09-17)
+
+The award is a **3-page SF30** modifying an existing task order. Everything below is what that document states; §0's table and date ladder are now keyed to it.
+
+| Field | Value |
+|---|---|
+| Contract / task order | `GS00F045DA` (GSA schedule) / `70FA3126F00000042` |
+| Modification | **P00001**, signed by the Contracting Officer **2026-06-18** |
+| Authority | **FAR 52.243-1 Changes—Fixed Price, ALT III** — issued as a change order for work the government treats as **already in scope** of the PWS |
+| Contractor | Guidehouse Inc, UEI `N9NJK877QJK9` |
+| New CLIN | **0010 — Additional In-Scope Work**, 5 MO × $173,682.87 |
+| Net increase | **$868,414.35** |
+| Task order value | $4,950,312.65 → **$5,818,727.00** |
+| CLIN 0010 POP | **2026-09-18 – 2027-02-18** (stated twice); task-order POP 2026-06-19 – 2027-02-18 |
+| Scope hooks | **PWS 5.8.2** Technical Support Services · **PWS 5.8.3** Issue Management Technology Services · **PWS 5.8.4** Analytics Reporting Services |
+| PSC | `DA10` — IT and Telecom, business application / application development, software as a service |
+| Funding | BFY 2026 · Fund OS · Program MA92 · Org A670 · Object class 258A · Fund type D · requisition `2026-OS-MA92-A670--258A` |
+| Government officials | CO **Janine Bennett** · COR **Stacy Hunt** · Alternate COR **Sara Gray** · Contract Specialist **Jade Wiggins** |
+
+**What it confirms.** Firm-fixed price, as assumed. The money ties exactly: 5 × $173,682.87 = $868,414.35, and $4,950,312.65 + $868,414.35 = $5,818,727.00. The award equals the pricing template's bottom line — $868,414.35 is the review's $838,362.34 "net of the 5.8.2 allowance" plus an allowance of $30,052.01 — so the government accepted the price as offered and the value is now fixed.
+
+**What it changes.**
+
+1. **The POP starts Sept 18, not Sept 30 — and `F-03` resolved the opposite way to the review's recommendation.** The review proposed making the Pricing Template tab agree with the POP tab at 2026-09-30; the award adopted the **Pricing Template** date instead. The POP is 153 calendar days / **103 working days**, against the 141 days / 95 working days this file planned — eight working days more.
+2. **Both 10-business-day dependencies land ~Oct 1–2, not Oct 14.** The acceptance criteria (Assumptions #2) and FEMA's provision of sample data, environment access, the approved LLM endpoint and a named product owner (Assumptions #3/#4) all move eight working days earlier in absolute terms. The pricing file's own internal note already called ten business days "aggressive for FEMA" (`F-09`); that judgement now applies to an earlier date.
+3. **Scope is hooked to PWS paragraphs, not to the draft SOW.** The mod incorporates §§5.8.2/5.8.3/5.8.4 of the PWS and never names PIIA, PII Redaction, VAYGo or the Task Management System. Which paragraph carries PIIA is not stated; **5.8.4 Analytics Reporting Services** is the obvious fit, but it is an inference, and it decides which PWS performance standards the PIIA deliverables are measured against.
+
+**What it is silent on — and this is the item to act on.** None of the pricing Assumptions tab's terms appear anywhere in the three pages: not the POC-only scope limit and the exclusion of production deployment (`F-01`), not the 20-programs / FY2024–FY2026 planning quantities (`F-06`, `F-08`), not the Dec 15 FIMS date with its WebIFMIS-only fallback (`F-07`), not the ten-business-day dependency dates, not the 15-business-day acceptance clause. The SF30 says only that all other terms and conditions remain unchanged. Whether those assumptions bind depends on whether the quote or proposal was incorporated by reference somewhere this 3-page document does not show.
+
+That matters because every scope-control mechanism in this plan rests on them. Under a **FAR 52.243-1 in-scope change order**, the default reading is that the PWS governs and the assumptions are Guidehouse's own estimating basis — which is precisely the reading that makes `F-01` (SOW Phase 2 versus POC-only) expensive in February rather than cheap in September.
+
+**Recommended first action, before or at kickoff:** ask the CO and COR in writing to confirm (a) which document governs PIIA scope — the PWS paragraph, the consolidated SOW, or the quote's Assumptions tab; (b) that the POC-only limit and the production-deployment exclusion are incorporated; (c) the planning quantities; (d) the FIMS Dec 15 fallback; and (e) the convention for counting the ten business days. All five are cheap to settle on day one and are the subject of `F-01`, `F-06`, `F-07`, `F-08` and `F-09`.
+
+**Also still open:** the mod names a COR and an alternate COR, which is not the same as the **named product owner** Assumptions #4 requires. That dependency is unmet until FEMA names one.
+
+> This reading is based solely on the 3-page SF30. Attachments, the PWS itself, and any incorporated quote were not provided and may settle several of the points above.
 
 ---
 
@@ -272,28 +314,30 @@ Port notes:
 
 ## 4. Plan against the period of performance
 
-Six sprints inside 20 weeks, holiday-aware, mapped to the SOW's Phase 1 milestone bands. Effort is the SOW ROM of ~1,076 hours, roughly one full-time Senior Consultant, a 0.3–0.4 FTE manager, and director touchpoints.
+Six sprints inside the **awarded** POP, holiday-aware, mapped to the SOW's Phase 1 milestone bands. Effort is the SOW ROM of ~1,076 hours, roughly one full-time Senior Consultant, a 0.3–0.4 FTE manager, and director touchpoints.
+
+**Re-cut to the Sept 18 start (2026-09-17).** The awarded POP is 22 working weeks / 103 working days, two more weeks than the 20 this table was first built against. Week 1 is taken as **Mon Sept 21**, treating the Fri Sept 18 contract start and the weekend as mobilisation. The two extra weeks are placed in **S3** (the instrument-dependent sprint, which the Thanksgiving week already eats into) and **S5** (the deliverable-heavy one: full runs, SME validation, results briefing). S4 still opens immediately after the **Dec 15** FIMS decision date, which was a deliberate property of the original cut and is preserved. Both placements are judgement calls — move them if the team reads the risk differently.
 
 | Sprint | Weeks / dates | SOW band | Goal | Build | Client-facing | Exit criteria |
 |---|---|---|---|---|---|---|
-| **S0 Landing** | 1–2 · Sept 30 – Oct 13 | Wks 1–3 onboarding | Prove the platform before real data exists | Bundle skeleton; catalogs and schemas (PLT-01); seed `config.*` and `ref.*`; load `demo.*` from the synthetic CSVs; port tasks 3–8 to Spark; **parity test green** (PLT-13); stub app with SSO | Kickoff; access requests; current-state walkthroughs; cycle-time baseline; **acceptance criteria drafted (§5) and delivered by Oct 14**; request FY2023 extract in addition to FY2024–26 (`DBX-R-04`); ask for the real PRA instrument and the 20-program taxonomy | Synthetic FY-end batch runs end-to-end in FEMADex; parity 100 %; acceptance criteria submitted |
-| **S1 Real extract in** | 3–5 · Oct 14 – Nov 3 | Wks 2–7 extracts & profiling | First real WebIFMIS extract through bronze → silver | `schema_map.webifmis.yaml` from the actual layout (`SME-03`); profiling notebook (nulls, code cardinality, FY windows, DR coverage); cleansing rules tuned on real dirt; exception queue populated | Data-handling confirmation; trigger and business-rule workshop #1 (measures, threshold, direction, floors → `variance_trigger.yaml`); product owner cadence | Real FY2024–26 rows in `silver.transaction`; profiling report; workshop decisions logged as `DEC-` entries |
-| **S2 Mapping at 20 programs** | 6–8 · Nov 4 – Nov 24 | Wks 4–12 mapping runs | Deterministic mapping for the agreed 20 programs | Taxonomy in `ref.program`/`ref.sub_program`; `mapping_rules.yaml` v1 (client rules where given, mined proposals elsewhere with `status=inferred`); rollup + event split; `mine_history` job; exception queue in the app | **SME adjudication of a validation sample of prior-year mapping decisions** (SOW deliverable); workshop #2 (code structures, event encoding `SME-06`) | Mapping coverage and exception rate reported per program; validation-sample agreement rate recorded; rule status lifecycle visible |
-| **S3 PRA, review, AI** | 9–11 · Nov 25 – Dec 15 (Thanksgiving) | Wks 4–12 | Draft PRA responses with lineage; sign-off works | `config.risk_question` from the real instrument (`SME-05`); `bind_pra`; `explain` against the approved endpoint with numeric guard; Vector Search or citation table; review app pages 7+8 with identity-asserted sign-off; `review.audit_event` complete | Reviewer walkthrough; evaluation protocol for AI outputs agreed (Pricing Assumptions #3) | A reviewer can approve, override with reason, and finalize a PRA for one program end-to-end, with lineage to `txn_id`s |
-| **S4 FIMS bridge** | 12–14 · Dec 16 – Jan 5 (holidays) | Wks 4–12 | Survive the migration | If FIMS extracts arrived by Dec 15: `schema_map.fims.yaml`, `config.code_bridge`, WebIFMIS-vs-FIMS comparison notebook, re-baselined mining. If not: harden WebIFMIS path, off-cycle monitor job on a partial FY | Thin client availability; use the window for documentation drafts (methodology, job aids) | Either a FIMS comparison report or a written WebIFMIS-only determination for the Contracting Officer |
-| **S5 Full runs & validation** | 15–18 · Jan 6 – Feb 2 | Wks 4–16 results | Full FY2026 run across 20 programs; results briefing | Full batch; PRA responses for all 20 programs; trigger flag list; exports; AI evaluation results against the adjudicated sample; MLflow eval report; summary deliverable | SME validation sessions; FEMA review and sign-off of PRA responses; **results briefing** with go/no-go inputs and scaled-deployment outline | All `AC-` criteria demonstrated; summary deliverable delivered |
-| **Close** | 19–20 · Feb 3 – Feb 18 | Wks 13–16 finalize | Acceptance and handover | Fix defects; freeze `config.*`; export bundle; ownership transfer of code, configuration, secrets (rotated) | Written acceptance per solution; knowledge transfer to the FEMA operator | Accepted in writing or escalated per the 15-business-day clause |
+| **S0 Landing** | 1–2 · Sept 21 – Oct 2 | Wks 1–3 onboarding | Prove the platform before real data exists | Bundle skeleton; catalogs and schemas (PLT-01); seed `config.*` and `ref.*`; load `demo.*` from the synthetic CSVs; port tasks 3–8 to Spark; **parity test green** (PLT-13); stub app with SSO | Kickoff; access requests; current-state walkthroughs; cycle-time baseline; **acceptance criteria drafted (§5) and delivered by Oct 1**; request FY2023 extract in addition to FY2024–26 (`DBX-R-04`); ask for the real PRA instrument and the 20-program taxonomy | Synthetic FY-end batch runs end-to-end in FEMADex; parity 100 %; acceptance criteria submitted |
+| **S1 Real extract in** | 3–5 · Oct 5 – Oct 23 | Wks 2–7 extracts & profiling | First real WebIFMIS extract through bronze → silver | `schema_map.webifmis.yaml` from the actual layout (`SME-03`); profiling notebook (nulls, code cardinality, FY windows, DR coverage); cleansing rules tuned on real dirt; exception queue populated | Data-handling confirmation; trigger and business-rule workshop #1 (measures, threshold, direction, floors → `variance_trigger.yaml`); product owner cadence | Real FY2024–26 rows in `silver.transaction`; profiling report; workshop decisions logged as `DEC-` entries |
+| **S2 Mapping at 20 programs** | 6–8 · Oct 26 – Nov 13 | Wks 4–12 mapping runs | Deterministic mapping for the agreed 20 programs | Taxonomy in `ref.program`/`ref.sub_program`; `mapping_rules.yaml` v1 (client rules where given, mined proposals elsewhere with `status=inferred`); rollup + event split; `mine_history` job; exception queue in the app | **SME adjudication of a validation sample of prior-year mapping decisions** (SOW deliverable); workshop #2 (code structures, event encoding `SME-06`) | Mapping coverage and exception rate reported per program; validation-sample agreement rate recorded; rule status lifecycle visible |
+| **S3 PRA, review, AI** | 9–12 · Nov 16 – Dec 11 (Thanksgiving) | Wks 4–12 | Draft PRA responses with lineage; sign-off works | `config.risk_question` from the real instrument (`SME-05`); `bind_pra`; `explain` against the approved endpoint with numeric guard; Vector Search or citation table; review app pages 7+8 with identity-asserted sign-off; `review.audit_event` complete | Reviewer walkthrough; evaluation protocol for AI outputs agreed (Pricing Assumptions #3) | A reviewer can approve, override with reason, and finalize a PRA for one program end-to-end, with lineage to `txn_id`s |
+| **S4 FIMS bridge** | 13–15 · Dec 14 – Jan 1 (holidays) | Wks 4–12 | Survive the migration | If FIMS extracts arrived by Dec 15: `schema_map.fims.yaml`, `config.code_bridge`, WebIFMIS-vs-FIMS comparison notebook, re-baselined mining. If not: harden WebIFMIS path, off-cycle monitor job on a partial FY | Thin client availability; use the window for documentation drafts (methodology, job aids) | Either a FIMS comparison report or a written WebIFMIS-only determination for the Contracting Officer |
+| **S5 Full runs & validation** | 16–20 · Jan 4 – Feb 5 | Wks 4–16 results | Full FY2026 run across 20 programs; results briefing | Full batch; PRA responses for all 20 programs; trigger flag list; exports; AI evaluation results against the adjudicated sample; MLflow eval report; summary deliverable | SME validation sessions; FEMA review and sign-off of PRA responses; **results briefing** with go/no-go inputs and scaled-deployment outline | All `AC-` criteria demonstrated; summary deliverable delivered |
+| **Close** | 21–22 · Feb 8 – Feb 18 | Wks 13–16 finalize | Acceptance and handover | Fix defects; freeze `config.*`; export bundle; ownership transfer of code, configuration, secrets (rotated) | Written acceptance per solution; knowledge transfer to the FEMA operator | Accepted in writing or escalated per the 15-business-day clause |
 
 Sequencing rules:
 
-1. **Nothing waits on real data.** S0 ships on synthetic data so the environment, bundle, SSO and app are proven by Oct 13 even if extracts slip (they are due Oct 14 and FEMA timelines are called "aggressive" in the pricing file's own notes).
+1. **Nothing waits on real data.** S0 ships on synthetic data so the environment, bundle, SSO and app are proven by Oct 2 even if extracts slip (they are due Oct 1–2 and FEMA timelines are called "aggressive" in the pricing file's own notes — a judgement that now applies to a date eight working days earlier, §0a).
 2. **Deterministic core before AI.** Tasks 3–8 are green on real data before task 9 is wired; the endpoint dependency cannot block the reportable numbers.
 3. **The real instrument gates S3, not S0.** Until `SME-05` is answered, the illustrative 10 questions stay in `config.risk_question` with `illustrative=true`, and the app labels them.
 4. **FIMS is an option, not the path.** Dec 15 is a hard decision date; the WebIFMIS-only outcome is contractually acceptable.
 
 ---
 
-## 5. Proposed acceptance criteria (`AC-`) — due Oct 14
+## 5. Proposed acceptance criteria (`AC-`) — due Oct 1–2 (was Oct 14, §0a)
 
 Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-scope items and Pricing Assumptions #2 and #3.
 
@@ -364,13 +408,14 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 
 ---
 
-## 9. First ten business days (Sept 30 – Oct 13)
+## 9. First ten business days (Sept 18 – Oct 1)
 
 1. Request workspace access, catalog creation rights, the enabled-feature list, the LLM endpoint name, and repo/bundle deployment permissions (Pricing Assumptions #4).
 2. Send FEMA the data request: FY2023–FY2026 WebIFMIS extracts (layout as-is), the program taxonomy for the 20 programs, the PRA instrument, prior-year mapping decisions for the adjudication sample, and last-comprehensive-assessment dates.
 3. Here: ~~port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`~~ **done 2026-09-17 (§3b)**; add the Spark adapter and re-run the same parity test locally; split `config/*.yaml`; write `tools/make_packet.py`; author packets `PIIA-02` through `PIIA-05` (§3a).
 4. On the GFE: run `PIIA-01-gfe-recon` (already drafted) and email the STEP-RESULT file back; then `PIIA-02` to create the GitLab project, the payload packets, and `PIIA-05` to link Databricks Repos, stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*`, and re-run the parity test on a cluster.
-5. Draft the acceptance criteria (§5) and the AI evaluation protocol; send by Oct 14.
+5. Draft the acceptance criteria (§5) and the AI evaluation protocol; send by **Oct 1**.
+8. Write to the CO and COR to confirm what governs PIIA scope and that the pricing Assumptions tab's terms are incorporated (§0a, "Recommended first action").
 6. Hold the current-state walkthrough and record the cycle-time baseline.
 7. Log every workshop outcome as a `DEC-` entry in file 16 and every new gap as an `ASSUMP-`/`SME-` in file 03 conventions, continuing the ID series.
 
