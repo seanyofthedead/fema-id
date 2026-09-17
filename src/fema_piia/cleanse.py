@@ -23,11 +23,25 @@ from typing import Mapping
 
 from .config import CleansingConfig
 
-__all__ = ["CLEAN", "NORMALIZED", "ALIASED", "CleanseStats",
+__all__ = ["CLEAN", "NORMALIZED", "ALIASED", "CleanseStats", "WHITESPACE",
+           "SEPARATOR_PATTERN", "TRIM_PATTERN",
            "normalize_raw", "cleanse_code", "cleanse_action"]
 
+# The normalization alphabet is written out rather than using ``\s`` because the
+# same pipeline has to run in three engines — Python, Spark SQL and the
+# leave-behind's JavaScript — whose ``\s`` do not agree on Unicode whitespace.
+# An explicit ASCII class means the pandas and Spark paths cannot disagree about
+# what a separator is. If real WebIFMIS extracts turn up non-breaking spaces,
+# widen this one constant and both engines follow.
+WHITESPACE = " \t\n\r\f\v"
+
 #: ``normalizeRaw()``: one or more ``/`` or whitespace characters become a hyphen.
-_SEPARATORS = re.compile(r"[/\s]+")
+SEPARATOR_PATTERN = f"[/{WHITESPACE}]+"
+#: Leading/trailing whitespace, stripped before separators are collapsed.
+TRIM_PATTERN = f"^[{WHITESPACE}]+|[{WHITESPACE}]+$"
+
+_SEPARATORS = re.compile(SEPARATOR_PATTERN)
+_TRIM = re.compile(TRIM_PATTERN)
 
 CLEAN = "clean"
 NORMALIZED = "normalized"
@@ -49,7 +63,8 @@ class CleanseStats:
 
 def normalize_raw(value: object) -> str:
     """``normalizeRaw(s)`` — trim, upper-case, separators to hyphen."""
-    return _SEPARATORS.sub("-", str(value if value is not None else "").strip().upper())
+    text = str(value if value is not None else "")
+    return _SEPARATORS.sub("-", _TRIM.sub("", text).upper())
 
 
 def cleanse_code(raw: object, cleansing: CleansingConfig) -> str:

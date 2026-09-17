@@ -14,12 +14,16 @@ from .base import Backend, TransactionColumns
 __all__ = ["Backend", "TransactionColumns", "get_backend"]
 
 
-def get_backend(name: str = "pandas") -> Backend:
-    """Return a backend by name (``pandas`` today, ``spark`` next)."""
+def get_backend(name: str = "pandas", **kwargs) -> Backend:
+    """Return a backend by name.
+
+    ``pandas`` runs off platform with no cluster; ``spark`` runs on FEMADex and
+    accepts an existing ``spark`` session (defaulting to the active one).
+    """
     if name == "pandas":
         from .pandas_io import PandasBackend
-        return PandasBackend()
+        return PandasBackend(**kwargs)
     if name == "spark":
-        from .spark_io import SparkBackend  # pragma: no cover - added in the Spark step
-        return SparkBackend()
+        from .spark_io import SparkBackend
+        return SparkBackend(**kwargs)
     raise ValueError(f"unknown backend {name!r}")

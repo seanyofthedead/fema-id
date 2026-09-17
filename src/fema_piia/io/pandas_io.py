@@ -17,17 +17,14 @@ from typing import Any, Mapping
 
 import pandas as pd
 
-from ..aggregate import AggregateResult
+from ..aggregate import AggregateResult, index_mapped_codes
 from ..cleanse import CleanseStats, cleanse_code, normalize_raw
 from ..config import CleansingConfig
 from ..money import parse_cents
 from ..rules import CodeAssignment
-from .base import Backend, TransactionColumns
+from .base import CENTS_COLUMN, Backend, TransactionColumns
 
 __all__ = ["PandasBackend"]
-
-#: Engine-owned columns added to the ledger by task 3.
-CENTS_COLUMN = "_amount_cents"
 
 
 class PandasBackend(Backend):
@@ -94,8 +91,7 @@ class PandasBackend(Backend):
         sub_fy_cents: dict[tuple[str, int, str], int] = {}
         program_fy_txn_count: dict[tuple[str, int], int] = {}
         program_fy_codes: defaultdict[tuple[str, int], set[str]] = defaultdict(set)
-        program_codes: defaultdict[str, set[str]] = defaultdict(set)
-        program_events: defaultdict[str, set[int | None]] = defaultdict(set)
+        program_codes, program_events = index_mapped_codes(assignments)
 
         for (pid, fiscal_year), group in rolled.groupby(["_program_id", columns.fiscal_year],
                                                         sort=False):
@@ -114,10 +110,6 @@ class PandasBackend(Backend):
                 ["_program_id", columns.fiscal_year, "_sub_program_id"], sort=False):
             sub_fy_cents[(pid, int(fiscal_year), sub_id)] = int(group[CENTS_COLUMN].sum())
 
-        for code, assignment in mapped.items():
-            program_codes[assignment.program_id].add(code)
-            program_events[assignment.program_id].add(assignment.parts.disaster_number)
-
         exception_codes: dict[str, tuple[int, int, int]] = {}
         exception_count_by_program_fy: defaultdict[tuple[str, int], int] = defaultdict(int)
         for (code, fiscal_year), group in unmapped.groupby([columns.code, columns.fiscal_year],
@@ -134,9 +126,8 @@ class PandasBackend(Backend):
             sub_fy_cents=sub_fy_cents,
             program_fy_txn_count=program_fy_txn_count,
             program_fy_codes={k: frozenset(v) for k, v in program_fy_codes.items()},
-            program_codes={k: frozenset(v) for k, v in program_codes.items()},
-            program_events={k: tuple(sorted(v, key=lambda e: -1 if e is None else e))
-                            for k, v in program_events.items()},
+            program_codes=program_codes,
+            program_events=program_events,
             fiscal_years=tuple(sorted(int(fy) for fy in frame[columns.fiscal_year].unique())),
             exception_codes=exception_codes,
             exception_count_by_program_fy=dict(exception_count_by_program_fy),

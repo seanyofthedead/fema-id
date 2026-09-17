@@ -11,7 +11,13 @@ dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
 pandas = ["pandas>=2.0"]
-spark = ["pyspark>=3.5", "delta-spark>=3.0"]
+# Spark 3.5 is the line in the Databricks 15.x/16.x LTS runtimes; the adapter
+# uses only constructs that behave identically on Spark 4.x, since the FEMADex
+# runtime version is not yet known (DBX-R-02). Verified locally on 3.5.9 +
+# delta-spark 3.2.1 under Java 21.
+spark = ["pyspark>=3.5,<5", "delta-spark>=3.0"]
+# Light by design: `pip install -e .[dev]` runs the parity gate on the pandas
+# path with no JVM. Add `,spark` for the full cross-backend and Delta suite.
 dev = ["pandas>=2.0", "pytest>=7.4"]
 
 [tool.setuptools.packages.find]

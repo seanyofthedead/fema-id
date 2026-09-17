@@ -26,8 +26,28 @@ from .rollup import sorted_events
 from .trigger import (TriggerEvaluation, trig_apply, trig_apply_count,
                       trig_combined, yoy_pct)
 
-__all__ = ["AggregateResult", "build_spend_summary",
+__all__ = ["AggregateResult", "index_mapped_codes", "build_spend_summary",
            "build_fiscal_year_spend_summary", "build_trigger_evaluation"]
+
+
+def index_mapped_codes(assignments) -> tuple[dict[str, frozenset[str]],
+                                             dict[str, tuple[int | None, ...]]]:
+    """``program_id -> its mapped codes`` and ``program_id -> its events``.
+
+    Derived from the code assignments rather than from the ledger, and shared by
+    every backend: which codes and events a program owns is a property of the
+    rules in force, not of how the rows happened to be grouped.
+    """
+    codes: dict[str, set[str]] = {}
+    events: dict[str, set[int | None]] = {}
+    for code, assignment in assignments.items():
+        if not assignment.is_mapped:
+            continue
+        codes.setdefault(assignment.program_id, set()).add(code)
+        events.setdefault(assignment.program_id, set()).add(assignment.parts.disaster_number)
+    return ({pid: frozenset(v) for pid, v in codes.items()},
+            {pid: tuple(sorted(v, key=lambda e: -1 if e is None else e))
+             for pid, v in events.items()})
 
 
 @dataclass(frozen=True)

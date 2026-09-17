@@ -18,7 +18,10 @@ from ..cleanse import CleanseStats
 from ..config import CleansingConfig
 from ..rules import CodeAssignment
 
-__all__ = ["TransactionColumns", "Backend"]
+__all__ = ["CENTS_COLUMN", "TransactionColumns", "Backend"]
+
+#: Engine-owned column holding each row's amount in integer cents.
+CENTS_COLUMN = "_amount_cents"
 
 
 @dataclass(frozen=True)

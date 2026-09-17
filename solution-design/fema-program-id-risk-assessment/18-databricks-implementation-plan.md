@@ -283,21 +283,30 @@ This repo is the **verification bench**: everything is proven here first. The pi
 
 ### 3b. Build status (updated 2026-09-17)
 
-Tasks **3–8 are ported and the parity gate is green** on the pandas path. What now exists in this repo, against the tree above:
+Tasks **3–8 are ported and the parity gate is green on both backends**. What now exists in this repo, against the tree above:
 
 | Path | State |
 |---|---|
-| `src/fema_piia/` | `config.py` (rules-as-data loader), `money.py`, `cleanse.py` (3), `rules.py` (4), `rollup.py` (5), `aggregate.py` (6), `trigger.py` (7), `pra.py` (8), `pipeline.py`, `io/` (`base.py`, `pandas_io.py`) |
-| `tests/` | `conftest.py`, `test_parity_synthetic.py` — 8 tests, no cluster, no network |
+| `src/fema_piia/` | `config.py` (rules-as-data loader), `money.py`, `cleanse.py` (3), `rules.py` (4), `rollup.py` (5), `aggregate.py` (6), `trigger.py` (7), `pra.py` (8), `pipeline.py` |
+| `src/fema_piia/io/` | `base.py` (backend contract), `pandas_io.py`, **`spark_io.py`**, **`schemas.py`** (declared Delta types + the render seam) |
+| `tests/` | `test_parity_synthetic.py` (both backends), `test_backend_parity.py`, `test_delta_roundtrip.py` — **39 tests**, no network |
 | `pyproject.toml` | wheel metadata; `pandas` / `spark` / `dev` extras |
-| still to come | Spark adapter (`io/spark_io.py`), `config/*.yaml` split, `tools/make_packet.py`, `resources/`, `app/`, `notebooks/`, tasks 9–11 |
+| still to come | `config/*.yaml` split, `tools/make_packet.py`, `resources/`, `app/`, `notebooks/`, tasks 9–11 |
 
-**What the gate checks.** `pytest tests/` reproduces `program_mapping.csv` (261 rows), `spend_summary.csv` (85), `fiscal_year_spend_summary.csv` (25) and `risk_response.csv` (50) — **4,014 values** — from `transaction.csv` + `rules.yaml` and nothing else. Comparison is keyed on each table's primary key rather than row order, because row order is not a property of a Delta table and a test that depended on it would pass here and fail on the platform for no real reason. Values are compared as the exact strings the storage layer holds, so a cent or a rounding decision cannot drift. Mutating `threshold_pct`, `combine` or a rule confidence in `rules.yaml` fails the gate, so it is not passing vacuously.
+**Verified locally on** pyspark 3.5.9 + delta-spark 3.2.1 under Java 21 — the Spark 3.5 line is what the Databricks 15.x/16.x LTS runtimes carry. The adapter uses only constructs that behave identically on Spark 4.x, because the FEMADex runtime version is still unknown (`DBX-R-02`).
+
+**What the gate checks.** `pytest tests/` reproduces `program_mapping.csv` (261 rows), `spend_summary.csv` (85), `fiscal_year_spend_summary.csv` (25) and `risk_response.csv` (50) — **4,014 values** — from `transaction.csv` + `rules.yaml` and nothing else, **through each backend independently**. Comparison is keyed on each table's primary key rather than row order, because row order is not a property of a Delta table and a test that depended on it would pass here and fail on the platform for no real reason. Values are compared as the exact strings the storage layer holds, so a cent or a rounding decision cannot drift. Mutating `threshold_pct`, `combine` or a rule confidence in `rules.yaml` fails the gate, so it is not passing vacuously.
 
 **Two design points the port settled** (logged as `DEC-31`/`DEC-32` in file 16):
 
 - Rule texture — the `BR-` ID order, statuses and confidences behind `program_mapping.rule_id`/`.confidence` — moved out of the generator and into `rules.yaml`'s `rule_metadata`, so the engine compiles the rule set from the same source the generator does rather than hard-coding constants it cannot cite. All 16 generated files stayed byte-identical.
 - The similarity suggestion on an exception-queue code is an **input** to the engine, never something it derives. In the pilot those rows come from the similarity job (§2.3 task 10); for the fixture they are seeded from `rules.yaml`, which puts the exception path inside the parity gate without blurring the deterministic/AI boundary.
+
+**Three things the Spark step added beyond a second adapter.**
+
+- **The backends are checked against each other, not only against the fixture.** Passing PLT-13 twice is evidence about four tables on one dataset; `test_backend_parity.py` asserts the property the three-place model actually needs — that the engine verified here and the engine that runs in FEMADex are the same engine. It compares every output table, the grouping layer itself (including `sub_fy_cents`, which no committed fixture covers but the review app's drill-down will), the cleansing counts, and normalization over adversarial raw codes. Breaking the Spark normalizer alone fails 12 tests; the parity gate by itself would not have caught it in both directions.
+- **Whitespace is pinned to an explicit ASCII class.** Python's `\s`, Java's `\s` and JavaScript's `\s` disagree on Unicode, and the same cleansing rule runs in all three. `fema_piia.cleanse` now names the character set once and both engines use it; if real extracts carry non-breaking spaces, one constant changes and both follow.
+- **The storage seam is typed and tested** (`io/schemas.py`, `DEC-33`). The engine emits *rendered* rows — exact text matching the committed fixture, which is what the gate compares and what a reviewer reads. A Delta table is not a rendering: money belongs in `decimal(18,2)`, a fiscal year in an `int`, and a cell with no comparable prior year in a **null**, not an empty string. `test_delta_roundtrip.py` writes each table to Delta, reads it back, and re-runs the parity assertions on what comes out, plus an explicit check that blank prior-year cells are stored as nulls and never as zeros — a zero there would report every first-year row as a −100 % change.
 
 **Boundaries the port holds.** The backends own only reading, the two row-wise transforms, and grouping; rule evaluation, the variance trigger and the PRA binds are pure Python shared by both paths, so the pandas and Spark engines cannot drift on any reportable decision. Dollars are integer cents end to end (`decimal`, never float). The YoY percentage is rounded to one decimal **before** it is compared to the threshold, so a change displayed as `20.0 %` fires a 20 % trigger — screen and decision cannot disagree. Exception-queue spend enters no total. The validation-only ground-truth key is not read by any engine module, and a test asserts it (`DEC-22`).
 
@@ -412,7 +421,7 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 
 1. Request workspace access, catalog creation rights, the enabled-feature list, the LLM endpoint name, and repo/bundle deployment permissions (Pricing Assumptions #4).
 2. Send FEMA the data request: FY2023–FY2026 WebIFMIS extracts (layout as-is), the program taxonomy for the 20 programs, the PRA instrument, prior-year mapping decisions for the adjudication sample, and last-comprehensive-assessment dates.
-3. Here: ~~port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`~~ **done 2026-09-17 (§3b)**; add the Spark adapter and re-run the same parity test locally; split `config/*.yaml`; write `tools/make_packet.py`; author packets `PIIA-02` through `PIIA-05` (§3a).
+3. Here: ~~port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`; add the Spark adapter and re-run the same parity test locally~~ **done 2026-09-17 (§3b)**; split `config/*.yaml`; write `tools/make_packet.py`; author packets `PIIA-02` through `PIIA-05` (§3a).
 4. On the GFE: run `PIIA-01-gfe-recon` (already drafted) and email the STEP-RESULT file back; then `PIIA-02` to create the GitLab project, the payload packets, and `PIIA-05` to link Databricks Repos, stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*`, and re-run the parity test on a cluster.
 5. Draft the acceptance criteria (§5) and the AI evaluation protocol; send by **Oct 1**.
 8. Write to the CO and COR to confirm what governs PIIA scope and that the pricing Assumptions tab's terms are incorporated (§0a, "Recommended first action").
