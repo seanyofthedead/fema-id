@@ -1,0 +1,9 @@
+# Python build / test artifacts — the engine is shipped as source and built on
+# the far side of the transfer boundary (§3a: no binaries cross).
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/

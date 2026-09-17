@@ -221,13 +221,21 @@ def build_dataset(cfg: dict, anchors: dict) -> tuple[dict[str, bytes], dict]:
         rules.append(r)
         return r["rule_id"]
 
-    next_rule("event_split", "event_segment -> disaster_number (SRC-02)", 1.0, "sme_confirmed")
-    next_rule("cleansing", "normalize: strip_whitespace, uppercase, separators_to_hyphen", 1.0, "sme_confirmed")
+    # rule texture (IDs / statuses / confidences) is config, not a literal, so the
+    # pilot engine can compile the identical rule set from rules.yaml alone
+    # (DEC-31, PLT-13). Fallbacks reproduce the pre-DEC-31 literals exactly.
+    meta = cfg.get("rule_metadata", {})
+    rconf = meta.get("confidence", {})
+    next_rule("event_split", "event_segment -> disaster_number (SRC-02)",
+              float(rconf.get("event_split", 1.0)), "sme_confirmed")
+    next_rule("cleansing", "normalize: strip_whitespace, uppercase, separators_to_hyphen",
+              float(rconf.get("cleansing_normalize", 1.0)), "sme_confirmed")
     for alias, target in cfg["cleansing"]["alias_map"].items():
         next_rule("cleansing", f"alias {alias} -> {target} (legacy code retired after FY2023)",
-                  0.97, "sme_confirmed")
+                  float(rconf.get("cleansing_alias", 0.97)), "sme_confirmed")
 
-    inferred_subs = {"SUB-IA-MC", "SUB-HS-OPSG", "SUB-PA-4341"}   # texture: still 'inferred'
+    inferred_subs = set(meta.get("inferred_sub_programs",
+                                 ["SUB-IA-MC", "SUB-HS-OPSG", "SUB-PA-4341"]))
     ND_SEG = "ND"   # event-segment token for non-disaster codes (REQ-030)
     for prog in programs:
         fund = prog["fund_segment"]
@@ -242,7 +250,8 @@ def build_dataset(cfg: dict, anchors: dict) -> tuple[dict[str, bytes], dict]:
                 expr = (f"fund_segment == '{fund}' and program_segment in {sub_segments} "
                         f"-> {sid}")
             status = "inferred" if sid in inferred_subs else "sme_confirmed"
-            conf = 0.88 if status == "inferred" else 0.98
+            conf = float(rconf.get("code_to_subprogram_inferred", 0.88)) if status == "inferred" \
+                else float(rconf.get("code_to_subprogram_sme_confirmed", 0.98))
             rule_by_sub[sid] = next_rule("code_to_subprogram", expr, conf, status)
             events = sub["events"] or [None]   # non-disaster: single ND pseudo-event
             for seg in sub_segments:
@@ -255,7 +264,8 @@ def build_dataset(cfg: dict, anchors: dict) -> tuple[dict[str, bytes], dict]:
                         "rule_id": rule_by_sub[sid],
                     })
         sub_ids = [s["sub_program_id"] for s in prog["sub_programs"]]
-        rollup_rule = next_rule("rollup", f"{sub_ids} -> {prog['program_id']}", 0.98, "sme_confirmed")
+        rollup_rule = next_rule("rollup", f"{sub_ids} -> {prog['program_id']}",
+                                float(rconf.get("rollup", 0.98)), "sme_confirmed")
         prog["_rollup_rule"] = rollup_rule
 
     dup = {c["code"] for c in codes}

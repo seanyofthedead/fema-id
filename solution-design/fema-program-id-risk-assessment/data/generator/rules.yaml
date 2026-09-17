@@ -55,6 +55,28 @@ variance_trigger:
 confidence_routing:
   prefill_threshold: 0.85       # >= prefill+editable; < exception queue
 
+# --- rule texture: IDs, statuses and confidences of the emitted rule set ------
+# Surfaced here (2026-09-17, DEC-31) so rules.yaml alone is a complete spec of
+# `config.mapping_rule`: the pilot engine (src/fema_piia) compiles the same rule
+# set from this file and must reproduce program_mapping.rule_id / .confidence
+# exactly (PLT-13 parity gate). The generator reads these keys too; omitting
+# them falls back to the literals it used before, so output is unchanged.
+# Rule IDs are assigned BR-001.. in emission order: event_split, cleansing
+# normalize, one cleansing rule per alias_map entry, then per program in
+# `programs` order one code_to_subprogram rule per sub-program followed by the
+# program's rollup rule.
+rule_metadata:
+  # sub-programs whose grouping rule is still machine-inferred rather than
+  # SME-confirmed (REQ-013/SME-04 texture): lower confidence, status 'inferred'
+  inferred_sub_programs: [SUB-IA-MC, SUB-HS-OPSG, SUB-PA-4341]
+  confidence:
+    event_split: 1.00
+    cleansing_normalize: 1.00
+    cleansing_alias: 0.97
+    code_to_subprogram_sme_confirmed: 0.98
+    code_to_subprogram_inferred: 0.88
+    rollup: 0.98
+
 # --- calibration (SRC-03 / SRC-04 obligation envelopes; ASSUMP-10) -----------
 # Applies to DISASTER programs only. Non-disaster programs (HSGP, US&R) have
 # no public per-DR envelope; their synthetic bases are fixed below and carry a

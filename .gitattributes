@@ -21,3 +21,10 @@ solution-design/fema-program-id-risk-assessment/leavebehind/** text eol=lf
 *.jpeg binary
 *.gif  binary
 *.zip  binary
+
+# Pilot engine reproducibility: the engine, its tests and its packaging travel
+# to the FEMA-side machine as text in payload packets, hashed per file. CRLF
+# rewriting on checkout would break every SHA-256 comparison at that boundary.
+src/** text eol=lf
+tests/** text eol=lf
+pyproject.toml text eol=lf

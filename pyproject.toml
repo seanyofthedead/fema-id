@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fema-piia"
+version = "0.1.0"
+description = "Deterministic engine for the FEMA Program ID & Preliminary Risk Assessment pilot (PLT-03)"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+pandas = ["pandas>=2.0"]
+spark = ["pyspark>=3.5", "delta-spark>=3.0"]
+dev = ["pandas>=2.0", "pytest>=7.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

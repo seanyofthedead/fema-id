@@ -239,6 +239,28 @@ This repo is the **verification bench**: everything is proven here first. The pi
 
 **Consequences for the tree above.** `resources/`, `databricks.yml` and `app/` are templates with placeholders (`${var.catalog}`, `${var.llm_endpoint}`) resolved on the build side; `src/fema_piia/io/` must offer a pandas adapter so every test here runs with no Spark; `tests/test_parity_synthetic.py` is the contract all three places share; `docs/agent-runs/` is the outbound channel and `tools/make_packet.py` is its only producer of payload blocks.
 
+### 3b. Build status (updated 2026-09-17)
+
+Tasks **3–8 are ported and the parity gate is green** on the pandas path. What now exists in this repo, against the tree above:
+
+| Path | State |
+|---|---|
+| `src/fema_piia/` | `config.py` (rules-as-data loader), `money.py`, `cleanse.py` (3), `rules.py` (4), `rollup.py` (5), `aggregate.py` (6), `trigger.py` (7), `pra.py` (8), `pipeline.py`, `io/` (`base.py`, `pandas_io.py`) |
+| `tests/` | `conftest.py`, `test_parity_synthetic.py` — 8 tests, no cluster, no network |
+| `pyproject.toml` | wheel metadata; `pandas` / `spark` / `dev` extras |
+| still to come | Spark adapter (`io/spark_io.py`), `config/*.yaml` split, `tools/make_packet.py`, `resources/`, `app/`, `notebooks/`, tasks 9–11 |
+
+**What the gate checks.** `pytest tests/` reproduces `program_mapping.csv` (261 rows), `spend_summary.csv` (85), `fiscal_year_spend_summary.csv` (25) and `risk_response.csv` (50) — **4,014 values** — from `transaction.csv` + `rules.yaml` and nothing else. Comparison is keyed on each table's primary key rather than row order, because row order is not a property of a Delta table and a test that depended on it would pass here and fail on the platform for no real reason. Values are compared as the exact strings the storage layer holds, so a cent or a rounding decision cannot drift. Mutating `threshold_pct`, `combine` or a rule confidence in `rules.yaml` fails the gate, so it is not passing vacuously.
+
+**Two design points the port settled** (logged as `DEC-31`/`DEC-32` in file 16):
+
+- Rule texture — the `BR-` ID order, statuses and confidences behind `program_mapping.rule_id`/`.confidence` — moved out of the generator and into `rules.yaml`'s `rule_metadata`, so the engine compiles the rule set from the same source the generator does rather than hard-coding constants it cannot cite. All 16 generated files stayed byte-identical.
+- The similarity suggestion on an exception-queue code is an **input** to the engine, never something it derives. In the pilot those rows come from the similarity job (§2.3 task 10); for the fixture they are seeded from `rules.yaml`, which puts the exception path inside the parity gate without blurring the deterministic/AI boundary.
+
+**Boundaries the port holds.** The backends own only reading, the two row-wise transforms, and grouping; rule evaluation, the variance trigger and the PRA binds are pure Python shared by both paths, so the pandas and Spark engines cannot drift on any reportable decision. Dollars are integer cents end to end (`decimal`, never float). The YoY percentage is rounded to one decimal **before** it is compared to the threshold, so a change displayed as `20.0 %` fires a 20 % trigger — screen and decision cannot disagree. Exception-queue spend enters no total. The validation-only ground-truth key is not read by any engine module, and a test asserts it (`DEC-22`).
+
+---
+
 Port notes:
 
 - The leave-behind's `template.html` JavaScript (about 3,100 lines) and `generate_synthetic.py` are the executable specification. Port function by function; keep the names in the Python module docstrings so the parity test reads like the JS.
@@ -346,7 +368,7 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 
 1. Request workspace access, catalog creation rights, the enabled-feature list, the LLM endpoint name, and repo/bundle deployment permissions (Pricing Assumptions #4).
 2. Send FEMA the data request: FY2023–FY2026 WebIFMIS extracts (layout as-is), the program taxonomy for the 20 programs, the PRA instrument, prior-year mapping decisions for the adjudication sample, and last-comprehensive-assessment dates.
-3. Here: port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`; write `tools/make_packet.py`; author packets `PIIA-02` through `PIIA-05` (§3a).
+3. Here: ~~port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`~~ **done 2026-09-17 (§3b)**; add the Spark adapter and re-run the same parity test locally; split `config/*.yaml`; write `tools/make_packet.py`; author packets `PIIA-02` through `PIIA-05` (§3a).
 4. On the GFE: run `PIIA-01-gfe-recon` (already drafted) and email the STEP-RESULT file back; then `PIIA-02` to create the GitLab project, the payload packets, and `PIIA-05` to link Databricks Repos, stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*`, and re-run the parity test on a cluster.
 5. Draft the acceptance criteria (§5) and the AI evaluation protocol; send by Oct 14.
 6. Hold the current-state walkthrough and record the cycle-time baseline.

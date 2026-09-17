@@ -140,4 +140,5 @@ Deferred to roadmap (plan Wave F): historical-RA ingestion (REQ-033), 3-year-cyc
 - **Blocking SME confirmations:** `SME-01` (trigger), `SME-03` (extract), `SME-05` (PRA text), `SME-11` (spend definition).
 - **Wave 1:** ✅ COMPLETE — calibrated synthetic dataset generated and committed (`data/`; see §1a). Fields added beyond file 08 (`transaction.raw_code`, `fiscal_year_spend_summary`, watermark on all tables, `cleansing` rule type) are flagged in `data/DATA_DICTIONARY.md` §5 for adoption into file 08 at its next revision.
 - **Highest-priority next build wave:** Wave 2 — data model + ingestion (file 12).
+- **Funded pilot (file 18):** tasks 3–8 of the FEMADex pipeline are ported to `src/fema_piia` on the pandas path and the `PLT-13` parity gate is green — `pytest tests/` reproduces 4,014 committed values across `program_mapping`, `spend_summary`, `fiscal_year_spend_summary` and `risk_response` from `transaction.csv` + `rules.yaml`, with no cluster and no network (file 18 §3b). Next: the Spark adapter against the same test, the `config/*.yaml` split, and `tools/make_packet.py`.
 - **Production path:** Wave 8 security/FedRAMP assessment (`SME-09/16/17/18`).
