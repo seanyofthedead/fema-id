@@ -350,6 +350,8 @@ Sequencing rules:
 
 Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-scope items and Pricing Assumptions #2 and #3.
 
+> **The sendable deliverable is `deliverables/ACCEPTANCE_CRITERIA.md`** (drafted 2026-09-17, internal review pending). It expands each criterion below with an objective pass condition, names the evidence, adds `AC-13`, and carries four things this table does not: the points to confirm with the CO given the award's silence (§0a), the FEMA dependency list with a proposed rule for late dependencies, what sits outside acceptance, and what is **measured and reported rather than guaranteed** — chiefly the automated-mapping agreement rate, which no one can responsibly put a number on before seeing the data. It also proposes staged demonstration (M1–M5) instead of a single acceptance event in February.
+
 | ID | Criterion | Evidence | SOW item |
 |---|---|---|---|
 | AC-01 | The FY-end batch job ingests the agreed WebIFMIS extracts (FY2024–FY2026, agreed layout) through a configuration-only schema map with no code change per layout | `config.schema_map` rows; job run for each FY | Ingestion via schema-mapping adapter |
@@ -364,6 +366,7 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 | AC-10 | AI rationale text is generated only through the FEMA-approved endpoint, is labeled AI-generated, and any numeral it contains matches the source figure or the row is quarantined | `explain` task logs; MLflow eval | AI-use approvals, guardrails |
 | AC-11 | Exports (XLSX/CSV spend summary, PRA package) are produced to a Volume and match `gold.*` | Job output + diff | Data support for downstream assessment |
 | AC-12 | The methodology document, summary deliverable (approach, confidence levels, validated codes, items needing validation), results briefing and scaled-deployment outline are delivered; all code and config are in the FEMA-owned repository/bundle | Documents; repo transfer | Methodology, briefing, go/no-go, handover |
+| AC-13 | The engine reproduces a committed reference dataset exactly — every value of `program_mapping`, `spend_summary`, `fiscal_year_spend_summary` and `risk_response` — from the ledger and the rules alone, as an automated test on every change | Test suite run live; value count reported (4,014 today, both execution paths, re-checked after a Delta round trip) | Underpins every item above; already met (§3b) |
 
 ---
 
@@ -435,7 +438,7 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 | Series | Range | Consolidated in |
 |---|---|---|
 | `PLT-` | 01–14 | this file §1 |
-| `AC-` | 01–12 | this file §5 (to be sent to FEMA by Oct 14) |
+| `AC-` | 01–13 | this file §5; full text in `deliverables/ACCEPTANCE_CRITERIA.md` (to be sent to FEMA by **Oct 1–2**, §0a) |
 | `DBX-R-` | 01–15 | this file §7; candidates for file 15 once the pilot starts |
 | `PIIA-` (packets) | 01–05 planned, 01 drafted | `docs/agent-runs/` at the repo root |
 | `DQ-` | 01–06 | this file §8 |
