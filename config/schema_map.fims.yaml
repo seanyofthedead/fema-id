@@ -1,0 +1,24 @@
+# =============================================================================
+# schema_map.fims.yaml — seeds config.schema_map for FIMS (pipeline task 2)
+# =============================================================================
+# !! STUB — NOTHING IS KNOWN ABOUT THIS LAYOUT YET !!
+#
+# FIMS extracts are due 2026-12-15 (pricing Assumptions #4). If they do not
+# arrive by then, the PIIA tool is delivered against WebIFMIS only and a written
+# determination goes to the Contracting Officer instead — that fallback is
+# contractual, not a failure, and is stated in the acceptance criteria (§3).
+#
+# This file exists now so that the WebIFMIS-only outcome is a file that stayed
+# empty rather than a capability that was never built: the engine is
+# source-agnostic by construction (DEC-14, ASSUMP-12), and adding a second
+# source is adding a second schema map, not a second pipeline.
+#
+# When the layout arrives, mirror schema_map.webifmis.yaml. Reconciling the two
+# sources — same program, same fiscal year, two systems — is config.code_bridge.
+# =============================================================================
+
+schema_map:
+  source_system: FIMS
+  version: stub
+  status: awaiting extracts (due 2026-12-15; WebIFMIS-only fallback applies)
+  columns: []

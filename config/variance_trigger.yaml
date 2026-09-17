@@ -1,0 +1,40 @@
+# =============================================================================
+# variance_trigger.yaml — seeds config.variance_trigger (PLT-05)
+# =============================================================================
+# The comprehensive-assessment trigger (file 10 §5; REQ-010, REQ-031,
+# ASSUMP-03/21, DEC-08). Every value here is CONFIGURATION: AC-05 is the
+# commitment that changing it and re-running re-flags programs with no code
+# change and no redeploy.
+#
+# STATUS: values below are the package's design defaults, carried forward from
+# the transcript. They are workshop output, not fact, until confirmed:
+#   SME-01  threshold, direction, and whether the measure is obligations or
+#           disbursements. The funding documents list "confirmation of the
+#           trigger measure (obligations versus disbursements)" as a dependency,
+#           and it changes every reported figure, not just the flags.
+#   SME-28  the exact 2024 transaction-count rule.
+# Record the workshop outcome as a DEC- entry in file 16 when it is settled.
+# =============================================================================
+
+variance_trigger:
+  # Both measures evaluated; a breach on any enabled measure flags the program
+  # (REQ-031, the client's 2024 rule change). Remove an entry to disable it.
+  measures: [disbursements, transaction_count]
+  combine: any                  # any | all  (the team's rule reads as either-measure)
+
+  threshold_pct: 20             # transcript hedged "I think it's like 20%"
+  direction: either             # either | increase_only | decrease_only
+                                # 'either' retained deliberately: the decrease
+                                # case was a stated concern, not an oversight
+
+  # Optional floors, to stop a tiny program generating noise. Zero means no
+  # floor; set them only if a workshop asks for them, and record why.
+  min_prior_year_amount: 0
+  min_prior_year_count: 0
+
+  compare: prior_fiscal_year    # YoY basis
+
+  # REQ-034, only if FEMA supplies last-comprehensive-assessment dates (DQ-06).
+  # When absent the three-year path is simply not evaluated; it is never
+  # inferred from partial history.
+  # comprehensive_cycle_years: 3

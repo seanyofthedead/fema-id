@@ -1,0 +1,75 @@
+# =============================================================================
+# mapping_rules.yaml — seeds config.mapping_rule and config.cleansing_alias
+# =============================================================================
+# The program-identification rules for the PILOT (20 programs, FY2024-FY2026).
+# Rules-as-data (DEC-02, PLT-05): git is the version of record, the Delta tables
+# are the runtime.
+#
+# THE TAXONOMY IS DELIBERATELY EMPTY. The real Program ID rules are undocumented
+# and inaccessible (REQ-002); inventing a 20-program taxonomy here would be
+# fabrication. It is filled from two sources, and each rule records which:
+#   - FEMA-supplied groupings and the program taxonomy (SME-02, SME-04, and the
+#     20-program list requested at kickoff)  -> status: sme_confirmed
+#   - the mine_history job over FY n-1 and earlier (REQ-013, §2.3 task 10)
+#     -> status: inferred, with a confidence
+# An `inferred` rule contributes to no reportable figure until a human approves
+# it (AC-04). Until this file has programs, every code lands in the exception
+# queue, which is the correct behaviour for "no rules configured yet" and is
+# visible rather than silent.
+#
+# The synthetic fixture's own taxonomy lives with the fixture, in
+# data/generator/rules.yaml, and is loaded into the `demo` schema (PLT-14). It
+# is never merged with this file.
+# =============================================================================
+
+# --- routing (file 09 §9; ASSUMP-16, DEC-07; confirm SME-15) -----------------
+confidence_routing:
+  # At or above the bar a proposal pre-fills and stays editable; below it the
+  # record goes to the exception queue for a human. Guardrail G5.
+  prefill_threshold: 0.85
+
+# --- cleansing / adjustment rules (REQ-002 / REQ-003) ------------------------
+# Applied to the as-landed raw code to recover the canonical one. `normalize` is
+# the deterministic pipeline; the alias map handles codes retired by a
+# reorganisation or a system change.
+cleansing:
+  normalize:
+    - strip_whitespace
+    - uppercase
+    - separators_to_hyphen
+  # Populated from the real extract once the code structures are walked through
+  # (SME-06). Each entry needs a reason recorded, not just a mapping.
+  alias_map: {}
+
+# --- rule texture (see DEC-31) -----------------------------------------------
+# Confidences attached to each rule type as it is emitted. `inferred_sub_programs`
+# names groupings the mining job proposed that a human has not yet confirmed.
+rule_metadata:
+  inferred_sub_programs: []
+  confidence:
+    event_split: 1.00
+    cleansing_normalize: 1.00
+    cleansing_alias: 0.97
+    code_to_subprogram_sme_confirmed: 0.98
+    code_to_subprogram_inferred: 0.88
+    rollup: 0.98
+
+# --- program taxonomy ---------------------------------------------------------
+# Shape, for reference when the workshop output arrives. One entry per parent
+# program; `mapping_style` is `event_driven` where the event segment decides the
+# sub-grouping (as disaster-number grouping does) and `segment_driven` where
+# each sub-program owns program segments.
+#
+#   - program_id: PROG-XX
+#     program_name: "..."
+#     assistance_listing: "97.xxx"      # empty for an umbrella program
+#     is_disaster: true                 # false for preparedness/readiness money
+#     tafs: "..."
+#     fund_segment: XX
+#     mapping_style: segment_driven     # or event_driven
+#     program_segments: ["..."]         # event_driven only
+#     sub_programs:
+#       - {sub_program_id: SUB-XX-YY, sub_program_name: "...",
+#          segments: ["..."], events: []}
+#
+programs: []

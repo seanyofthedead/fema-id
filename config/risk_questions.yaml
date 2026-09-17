@@ -1,0 +1,78 @@
+# =============================================================================
+# risk_questions.yaml — seeds config.risk_question (PLT-05)
+# =============================================================================
+# The preliminary risk assessment instrument the pilot binds answers to.
+#
+# !! PLACEHOLDER !!  These ten questions are the package's ILLUSTRATIVE
+# instrument (file 10 §2; ASSUMP-04, DEC-03). They are NOT FEMA's instrument.
+# FEMA's actual instrument is a Phase 1 in-scope item and a named dependency;
+# when SME-05 is answered this file is REPLACED WHOLESALE and nothing else
+# changes — that replaceability is the point, and it is what AC-07 demonstrates.
+# Until then the app labels every question as illustrative on screen.
+#
+# `qtype` decides who answers:
+#   quantitative — the deterministic core fills it from `source_binding`
+#   qualitative  — a human answers it; the engine leaves it empty and never
+#                  guesses (REQ-009). Guardrail G1 lives on this line.
+#
+# `source_binding` names an engine value — a column of a gold table — not free
+# text. A quantitative question whose binding does not resolve is a
+# configuration error, not a blank answer.
+#
+# When the real instrument arrives, expect three things to need a decision per
+# question: its qtype, its binding, and whether a binding exists at all. A
+# question with no binding is not a failure; it is a human question, and saying
+# so is more useful than automating it badly.
+# =============================================================================
+
+risk_questions:
+  - question_id: Q1
+    text: "Total program disbursements this FY (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.total_disbursement"
+  - question_id: Q2
+    text: "Year-over-year change in program spend, percent (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.yoy_pct_change"
+  - question_id: Q3
+    text: "Does YoY change breach the comprehensive-assessment threshold on dollars or transaction volume? (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.trigger_flag (dollar or transaction-count measure, REQ-031)"
+  - question_id: Q4
+    text: "Number of sub-programs / financial codes rolled into this program (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.sub_program_count,financial_code_count"
+  - question_id: Q5
+    text: "Number of disaster events contributing to spend (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.event_count"
+  - question_id: Q6
+    text: "Share of spend concentrated in the top event, percent (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.top_event_share_pct"
+  - question_id: Q7
+    text: "Count of exception-queue / unmapped records for this program (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.exception_queue_count"
+  - question_id: Q8
+    text: "Prior-year comprehensive-assessment status / recency (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "prior fiscal_year_spend_summary.trigger_flag"
+  - question_id: Q9
+    text: "Were there significant changes to program rules or regulation this FY? (illustrative placeholder, ASSUMP-04)"
+    qtype: qualitative
+    auto_populatable: false
+    source_binding: "program-office input (REQ-009)"
+  - question_id: Q10
+    text: "Were there significant staffing / process changes affecting controls? (illustrative placeholder, ASSUMP-04)"
+    qtype: qualitative
+    auto_populatable: false
+    source_binding: "program-office input (REQ-009)"

@@ -32,7 +32,8 @@ __all__ = [
     "RiskQuestion",
     "EngineConfig",
     "load_config",
-    "RISK_QUESTIONS",
+    "ENGINE_CONFIG_FILES",
+    "ConfigError",
 ]
 
 #: Event-segment token carried by non-disaster financial codes (REQ-030).
@@ -148,8 +149,20 @@ class RiskQuestion:
     source_binding: str
 
 
+class ConfigError(ValueError):
+    """Raised when a configuration could not produce trustworthy output."""
+
+
+VALID_MEASURES = frozenset({"disbursements", "transaction_count"})
+VALID_COMBINE = frozenset({"any", "all"})
+VALID_DIRECTIONS = frozenset({"either", "increase_only", "decrease_only"})
+
+
 @dataclass(frozen=True)
 class EngineConfig:
+    #: Advisory only: the fiscal years the configuration was written for. The
+    #: engine takes the years it reports on from the ledger it was handed, so a
+    #: batch that arrives short of a year is visible rather than back-filled.
     fiscal_years: tuple[int, ...]
     variance_trigger: VarianceTrigger
     cleansing: CleansingConfig
@@ -185,34 +198,111 @@ class EngineConfig:
     def suggestion_by_code(self) -> dict[str, SimilaritySuggestion]:
         return {s.code: s for s in self.similarity_suggestions}
 
+    # -- validation --------------------------------------------------------
+    def problems(self) -> list[str]:
+        """Everything wrong with this configuration, as readable sentences.
 
-# --- the illustrative 10-question PRA instrument (file 10 §2, DEC-03) --------
-# Placeholder text, labelled as such (ASSUMP-04). Replaced wholesale by FEMA's
-# real instrument once obtained (SME-05); at that point these rows come from
-# ``config/risk_questions.yaml`` and this constant goes away.
-RISK_QUESTIONS: tuple[RiskQuestion, ...] = (
-    RiskQuestion("Q1", "Total program disbursements this FY (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "fiscal_year_spend_summary.total_disbursement"),
-    RiskQuestion("Q2", "Year-over-year change in program spend, percent (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "fiscal_year_spend_summary.yoy_pct_change"),
-    RiskQuestion("Q3", "Does YoY change breach the comprehensive-assessment threshold on dollars or transaction volume? (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True,
-                 "fiscal_year_spend_summary.trigger_flag (dollar or transaction-count measure, REQ-031)"),
-    RiskQuestion("Q4", "Number of sub-programs / financial codes rolled into this program (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "fiscal_year_spend_summary.sub_program_count,financial_code_count"),
-    RiskQuestion("Q5", "Number of disaster events contributing to spend (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "fiscal_year_spend_summary.event_count"),
-    RiskQuestion("Q6", "Share of spend concentrated in the top event, percent (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "fiscal_year_spend_summary.top_event_share_pct"),
-    RiskQuestion("Q7", "Count of exception-queue / unmapped records for this program (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "fiscal_year_spend_summary.exception_queue_count"),
-    RiskQuestion("Q8", "Prior-year comprehensive-assessment status / recency (illustrative placeholder, ASSUMP-04)",
-                 "quantitative", True, "prior fiscal_year_spend_summary.trigger_flag"),
-    RiskQuestion("Q9", "Were there significant changes to program rules or regulation this FY? (illustrative placeholder, ASSUMP-04)",
-                 "qualitative", False, "program-office input (REQ-009)"),
-    RiskQuestion("Q10", "Were there significant staffing / process changes affecting controls? (illustrative placeholder, ASSUMP-04)",
-                 "qualitative", False, "program-office input (REQ-009)"),
-)
+        Run when ``config.*`` is seeded, so a configuration that cannot produce
+        trustworthy output fails at deploy time with a list of reasons — not
+        silently at report time, which is where a wrong threshold or an
+        unresolvable PRA binding would otherwise surface.
+
+        An empty taxonomy is **not** a problem: before the workshops there are
+        no rules, every code goes to the exception queue, and that is the
+        correct and visible behaviour.
+        """
+        found: list[str] = []
+        trigger = self.variance_trigger
+
+        unknown = sorted(set(trigger.measures) - VALID_MEASURES)
+        if unknown:
+            found.append(f"variance_trigger.measures has unknown measure(s): {unknown}; "
+                         f"expected any of {sorted(VALID_MEASURES)}")
+        if not trigger.measures:
+            found.append("variance_trigger.measures is empty; no measure would be evaluated")
+        if trigger.combine not in VALID_COMBINE:
+            found.append(f"variance_trigger.combine is {trigger.combine!r}; "
+                         f"expected one of {sorted(VALID_COMBINE)}")
+        if trigger.direction not in VALID_DIRECTIONS:
+            found.append(f"variance_trigger.direction is {trigger.direction!r}; "
+                         f"expected one of {sorted(VALID_DIRECTIONS)}")
+        if trigger.threshold_pct <= 0:
+            found.append(f"variance_trigger.threshold_pct is {trigger.threshold_pct}; "
+                         "a threshold at or below zero would flag every program")
+        if not 0.0 <= self.prefill_threshold <= 1.0:
+            found.append(f"confidence_routing.prefill_threshold is {self.prefill_threshold}; "
+                         "expected a confidence between 0 and 1")
+
+        found.extend(self._duplicates("program_id", [p.program_id for p in self.programs]))
+        found.extend(self._duplicates("sub_program_id",
+                                      [s.sub_program_id for s in self.sub_programs]))
+        found.extend(self._duplicates("rule_id", [r.rule_id for r in self.rules]))
+        found.extend(self._duplicates("question_id",
+                                      [q.question_id for q in self.risk_questions]))
+
+        known_subs = {s.sub_program_id for s in self.sub_programs}
+        for rule in self.code_to_subprogram_rules:
+            if rule.sub_program_id not in known_subs:
+                found.append(f"rule {rule.rule_id} maps to sub-program "
+                             f"{rule.sub_program_id!r}, which no program declares")
+            if not rule.program_segments:
+                found.append(f"rule {rule.rule_id} has no program segments and would "
+                             "match nothing")
+
+        for question in self.risk_questions:
+            if question.qtype == "quantitative" and not question.source_binding:
+                found.append(f"question {question.question_id} is quantitative but has no "
+                             "source_binding; the engine would have nothing to fill it from")
+            if question.qtype not in {"quantitative", "qualitative"}:
+                found.append(f"question {question.question_id} has qtype "
+                             f"{question.qtype!r}; expected quantitative or qualitative")
+
+        for suggestion in self.similarity_suggestions:
+            if not 0.0 <= suggestion.confidence <= 1.0:
+                found.append(f"similarity suggestion for {suggestion.code} has confidence "
+                             f"{suggestion.confidence}, which is not between 0 and 1")
+        return found
+
+    @staticmethod
+    def _duplicates(label: str, values: Sequence[str]) -> list[str]:
+        seen: set[str] = set()
+        duplicated = sorted({v for v in values if v in seen or seen.add(v)})
+        return [f"duplicate {label}: {duplicated}"] if duplicated else []
+
+    def raise_for_problems(self) -> None:
+        """Raise :class:`ConfigError` listing every problem, or return quietly."""
+        found = self.problems()
+        if found:
+            raise ConfigError("configuration is not usable:\n  - " + "\n  - ".join(found))
+
+
+#: The engine-config files a split ``config/`` directory contributes. Files not
+#: listed here belong to other pipeline tasks (``schema_map.*`` to task 2,
+#: ``code_bridge`` to the FIMS bridge) and have their own loaders, so a stray
+#: file in the directory is ignored rather than merged by accident.
+ENGINE_CONFIG_FILES = ("mapping_rules.yaml", "variance_trigger.yaml",
+                       "risk_questions.yaml")
+
+
+def _risk_questions(raw: Mapping) -> tuple[RiskQuestion, ...]:
+    """Parse ``risk_questions:`` rows into ``config.risk_question``.
+
+    The instrument is data, never a literal in code (DEC-34, PLT-05): the
+    illustrative ten (ASSUMP-04, DEC-03) ship with the synthetic fixture, and
+    FEMA's real instrument replaces the file wholesale when ``SME-05`` is
+    answered, with no engine change. An absent key yields no questions rather
+    than a guessed default — the engine never invents an assessment.
+    """
+    return tuple(
+        RiskQuestion(
+            question_id=str(q["question_id"]),
+            text=str(q["text"]),
+            qtype=str(q["qtype"]),
+            auto_populatable=bool(q.get("auto_populatable", False)),
+            source_binding=str(q.get("source_binding", "")),
+        )
+        for q in (raw.get("risk_questions") or ())
+    )
 
 
 def _compile_rules(raw: Mapping) -> tuple[tuple[MappingRule, ...], dict[str, str]]:
@@ -308,15 +398,49 @@ def _build_programs(raw: Mapping, rule_by_sub: Mapping[str, str]) -> tuple[Progr
     return tuple(programs)
 
 
+def load_raw(path: str | Path) -> dict:
+    """Read one YAML file, or merge a split ``config/`` directory.
+
+    Both layouts are supported by one code path so the split is a deployment
+    choice rather than a fork: ``rules.yaml`` is the monolithic fixture config,
+    while ``config/`` is how the pilot ships it (PLT-05) and how ``config.*`` is
+    seeded. A key defined by two files in a directory is an error rather than a
+    silent last-one-wins, because the losing file would be invisible.
+    """
+    path = Path(path)
+    if path.is_file():
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+    if not path.is_dir():
+        raise FileNotFoundError(f"no config at {path}")
+
+    merged: dict = {}
+    origin: dict[str, str] = {}
+    for name in ENGINE_CONFIG_FILES:
+        candidate = path / name
+        if not candidate.exists():
+            continue
+        loaded = yaml.safe_load(candidate.read_text(encoding="utf-8")) or {}
+        for key, value in loaded.items():
+            if key in merged:
+                raise ValueError(
+                    f"config key {key!r} is defined in both {origin[key]} and {name}")
+            merged[key] = value
+            origin[key] = name
+    if not merged:
+        raise FileNotFoundError(
+            f"{path} contains none of {', '.join(ENGINE_CONFIG_FILES)}")
+    return merged
+
+
 def load_config(path: str | Path,
-                risk_questions: Sequence[RiskQuestion] = RISK_QUESTIONS) -> EngineConfig:
-    """Load ``rules.yaml`` (or the split ``config/*.yaml``) into an EngineConfig."""
-    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    return from_mapping(raw, risk_questions)
+                risk_questions: Sequence[RiskQuestion] | None = None) -> EngineConfig:
+    """Load ``rules.yaml``, or a split ``config/`` directory, into an EngineConfig."""
+    return from_mapping(load_raw(path), risk_questions)
 
 
 def from_mapping(raw: Mapping,
-                 risk_questions: Sequence[RiskQuestion] = RISK_QUESTIONS) -> EngineConfig:
+                 risk_questions: Sequence[RiskQuestion] | None = None) -> EngineConfig:
     trig_raw = raw.get("variance_trigger", {}) or {}
     measures = tuple(trig_raw.get("measures") or [trig_raw.get("measure", "disbursements")])
     trigger = VarianceTrigger(
@@ -355,6 +479,7 @@ def from_mapping(raw: Mapping,
         programs=programs,
         rules=rules,
         similarity_suggestions=suggestions,
-        risk_questions=tuple(risk_questions),
+        risk_questions=(tuple(risk_questions) if risk_questions is not None
+                        else _risk_questions(raw)),
         watermark=str(raw.get("watermark", "")),
     )

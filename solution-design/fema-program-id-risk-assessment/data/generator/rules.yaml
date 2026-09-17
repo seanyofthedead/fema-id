@@ -77,6 +77,68 @@ rule_metadata:
     code_to_subprogram_inferred: 0.88
     rollup: 0.98
 
+# --- the preliminary risk assessment instrument (file 10 §2; DEC-03) ---------
+# ILLUSTRATIVE PLACEHOLDER (ASSUMP-04). FEMA's real instrument is unavailable;
+# these ten questions stand in for it and are labelled as such everywhere they
+# appear. Surfaced here 2026-09-17 (DEC-34) so the generator and the pilot
+# engine bind to one definition instead of two hard-coded copies; the generator
+# falls back to its previous literals if the key is absent, so output is
+# unchanged. `source_binding` names an engine value, not free text: it is the
+# column the deterministic core fills the answer from (guardrail G1).
+# When SME-05 lands, FEMA's instrument replaces config/risk_questions.yaml for
+# the pilot; this block stays as the synthetic fixture's instrument.
+risk_questions:
+  - question_id: Q1
+    text: "Total program disbursements this FY (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.total_disbursement"
+  - question_id: Q2
+    text: "Year-over-year change in program spend, percent (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.yoy_pct_change"
+  - question_id: Q3
+    text: "Does YoY change breach the comprehensive-assessment threshold on dollars or transaction volume? (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.trigger_flag (dollar or transaction-count measure, REQ-031)"
+  - question_id: Q4
+    text: "Number of sub-programs / financial codes rolled into this program (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.sub_program_count,financial_code_count"
+  - question_id: Q5
+    text: "Number of disaster events contributing to spend (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.event_count"
+  - question_id: Q6
+    text: "Share of spend concentrated in the top event, percent (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.top_event_share_pct"
+  - question_id: Q7
+    text: "Count of exception-queue / unmapped records for this program (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "fiscal_year_spend_summary.exception_queue_count"
+  - question_id: Q8
+    text: "Prior-year comprehensive-assessment status / recency (illustrative placeholder, ASSUMP-04)"
+    qtype: quantitative
+    auto_populatable: true
+    source_binding: "prior fiscal_year_spend_summary.trigger_flag"
+  - question_id: Q9
+    text: "Were there significant changes to program rules or regulation this FY? (illustrative placeholder, ASSUMP-04)"
+    qtype: qualitative
+    auto_populatable: false
+    source_binding: "program-office input (REQ-009)"
+  - question_id: Q10
+    text: "Were there significant staffing / process changes affecting controls? (illustrative placeholder, ASSUMP-04)"
+    qtype: qualitative
+    auto_populatable: false
+    source_binding: "program-office input (REQ-009)"
+
 # --- calibration (SRC-03 / SRC-04 obligation envelopes; ASSUMP-10) -----------
 # Applies to DISASTER programs only. Non-disaster programs (HSGP, US&R) have
 # no public per-DR envelope; their synthetic bases are fixed below and carry a

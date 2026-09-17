@@ -47,6 +47,7 @@ The package separates **verified facts** (`SRC-`), **requirements** (`REQ-`), **
 | — | `deliverables/` | Contract deliverables for the funded pilot. `ACCEPTANCE_CRITERIA.md` — `AC-01…13`, due to FEMA Oct 1–2 (file 18 §0a, §5) |
 | — | `../../docs/agent-runs/` (repo root) | Agent-run packets that carry the pilot to the FEMA-side machine (conventions + `PIIA-01` recon) |
 | — | `../../src/fema_piia/`, `../../tests/` (repo root) | Pilot engine (pipeline tasks 3–8, pandas + Spark paths) and the `PLT-13` parity gate against `data/synthetic/` — see file 18 §3b |
+| — | `../../config/` (repo root) | Pilot runtime configuration seeded into `config.*` — mapping rules, variance trigger, PRA instrument, schema maps, code bridge. Several files deliberately empty pending `SME-02/03/04/05`; see its README |
 | — | `progress-tracker.md` | Status of all 19 files + commit hash |
 | — | `README.md` | This file |
 

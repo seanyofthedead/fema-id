@@ -1,0 +1,51 @@
+# =============================================================================
+# schema_map.webifmis.yaml — seeds config.schema_map (pipeline task 2)
+# =============================================================================
+# Maps the WebIFMIS extract's columns onto the engine's canonical columns. This
+# file is the whole of AC-01: a new or changed extract layout is accommodated
+# HERE, never by changing engine code.
+#
+# !! SOURCE COLUMN NAMES ARE NOT YET KNOWN !!  The real extract layout is
+# SME-03, a Phase 1 dependency. Every `source_column` below reads TBD. The
+# CANONICAL side is settled — it is what the engine consumes — so filling this
+# in is a transcription exercise at the data walkthrough, not a redesign.
+#
+# `required: true` means the batch is rejected with a reason if the column is
+# absent or unmappable; the pipeline does not proceed on a partial ledger.
+# Rejections are reported per batch with counts and reasons (REQ-001).
+# =============================================================================
+
+schema_map:
+  source_system: WEBIFMIS
+  version: draft-0
+  status: awaiting SME-03 (real extract layout)
+
+  columns:
+    # --- identity -------------------------------------------------------------
+    - {source_column: TBD, canonical_column: txn_id,              cast: string,        required: true}
+    # The financial code exactly as it lands, before cleansing. Kept alongside
+    # the canonical code (DEC-23) so every adjustment stays visible.
+    - {source_column: TBD, canonical_column: raw_code,            cast: string,        required: true}
+
+    # --- measures -------------------------------------------------------------
+    # Text in, decimal(18,2) out: the amount must never be parsed as a float.
+    - {source_column: TBD, canonical_column: disbursement_amount, cast: decimal(18,2), required: true}
+    - {source_column: TBD, canonical_column: fiscal_year,         cast: int,           required: true}
+    - {source_column: TBD, canonical_column: disbursement_date,   cast: date,          required: true}
+
+    # --- dimensions -----------------------------------------------------------
+    - {source_column: TBD, canonical_column: disbursement_type,   cast: string,        required: false}
+    - {source_column: TBD, canonical_column: disaster_number,     cast: int,           required: false}
+    - {source_column: TBD, canonical_column: is_disaster,         cast: boolean,       required: false}
+    - {source_column: TBD, canonical_column: tafs,                cast: string,        required: false}
+
+  # Validation applied before a batch is accepted. Thresholds are proposals for
+  # the data walkthrough; a rejected batch reports which rule failed and on how
+  # many rows, rather than failing with a stack trace.
+  validation:
+    reject_unknown_fiscal_year: true
+    reject_null_required: true
+    # Warn rather than reject: an unrecognised disaster number is a reference-data
+    # gap to chase, not a reason to refuse the ledger.
+    warn_unknown_disaster_number: true
+    max_reject_pct_before_abort: 5

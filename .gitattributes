@@ -28,3 +28,7 @@ solution-design/fema-program-id-risk-assessment/leavebehind/** text eol=lf
 src/** text eol=lf
 tests/** text eol=lf
 pyproject.toml text eol=lf
+
+# Pilot configuration crosses the transfer boundary as text in payload packets
+# and is hashed per file, so CRLF rewriting would break the comparison.
+config/** text eol=lf

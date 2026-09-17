@@ -579,6 +579,13 @@ def build_dataset(cfg: dict, anchors: dict) -> tuple[dict[str, bytes], dict]:
         ("Q10", "Were there significant staffing / process changes affecting controls? (illustrative placeholder, ASSUMP-04)",
          "qualitative", "false", "program-office input (REQ-009)"),
     ]
+    # The instrument is config, not a literal, so the generator and the pilot
+    # engine bind to one definition (DEC-34). Fallback above is the pre-DEC-34
+    # list, so a rules.yaml without the key produces identical output.
+    if cfg.get("risk_questions"):
+        q_rows = [(q["question_id"], q["text"], q["qtype"],
+                   str(q["auto_populatable"]).lower(), q["source_binding"])
+                  for q in cfg["risk_questions"]]
     t_q = Table("risk_question", ["question_id", "text", "qtype", "auto_populatable",
                                   "source_binding", "data_watermark"])
     for q in q_rows:

@@ -1,0 +1,26 @@
+# =============================================================================
+# code_bridge.yaml — seeds config.code_bridge
+# =============================================================================
+# Maps a WebIFMIS financial code to its FIMS successor, so that a program's
+# history survives the migration and year-over-year comparison still means
+# something across the boundary. Without this, FY2026 in one system and FY2027
+# in another are two unrelated series, and every trigger would fire.
+#
+# !! EMPTY UNTIL FIMS EXTRACTS ARRIVE !! (due 2026-12-15, see
+# schema_map.fims.yaml). Entries are produced by comparing the two extracts for
+# an overlapping period, not by guessing from code structure.
+#
+# Each entry records how it was established, because a bridge entry silently
+# re-points a program's spend:
+#   evidence: matched_on_overlap | sme_confirmed | inferred
+# An `inferred` entry is treated like an inferred mapping rule — it reaches no
+# reportable figure without human approval (AC-04).
+#
+# Maintenance of this bridge after the period of performance is explicitly
+# outside the proof of concept.
+#
+#   - {from_system: WEBIFMIS, from_code: "...", to_system: FIMS, to_code: "...",
+#      effective_fy_from: 2027, evidence: matched_on_overlap, approved_by: "..."}
+# =============================================================================
+
+code_bridge: []
