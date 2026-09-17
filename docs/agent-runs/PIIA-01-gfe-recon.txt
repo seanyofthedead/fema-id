@@ -1,0 +1,171 @@
+[agent-run][fema-piia][PIIA-01][v1]
+
+=====================================================================
+PIIA-01  -  WHAT THE GFE HAS AND WHAT IT CAN REACH
+=====================================================================
+
+WHY NOW
+-------
+The PIIA pilot will be built inside FEMA's Databricks (FEMADex) from a
+project on DHS GitLab, and the code gets there from your GFE laptop
+the same way the Boss packets worked: paste blocks into PowerShell.
+Before any packet writes anything, this one answers four questions
+the plan depends on: is git there, is Python there, is the Databricks
+CLI there, and can this laptop reach DHS GitLab and the FEMADex host.
+
+WHAT THIS DOES NOT TOUCH
+------------------------
+Nothing. Every block is read-only. The only file written is the
+result file. No token is needed, nothing is installed, no git command
+changes any repository, and nothing is sent to GitLab or Databricks
+beyond an ordinary web request to their sign-in pages.
+
+BEFORE YOU START - PLEASE READ, THIS PART MATTERS
+--------------------------------------------------
+  1. Open a fresh PowerShell 5.1 window. Use ONE window for the whole
+     packet - the steps hand state to each other in memory. If you
+     close it, start again from STEP 0.
+  2. In Notepad: Format > Word Wrap > ON. Some lines below are long;
+     with wrap off they run off-screen and are easy to half-select.
+  3. Paste ONE block at a time, in order, and press Enter once after
+     each paste. The last line of a block does not run until you do.
+  4. Every block ends by printing "STEP n OK". If you do not see that
+     line, the paste was incomplete - re-select the block and redo it.
+     Do not move on without it.
+  5. The "# ----- BEGIN/END PASTE -----" markers are harmless comments,
+     so it does not matter if you include them in the selection.
+  6. If output seems to freeze, you probably clicked in the window
+     (QuickEdit). Press Esc and it resumes.
+  7. STEP 3 asks you to type the FEMADex workspace address. If you do
+     not know it yet, press Enter to skip - that is a valid answer and
+     the packet still completes.
+
+Results go to  %USERPROFILE%\STEP-RESULT-PIIA-01.txt
+
+=====================================================================
+STEP 0 - PREAMBLE.  PASTE INTO POWERSHELL.  Prints STEP 0 OK.
+=====================================================================
+# ----- BEGIN PASTE -----
+$ErrorActionPreference = 'Continue'
+$gitlabHost = 'maestro.dhs.gov'
+$gitlabSignIn = 'https://maestro.dhs.gov/gitlab/users/sign_in'
+$dbxHost = ''
+$out = Join-Path $env:USERPROFILE 'STEP-RESULT-PIIA-01.txt'
+$enc = New-Object System.Text.UTF8Encoding($false)
+$env:GIT_TERMINAL_PROMPT = '0'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+[System.IO.File]::WriteAllText($out, "PIIA-01 RESULTS " + (Get-Date -Format s) + [Environment]::NewLine, $enc)
+function OUT([string]$t){ [System.IO.File]::AppendAllText($out, $t + [Environment]::NewLine, $enc) }
+function ERRBODY($e){ $m = ''; if($e.ErrorDetails -and $e.ErrorDetails.Message){ $m = $e.ErrorDetails.Message }; if(-not $m -and $e.Exception.Response){ try { $sr = New-Object System.IO.StreamReader($e.Exception.Response.GetResponseStream()); $m = $sr.ReadToEnd(); $sr.Close() } catch { $m = '' } }; return $m }
+function TOOL([string]$name){ $c = Get-Command $name -ErrorAction SilentlyContinue; if($c){ OUT("tool " + $name + ": FOUND at " + $c.Source) } else { OUT("tool " + $name + ": not found on PATH") }; return ($c -ne $null) }
+function VER([string]$label, [string]$exe, [string]$argLine){ try { $o = @(& $exe $argLine.Split(' ') 2>&1 | ForEach-Object { "$_" }); OUT($label + ": " + ($o -join ' | ')) } catch { OUT($label + ": FAILED " + $_.Exception.Message) } }
+function REACH([string]$h){ try { $t = Test-NetConnection -ComputerName $h -Port 443 -WarningAction SilentlyContinue; OUT("tcp 443 " + $h + ": " + $t.TcpTestSucceeded) } catch { OUT("tcp 443 " + $h + ": FAILED " + $_.Exception.Message) } }
+function HTTPS([string]$u){ try { $r = Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 30; OUT("https " + $u + ": status " + $r.StatusCode) } catch { $code = ''; if($_.Exception.Response){ $code = [int]$_.Exception.Response.StatusCode }; OUT("https " + $u + ": FAILED status=" + $code + " " + $_.Exception.Message + "  BODY: " + ((ERRBODY $_) -replace '\s+',' ').Substring(0, [Math]::Min(200, ((ERRBODY $_) -replace '\s+',' ').Length))) } }
+OUT("user: " + $env:USERNAME + "  machine: " + $env:COMPUTERNAME)
+OUT("powershell: " + $PSVersionTable.PSVersion.ToString() + "  edition: " + $PSVersionTable.PSEdition)
+OUT("windows: " + [Environment]::OSVersion.VersionString)
+OUT("64-bit process: " + [Environment]::Is64BitProcess)
+"STEP 0 OK"
+# ----- END PASTE -----
+
+=====================================================================
+STEP 1 - TOOLS ON THIS LAPTOP.  READ-ONLY.  PASTE INTO POWERSHELL.
+=====================================================================
+# ----- BEGIN PASTE -----
+OUT("--- STEP 1 tools ---")
+$hasGit = TOOL 'git'
+if($hasGit){ VER 'git version' 'git' '--version' }
+if($hasGit){ VER 'git user.name' 'git' 'config --global user.name' }
+if($hasGit){ VER 'git user.email' 'git' 'config --global user.email' }
+if($hasGit){ VER 'git autocrlf' 'git' 'config --global core.autocrlf' }
+if($hasGit){ VER 'git credential helper' 'git' 'config --global credential.helper' }
+$hasPy = TOOL 'py'
+if($hasPy){ VER 'py launcher list' 'py' '-0p' }
+if($hasPy){ VER 'py default version' 'py' '--version' }
+$hasPython = TOOL 'python'
+if($hasPython -and -not $hasPy){ VER 'python version' 'python' '--version' }
+if($hasPy){ VER 'pip version' 'py' '-m pip --version' }
+if($hasPy){ try { $o = @(& py -c 'import build; print(build.__version__)' 2>&1 | ForEach-Object { "$_" }); OUT("build module: " + ($o -join ' | ')) } catch { OUT("build module: FAILED " + $_.Exception.Message) } }
+if($hasPy){ try { $o = @(& py -c 'import yaml, pandas; print(yaml.__version__, pandas.__version__)' 2>&1 | ForEach-Object { "$_" }); OUT("pyyaml/pandas: " + ($o -join ' | ')) } catch { OUT("pyyaml/pandas: FAILED " + $_.Exception.Message) } }
+$hasDbx = TOOL 'databricks'
+if($hasDbx){ VER 'databricks cli version' 'databricks' '--version' }
+$hasCode = TOOL 'code'
+$hasNode = TOOL 'node'
+if($hasNode){ VER 'node version' 'node' '--version' }
+$cfgPath = Join-Path $env:USERPROFILE '.databrickscfg'
+if(Test-Path $cfgPath){ $profiles = @(Get-Content $cfgPath | Where-Object { $_ -match '^\[' }); OUT("databrickscfg: present, profiles: " + ($profiles -join ' ')) } else { OUT("databrickscfg: none") }
+$devDir = 'C:\dev'
+if(Test-Path $devDir){ $dirs = @(Get-ChildItem $devDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }); OUT("C:\dev folders: " + ($dirs -join ', ')) } else { OUT("C:\dev: does not exist") }
+"STEP 1 OK"
+# ----- END PASTE -----
+
+=====================================================================
+STEP 2 - CAN THIS LAPTOP REACH DHS GITLAB.  READ-ONLY.
+=====================================================================
+# ----- BEGIN PASTE -----
+OUT("--- STEP 2 network: DHS GitLab ---")
+REACH $gitlabHost
+HTTPS $gitlabSignIn
+$proxy = [System.Net.WebRequest]::GetSystemWebProxy().GetProxy('https://maestro.dhs.gov/')
+OUT("system proxy for gitlab: " + $proxy.AbsoluteUri)
+if($hasGit){ VER 'git http.proxy' 'git' 'config --global http.proxy' }
+if($hasGit){ VER 'git ls-remote (no auth; expected to fail cleanly, no prompt)' 'git' '-c credential.helper= -c credential.interactive=never ls-remote https://maestro.dhs.gov/gitlab/bossc/budget-tools-migration.git HEAD' }
+"STEP 2 OK"
+# ----- END PASTE -----
+
+=====================================================================
+STEP 3 - CAN THIS LAPTOP REACH FEMADEX.  READ-ONLY.  A prompt asks
+for the workspace address; press Enter to skip if you do not have it.
+=====================================================================
+# ----- BEGIN PASTE -----
+OUT("--- STEP 3 network: FEMADex ---")
+$dbxHost = (Read-Host 'FEMADex workspace address, host only, e.g. adb-1234.5.azuredatabricks.net (Enter to skip)').Trim()
+$dbxHost = $dbxHost -replace '^https?://', '' -replace '/.*$', ''
+if(-not $dbxHost){ OUT("femadex host: skipped by operator") }
+if($dbxHost){ OUT("femadex host: " + $dbxHost) }
+if($dbxHost){ REACH $dbxHost }
+if($dbxHost){ HTTPS ("https://" + $dbxHost + "/login.html") }
+if($dbxHost){ $proxy2 = [System.Net.WebRequest]::GetSystemWebProxy().GetProxy("https://" + $dbxHost + "/"); OUT("system proxy for femadex: " + $proxy2.AbsoluteUri) }
+if($dbxHost -and $hasDbx){ VER 'databricks auth profiles' 'databricks' 'auth profiles' }
+OUT("--- STEP 3 python package index ---")
+$pypi = 'https://pypi.org/simple/pyyaml/'
+HTTPS $pypi
+if($hasPy){ VER 'pip index url' 'py' '-m pip config get global.index-url' }
+"STEP 3 OK"
+# ----- END PASTE -----
+
+=====================================================================
+STEP 4 - REVIEW AND SEND.  PASTE INTO POWERSHELL.
+=====================================================================
+# ----- BEGIN PASTE -----
+OUT("--- STEP 4 summary ---")
+OUT("git: " + $hasGit + "  py: " + $hasPy + "  python: " + $hasPython + "  databricks cli: " + $hasDbx + "  vscode: " + $hasCode + "  node: " + $hasNode)
+notepad $out
+"STEP 4 OK"
+# ----- END PASTE -----
+
+HOW TO READ IT (what PASS looks like)
+- Every block prints "STEP n OK" as its last line. A missing one means
+  a short paste, not a failure of the step - redo that block.
+- STEP 1: "tool git: FOUND" and a git version, "tool py: FOUND" with a
+  3.10+ interpreter in the "py launcher list", and ideally "tool
+  databricks: FOUND". "not found on PATH" lines are answers, not
+  errors - they tell the plan what must be requested or worked around.
+- STEP 2: "tcp 443 maestro.dhs.gov: True" and an "https ... status
+  200" (or a 302 to a sign-in page) means GitLab is reachable. The
+  ls-remote line is expected to fail with an authentication message;
+  that still proves the git client can talk to the server. A timeout
+  or "could not resolve host" means the laptop is not on the right
+  network for this work.
+- STEP 3: if you typed the FEMADex host, "tcp 443 ...: True" and a
+  login page status mean the workspace is reachable from the GFE. The
+  pypi line tells us whether pip can install from the internet; if it
+  fails, packages must come from an approved mirror or from inside
+  Databricks.
+- STEP 4 just opens the file.
+
+EMAIL BACK
+1. Full content of STEP-RESULT-PIIA-01.txt (the file STEP 4 opens).
+   Send the file's text, not a copy of the console window.
+2. Nothing else. The next packet (PIIA-02) is written from these
+   answers.

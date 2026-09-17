@@ -197,22 +197,47 @@ fema-id/
 └── solution-design/                   # unchanged design package (this file lives here)
 ```
 
-### 3a. Two-machine delivery model (DQ-04)
+### 3a. Three-place delivery model and the packet approach (DQ-04, decided 2026-09-17)
 
-The build machine that reaches FEMADex is not the machine that reaches this repo. Assume no git path between them (`DBX-R-13`); a Databricks Repos link to a FEMA-hosted git is a bonus if FEMA provides one, not the plan.
+This repo is the **verification bench**: everything is proven here first. The pilot code then **lives on the FEMA-side machine** and reaches it through the **packet approach already used on the Boss project** (`seanyofthedead/boss_project`, branch `claude/notepad-terminal-commands-y6l78m`, `docs/agent-runs/CICD-19-*.txt`). Three places are involved:
 
-| | **This repo (design machine)** | **FEMA-side machine (build machine)** |
-|---|---|---|
-| Holds | Design package; `src/fema_piia` reference engine (pandas path); `config/*.yaml`; `data/synthetic`; `tests/`; bundle, job and app files as templates | The deployed bundle; workspace-specific `databricks.yml` targets; notebooks bound to `piia_dev`/`piia_test`; anything touching real extracts, CUI, endpoint names, secrets, workspace URLs |
-| Runs | `pytest` parity gate against the synthetic CSVs, no cluster needed | The same parity gate on a cluster against `demo.*`, then the real batch |
-| Never holds | Real data, CUI, workspace identifiers, secrets, FEMA-internal documents, the real PRA instrument text unless FEMA clears it | Nothing that must be kept out of FEMA's hands; at handover FEMA owns all of it (Pricing Assumptions #6) |
-| Direction of flow | → **Transfer kit** outbound only | ← Only redacted feedback: rule-status changes as YAML diffs, defect notes, aggregate parity results, no rows |
+| | **A. This repo (GitHub)** | **B. GFE build laptop (DHS network)** | **C. FEMADex workspace** |
+|---|---|---|---|
+| Role | Verification bench and upstream of the engine | Operator's machine: PowerShell 5.1, Edge, git, local clone of the DHS GitLab project | Runtime: Unity Catalog, jobs, app, endpoint |
+| Holds | Design package; `src/fema_piia` (pandas path); `config/*.yaml`; `data/synthetic`; `tests/`; bundle/job/app templates; **agent-run packets** under `docs/agent-runs/` | The DHS GitLab clone of the pilot project (on `maestro.dhs.gov/gitlab`, group to be confirmed; the Boss project's group is `bossc`); STEP-RESULT files | Databricks Repos checkout of the GitLab project; workspace-only config (targets, grants, endpoint names, secrets); real extracts and CUI |
+| Runs | `pytest` parity gate on the synthetic CSVs, no cluster | The packets: writes files into the clone, commits, pushes to GitLab, optionally runs the Databricks CLI | Parity notebook on `demo.*`, then the real batch |
+| Never holds | Real data, CUI, workspace identifiers, tokens, FEMA-internal documents | Nothing that FEMA must not own | Anything that must stay outside FEMA's hands (there is nothing in that category) |
+| Flow | A → B by packet, one way | B → C by `git push` to GitLab and Repos pull, or workspace upload | C → A: only aggregate results in STEP-RESULT files and redacted YAML diffs, never rows |
 
-**Transfer kit.** A single archive built by a script in this repo (`make transfer-kit`), carried over by whatever means FEMA approves (upload through the workspace UI, approved file transfer, or a FEMA-side git push). Contents: the `fema_piia` wheel, `config/*.yaml`, the bundle and job/app templates, the notebooks, the synthetic CSVs for the `demo` schema, the tests, and a `MANIFEST.sha256` (the same convention `data/synthetic` already uses) so the build machine can verify it landed intact. The kit carries a version stamp that is written into `silver.mapping_run.engine_version` on every run, so any result on the FEMA side is traceable to a commit here.
+**What a packet is** (the CICD-19 conventions, adopted unchanged; see `docs/agent-runs/README.md`):
 
-**Working rhythm.** Engine and config changes are made here, proven by the parity test, cut into a kit, and carried over in one batch per sprint (or per fix during S5). Workspace-only changes (cluster config, grants, endpoint wiring, app secrets) are made on the build machine and never come back; the build machine keeps its own change log inside the workspace. If FEMA does provide a git remote, the build machine pushes there and this repo stays the upstream of the engine only.
+- One plain-text file per run, `docs/agent-runs/<ID>-<slug>.txt`, headed `[agent-run][<project>][<ID>][<version or addendum>]`, opened in Notepad with Word Wrap on. Sections in order: WHY NOW, WHAT THIS DOES NOT TOUCH, BEFORE YOU START, STEP 0 … STEP n, HOW TO READ IT, EMAIL BACK.
+- One PowerShell 5.1 window for the whole packet; steps hand state to each other in memory. STEP 0 defines the variables and helpers (`OUT`, `GETJ`, `GITC`, `ERRBODY`, `TOKEN`). Every block sits between `# ----- BEGIN PASTE -----` and `# ----- END PASTE -----`, is pasted whole, and ends by printing `STEP n OK`; a missing OK means a short paste, not a failure.
+- **Read-only recon before any write.** The write step is refuse-by-default: it runs only if the recon step set `$ready` in the same window, and skipping it is how the operator declines.
+- Secrets are typed into a masked prompt (`TOKEN`), never pasted into a block, never echoed, never written; tokens expire the next day and a dedicated revoke step always runs.
+- Results append to `%USERPROFILE%\STEP-RESULT-<ID>.txt`; the last step opens it in Notepad and the operator emails the file's text back. Addenda (`<ID>-step-3b-…`) reuse the same window's variables and refuse if the state is missing. Error bodies are captured, not just status lines (the CICD-19 STEP 4b lesson).
 
-**Consequences for the tree above.** `resources/`, `databricks.yml` and `app/` are templates with placeholders (`${var.catalog}`, `${var.llm_endpoint}`) resolved on the build machine; `src/fema_piia/io/` must offer a pandas adapter so every test here runs with no Spark; `tests/test_parity_synthetic.py` is the contract both machines share.
+**What is new for this pilot: files cross too.** The Boss packets drove git and the GitLab API on code that was already on the GFE. Here the engine, config, tests, notebooks and synthetic CSVs must arrive as well, so a second packet kind exists:
+
+- **Payload packets** carry text files only, one file per block, as single-quoted here-strings written with `[IO.File]::WriteAllText` (UTF-8, LF), followed in the same block by `Get-FileHash -Algorithm SHA256` compared against the hash computed here. That is the `data/synthetic/MANIFEST.sha256` convention applied at the transfer boundary. Files longer than a few thousand lines are split across numbered blocks and concatenated on the GFE; no line of a shipped file may begin with `'@`, and the generator refuses to build a packet that violates this.
+- **No binaries cross.** No wheel, no `.pptx`, no images. The wheel is built on the GFE (`py -m build`) or installed from the Repos checkout inside FEMADex (`%pip install /Workspace/Repos/<path>/src`). Notebooks travel as `.py` source files, never `.ipynb`.
+- A generator in this repo (`tools/make_packet.py`, an S0 task) builds payload packets from a file list, so a packet is never hand-assembled and the hashes are never typed.
+- The `engine_version` stamped into `silver.mapping_run` on every run is the commit hash here that the payload packet was cut from, so any FEMADex result traces to a commit in this repo.
+
+**Planned packet series** (IDs continue the `PIIA-` prefix; each one is authored here after the corresponding change is verified here):
+
+| Packet | Kind | Purpose | Sprint |
+|---|---|---|---|
+| `PIIA-01-gfe-recon` | read-only | What the GFE has: PowerShell, git, Python, Databricks CLI, reachability of DHS GitLab and the FEMADex host, GitLab group membership (**drafted, see `docs/agent-runs/`**) | S0 |
+| `PIIA-02-gitlab-project` | recon + one guarded write | Create or adopt the GitLab project in the agreed group; clone it to `C:\dev\fema-piia`; push the skeleton | S0 |
+| `PIIA-03-payload-engine-v0` | payload | `src/`, `config/`, `tests/`, `pyproject.toml`, `databricks.yml` template; commit and push | S0 |
+| `PIIA-04-payload-demo-data` | payload | The synthetic CSVs for `demo.*` (split blocks) and the parity notebook source | S0 |
+| `PIIA-05-femadex-connect` | recon + guarded write | Link Databricks Repos to the GitLab project; run the parity notebook; record results | S0 |
+| `PIIA-1x` | payload | One per sprint with the engine/config delta; addenda for fixes during S5 | S1–S5 |
+
+**Working rhythm.** Engine and config changes originate here, pass the parity test, and become a payload packet. Workspace-only changes (cluster config, grants, endpoint wiring, app secrets) are made in FEMADex and never come back; the build side keeps its own change log in GitLab. GitLab, not this repo, is what Databricks Repos pulls from.
+
+**Consequences for the tree above.** `resources/`, `databricks.yml` and `app/` are templates with placeholders (`${var.catalog}`, `${var.llm_endpoint}`) resolved on the build side; `src/fema_piia/io/` must offer a pandas adapter so every test here runs with no Spark; `tests/test_parity_synthetic.py` is the contract all three places share; `docs/agent-runs/` is the outbound channel and `tools/make_packet.py` is its only producer of payload blocks.
 
 Port notes:
 
@@ -298,8 +323,9 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 | DBX-R-10 | **20-program taxonomy** and rollup rules not authoritative (`SME-04`, `SME-30`) | Medium | High | Mining proposals + adjudication sample are the SOW's own mitigation; keep `status=inferred` visible everywhere | FEMA SMEs |
 | DBX-R-11 | **CUI on a shared workspace**: grants misconfigured, synthetic and real data mixed | Low | High | Separate schemas and grants (PLT-01/14); no real data in `demo`; watermark column on synthetic rows only | Delivery lead |
 | DBX-R-12 | **Handover**: FEMA operates the solutions after Feb 18 with no managed service | Certain | Medium | Bundle-based deploy, job aids, an operator runbook, secrets rotated at handover | Delivery lead |
-| DBX-R-13 | **No git path between this repo and the build machine** (DQ-04): code moves by hand, drift between the two sides goes unnoticed, and a fix applied only on the FEMA side is lost at the next kit | High | Medium | Transfer kit with manifest and version stamp (§3a); one-directional flow; engine changes only ever originate here; a "kit check" step at the start of every sprint compares `engine_version` in the workspace to the kit shipped | Delivery lead |
-| DBX-R-14 | **Build machine constraints unknown**: a locked-down FEMA laptop may lack Python, the Databricks CLI, or outbound access to PyPI, so the wheel and its dependencies must arrive pre-built | Medium | Medium | Kit includes the wheel and a pinned `requirements.txt`; prefer libraries already on the Databricks runtime; confirm the CLI and Repos availability in week 1 | Delivery lead |
+| DBX-R-13 | **No git path from this repo to the build side** (DQ-04): code crosses by packet, so drift between GitHub and DHS GitLab goes unnoticed and a fix applied only in GitLab is overwritten by the next payload | High | Medium | Payload packets are generated, hashed and stamped with the source commit (§3a); engine changes only ever originate here; every sprint opens with a recon packet that prints the GitLab HEAD and the `engine_version` in the workspace for comparison | Delivery lead |
+| DBX-R-14 | **GFE constraints unknown**: no Python, no Databricks CLI, no PyPI egress, or no Databricks Repos link to DHS GitLab | Medium | Medium | `PIIA-01-gfe-recon` answers all four before anything is built; the wheel is built on the GFE or from the Repos checkout, never shipped; prefer libraries already on the Databricks runtime; workspace upload is the fallback for Repos | Delivery lead |
+| DBX-R-15 | **Packet operator error**: a short paste, a block run out of order, or a payload block that Notepad mangles (long lines, `'@` sequences) | Medium | Low | The conventions already guard this (STEP n OK, refuse-by-default writes, per-file SHA-256); the generator rejects unsafe content; payload blocks stay short enough to select reliably | Delivery lead |
 
 ---
 
@@ -320,8 +346,8 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 
 1. Request workspace access, catalog creation rights, the enabled-feature list, the LLM endpoint name, and repo/bundle deployment permissions (Pricing Assumptions #4).
 2. Send FEMA the data request: FY2023–FY2026 WebIFMIS extracts (layout as-is), the program taxonomy for the 20 programs, the PRA instrument, prior-year mapping decisions for the adjudication sample, and last-comprehensive-assessment dates.
-3. Here: port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`; cut **transfer kit v0** (§3a).
-4. On the build machine: confirm the Databricks CLI, Repos and workspace-import options; stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*` from the kit, re-run the parity test on a cluster.
+3. Here: port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`; write `tools/make_packet.py`; author packets `PIIA-02` through `PIIA-05` (§3a).
+4. On the GFE: run `PIIA-01-gfe-recon` (already drafted) and email the STEP-RESULT file back; then `PIIA-02` to create the GitLab project, the payload packets, and `PIIA-05` to link Databricks Repos, stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*`, and re-run the parity test on a cluster.
 5. Draft the acceptance criteria (§5) and the AI evaluation protocol; send by Oct 14.
 6. Hold the current-state walkthrough and record the cycle-time baseline.
 7. Log every workshop outcome as a `DEC-` entry in file 16 and every new gap as an `ASSUMP-`/`SME-` in file 03 conventions, continuing the ID series.
@@ -334,5 +360,6 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 |---|---|---|
 | `PLT-` | 01–14 | this file §1 |
 | `AC-` | 01–12 | this file §5 (to be sent to FEMA by Oct 14) |
-| `DBX-R-` | 01–14 | this file §7; candidates for file 15 once the pilot starts |
+| `DBX-R-` | 01–15 | this file §7; candidates for file 15 once the pilot starts |
+| `PIIA-` (packets) | 01–05 planned, 01 drafted | `docs/agent-runs/` at the repo root |
 | `DQ-` | 01–06 | this file §8 |

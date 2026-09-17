@@ -44,6 +44,7 @@ The package separates **verified facts** (`SRC-`), **requirements** (`REQ-`), **
 | 17 | `17-appendix.md` | Glossary, acronyms, example rules/data, diagrams, references |
 | 18 | `18-databricks-implementation-plan.md` | **Funded pilot** — implementation plan on FEMA's Databricks (FEMADex): platform decisions, catalog layout, pipeline, sprints against the POP, acceptance criteria, risks |
 | — | `review/PILOT_FUNDING_DOCS_REVIEW.md` | Findings from the draft SOW/ROM and FFP pricing template that shape file 18 |
+| — | `../../docs/agent-runs/` (repo root) | Agent-run packets that carry the pilot to the FEMA-side machine (conventions + `PIIA-01` recon) |
 | — | `progress-tracker.md` | Status of all 19 files + commit hash |
 | — | `README.md` | This file |
 
