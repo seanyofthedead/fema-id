@@ -170,7 +170,7 @@ The review app never computes a reportable number; it reads gold, writes `review
 
 ## 3. Repository restructuring
 
-Keep `solution-design/` as the design package. Add a build tree the bundle can deploy:
+The pilot code lives on a different machine (DQ-04, §3a). This repo therefore holds only what can be developed and tested **without** FEMADex: the design package, the engine's reference implementation with a pandas path, the config YAML, the synthetic fixtures and the parity tests. The bundle, job and app definitions below are authored here as templates but are only ever deployed from the FEMA-side machine.
 
 ```
 fema-id/
@@ -196,6 +196,23 @@ fema-id/
 │   ├── test_rules.py  test_trigger.py test_pra.py test_explain_numeric_guard.py
 └── solution-design/                   # unchanged design package (this file lives here)
 ```
+
+### 3a. Two-machine delivery model (DQ-04)
+
+The build machine that reaches FEMADex is not the machine that reaches this repo. Assume no git path between them (`DBX-R-13`); a Databricks Repos link to a FEMA-hosted git is a bonus if FEMA provides one, not the plan.
+
+| | **This repo (design machine)** | **FEMA-side machine (build machine)** |
+|---|---|---|
+| Holds | Design package; `src/fema_piia` reference engine (pandas path); `config/*.yaml`; `data/synthetic`; `tests/`; bundle, job and app files as templates | The deployed bundle; workspace-specific `databricks.yml` targets; notebooks bound to `piia_dev`/`piia_test`; anything touching real extracts, CUI, endpoint names, secrets, workspace URLs |
+| Runs | `pytest` parity gate against the synthetic CSVs, no cluster needed | The same parity gate on a cluster against `demo.*`, then the real batch |
+| Never holds | Real data, CUI, workspace identifiers, secrets, FEMA-internal documents, the real PRA instrument text unless FEMA clears it | Nothing that must be kept out of FEMA's hands; at handover FEMA owns all of it (Pricing Assumptions #6) |
+| Direction of flow | → **Transfer kit** outbound only | ← Only redacted feedback: rule-status changes as YAML diffs, defect notes, aggregate parity results, no rows |
+
+**Transfer kit.** A single archive built by a script in this repo (`make transfer-kit`), carried over by whatever means FEMA approves (upload through the workspace UI, approved file transfer, or a FEMA-side git push). Contents: the `fema_piia` wheel, `config/*.yaml`, the bundle and job/app templates, the notebooks, the synthetic CSVs for the `demo` schema, the tests, and a `MANIFEST.sha256` (the same convention `data/synthetic` already uses) so the build machine can verify it landed intact. The kit carries a version stamp that is written into `silver.mapping_run.engine_version` on every run, so any result on the FEMA side is traceable to a commit here.
+
+**Working rhythm.** Engine and config changes are made here, proven by the parity test, cut into a kit, and carried over in one batch per sprint (or per fix during S5). Workspace-only changes (cluster config, grants, endpoint wiring, app secrets) are made on the build machine and never come back; the build machine keeps its own change log inside the workspace. If FEMA does provide a git remote, the build machine pushes there and this repo stays the upstream of the engine only.
+
+**Consequences for the tree above.** `resources/`, `databricks.yml` and `app/` are templates with placeholders (`${var.catalog}`, `${var.llm_endpoint}`) resolved on the build machine; `src/fema_piia/io/` must offer a pandas adapter so every test here runs with no Spark; `tests/test_parity_synthetic.py` is the contract both machines share.
 
 Port notes:
 
@@ -281,6 +298,8 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 | DBX-R-10 | **20-program taxonomy** and rollup rules not authoritative (`SME-04`, `SME-30`) | Medium | High | Mining proposals + adjudication sample are the SOW's own mitigation; keep `status=inferred` visible everywhere | FEMA SMEs |
 | DBX-R-11 | **CUI on a shared workspace**: grants misconfigured, synthetic and real data mixed | Low | High | Separate schemas and grants (PLT-01/14); no real data in `demo`; watermark column on synthetic rows only | Delivery lead |
 | DBX-R-12 | **Handover**: FEMA operates the solutions after Feb 18 with no managed service | Certain | Medium | Bundle-based deploy, job aids, an operator runbook, secrets rotated at handover | Delivery lead |
+| DBX-R-13 | **No git path between this repo and the build machine** (DQ-04): code moves by hand, drift between the two sides goes unnoticed, and a fix applied only on the FEMA side is lost at the next kit | High | Medium | Transfer kit with manifest and version stamp (§3a); one-directional flow; engine changes only ever originate here; a "kit check" step at the start of every sprint compares `engine_version` in the workspace to the kit shipped | Delivery lead |
+| DBX-R-14 | **Build machine constraints unknown**: a locked-down FEMA laptop may lack Python, the Databricks CLI, or outbound access to PyPI, so the wheel and its dependencies must arrive pre-built | Medium | Medium | Kit includes the wheel and a pinned `requirements.txt`; prefer libraries already on the Databricks runtime; confirm the CLI and Repos availability in week 1 | Delivery lead |
 
 ---
 
@@ -291,7 +310,7 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 | DQ-01 | Which document governs PIIA scope: SOW Phase 1 + Phase 2, or the pricing Assumptions tab (POC only)? | Pricing tab governs; relabel SOW Phase 2 as follow-on (review F-01) |
 | DQ-02 | Reviewer UI: Databricks App, or dashboards plus notebooks? | Databricks App if enabled; confirm in week 1 (`DBX-R-02`) |
 | DQ-03 | Ask FEMA for FY2023 in addition to FY2024–FY2026? | Yes, extract only (`DBX-R-04`) |
-| DQ-04 | Where does the pilot code live: this repo, a new `fema-piia-databricks` repo, or FEMA's repository from day one? | Start in this repo under the tree in §3; mirror to FEMA's repo at handover (Pricing Assumptions #6) |
+| DQ-04 | Where does the pilot code live: this repo, a new `fema-piia-databricks` repo, or FEMA's repository from day one? | **Decided 2026-09-17: the pilot code lives on a different machine** (the FEMA-side build environment), not in this repo. This repo stays the design package, the engine's offline reference implementation and the synthetic test fixtures. See §3a |
 | DQ-05 | Scope of off-cycle monitoring in Phase 1? | A single job on a partial FY as a preview only; it is a Phase 2 item in the SOW |
 | DQ-06 | Do the three unfunded July "Wave F" items (historical assessment ingestion `REQ-033`, region drill-down `REQ-035`, 3-year cycle `REQ-034`) enter the pilot? | Only `REQ-034`, and only if FEMA supplies last-comprehensive dates; the others stay future |
 
@@ -301,8 +320,8 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 
 1. Request workspace access, catalog creation rights, the enabled-feature list, the LLM endpoint name, and repo/bundle deployment permissions (Pricing Assumptions #4).
 2. Send FEMA the data request: FY2023–FY2026 WebIFMIS extracts (layout as-is), the program taxonomy for the 20 programs, the PRA instrument, prior-year mapping decisions for the adjudication sample, and last-comprehensive-assessment dates.
-3. Stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*`.
-4. Port tasks 3–8 to Spark; make the parity test pass against `data/synthetic/*.csv`.
+3. Here: port tasks 3–8 with a pandas path; make the parity test pass against `data/synthetic/*.csv`; cut **transfer kit v0** (§3a).
+4. On the build machine: confirm the Databricks CLI, Repos and workspace-import options; stand up the bundle (`databricks.yml`, `piia_dev`), seed `config.*` and `ref.*`, load `demo.*` from the kit, re-run the parity test on a cluster.
 5. Draft the acceptance criteria (§5) and the AI evaluation protocol; send by Oct 14.
 6. Hold the current-state walkthrough and record the cycle-time baseline.
 7. Log every workshop outcome as a `DEC-` entry in file 16 and every new gap as an `ASSUMP-`/`SME-` in file 03 conventions, continuing the ID series.
@@ -315,5 +334,5 @@ Written to be demonstrable from the FEMA dev/test workspace, per SOW Phase 1 in-
 |---|---|---|
 | `PLT-` | 01–14 | this file §1 |
 | `AC-` | 01–12 | this file §5 (to be sent to FEMA by Oct 14) |
-| `DBX-R-` | 01–12 | this file §7; candidates for file 15 once the pilot starts |
+| `DBX-R-` | 01–14 | this file §7; candidates for file 15 once the pilot starts |
 | `DQ-` | 01–06 | this file §8 |
